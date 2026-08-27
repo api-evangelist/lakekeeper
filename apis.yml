@@ -1,23 +1,530 @@
 aid: lakekeeper
 name: Lakekeeper
-description: 'Lakekeeper is a company surfaced via the API Evangelist harvest backlog (source: self-hosted-agent-stack)
-  and added to the network as a stub for full-pipeline profiling.'
+description: >-
+  Lakekeeper is an open-source Apache Iceberg REST Catalog written in Rust and maintained by Vakamo. It manages
+  Iceberg tables, views and namespaces for query engines such as Apache Spark, Trino, StarRocks, DuckDB, Athena,
+  Flink and PyIceberg, vending short-lived, prefix-scoped storage credentials for S3, GCS, Azure ADLS and Microsoft
+  OneLake/Fabric instead of handing long-lived keys to engines. It exposes three distinct HTTP APIs — the standard
+  Iceberg REST Catalog API at /catalog/v1, a Lakekeeper-specific Management API at /management/v1 for bootstrapping,
+  projects, warehouses, users, roles, tasks and fine-grained permissions, and a Data API at /lakekeeper/v1 that
+  catalogs non-Iceberg generic tables such as Lance, Delta and Parquet. Authorization is pluggable (OpenFGA for RBAC/
+  ReBAC, Open Policy Agent bridge, Cedar in the commercial Lakekeeper+ distribution), authentication is OIDC/OAuth2
+  or Kubernetes service accounts, and change events are published as CloudEvents to Kafka or NATS. Lakekeeper is
+  self-hosted software under Apache 2.0; commercial Lakekeeper+ and Lakekeeper Cloud are sold by Vakamo.
 url: https://raw.githubusercontent.com/api-evangelist/lakekeeper/refs/heads/main/apis.yml
+image: https://docs.lakekeeper.io/assets/logos/LAKEKEEPER_IMAGE_TEXT_SIDE.svg
 x-type: company
 x-source: harvest:self-hosted-agent-stack
-x-tier: stub
-x-tier-reason: harvest
-specificationVersion: '0.20'
+specificationVersion: '0.23'
 created: '2026-08-27'
 modified: '2026-08-27'
 tags:
-- Company
-apis: []
+- Apache Iceberg
+- Data Catalog
+- Lakehouse
+- Open Source
+- Rust
+- Data Governance
+- Access Control
+- Object Storage
+- Metadata
+- Self-Hosted
+- OpenFGA
+- Data Engineering
+tags_raw:
+- apache-iceberg
+- data-catalog
+- lakehouse
+- open-source
+- rust
+- data-governance
+- access-control
+- object-storage
+- metadata
+- self-hosted
+- openfga
+- data-engineering
+apis:
+- name: Lakekeeper Generic Table (Data) API
+  description: >-
+    Lakekeeper's data-plane API served under /lakekeeper/v1, cataloging non-Iceberg table formats — Lance,
+    Delta, CSV, Parquet — alongside Iceberg tables in the same Warehouse and Namespace, with the same
+    credential vending and access control. Six operations across four paths covering list, create, load
+    and drop of generic tables, plus a referenced-by lookup. Consumed by the official pylakekeeper Python
+    client and the Lakekeeper Java/Spark clients.
+  humanURL: https://docs.lakekeeper.io/docs/latest/generic-tables/
+  baseURL: '{scheme}://{host}/lakekeeper/v1'
+  tags:
+  - Data Catalog
+  - Lakehouse
+  - Metadata
+  - Data Engineering
+  tags_raw:
+  - data-catalog
+  - lakehouse
+  - metadata
+  - data-engineering
+  properties:
+  - type: OpenAPI
+    url: openapi/lakekeeper-generic-table-api-openapi.yml
+  - type: Documentation
+    url: https://docs.lakekeeper.io/docs/latest/generic-tables/
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/generic-table/
+- aid: lakekeeper:lakekeeper-authorization-api
+  name: Lakekeeper Authorization API
+  description: The authorization API from Lakekeeper — 1 operation(s) for authorization.
+  humanURL: https://docs.lakekeeper.io/docs/latest/api/management/
+  baseURL: '{scheme}://{host}/management/v1'
+  tags:
+  - authorization
+  properties:
+  - type: OpenAPI
+    url: openapi/lakekeeper-authorization-api-openapi.yml
+  - type: Documentation
+    url: https://docs.lakekeeper.io/docs/latest/api-overview/
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/management/
+  - type: Authentication
+    url: authentication/lakekeeper-authentication.yml
+  - type: Conventions
+    url: conventions/lakekeeper-conventions.yml
+  - type: ErrorCatalog
+    url: errors/lakekeeper-problem-types.yml
+  - type: DataModel
+    url: data-model/lakekeeper-data-model.yml
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/catalog/
+  - type: Conformance
+    url: conformance/lakekeeper-conformance.yml
+  - type: OAuthScopes
+    url: scopes/lakekeeper-scopes.yml
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/management-plus/
+  - type: Pricing
+    url: https://vakamo.com/pricing
+- aid: lakekeeper:lakekeeper-catalog-api-api
+  name: Lakekeeper Catalog API
+  description: The Catalog API API from Lakekeeper — 16 operation(s) for catalog api.
+  humanURL: https://docs.lakekeeper.io/docs/latest/api/management/
+  baseURL: '{scheme}://{host}/management/v1'
+  tags:
+  - Catalog API
+  properties:
+  - type: OpenAPI
+    url: openapi/lakekeeper-catalog-api-api-openapi.yml
+  - type: Documentation
+    url: https://docs.lakekeeper.io/docs/latest/api-overview/
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/management/
+  - type: Authentication
+    url: authentication/lakekeeper-authentication.yml
+  - type: Conventions
+    url: conventions/lakekeeper-conventions.yml
+  - type: ErrorCatalog
+    url: errors/lakekeeper-problem-types.yml
+  - type: DataModel
+    url: data-model/lakekeeper-data-model.yml
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/catalog/
+  - type: Conformance
+    url: conformance/lakekeeper-conformance.yml
+  - type: OAuthScopes
+    url: scopes/lakekeeper-scopes.yml
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/management-plus/
+  - type: Pricing
+    url: https://vakamo.com/pricing
+- aid: lakekeeper:lakekeeper-configuration-api-api
+  name: Lakekeeper Configuration API
+  description: The Configuration API API from Lakekeeper — 1 operation(s) for configuration api.
+  humanURL: https://docs.lakekeeper.io/docs/latest/api/management/
+  baseURL: '{scheme}://{host}/management/v1'
+  tags:
+  - Configuration API
+  properties:
+  - type: OpenAPI
+    url: openapi/lakekeeper-configuration-api-api-openapi.yml
+  - type: Documentation
+    url: https://docs.lakekeeper.io/docs/latest/api-overview/
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/management/
+  - type: Authentication
+    url: authentication/lakekeeper-authentication.yml
+  - type: Conventions
+    url: conventions/lakekeeper-conventions.yml
+  - type: ErrorCatalog
+    url: errors/lakekeeper-problem-types.yml
+  - type: DataModel
+    url: data-model/lakekeeper-data-model.yml
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/catalog/
+  - type: Conformance
+    url: conformance/lakekeeper-conformance.yml
+  - type: OAuthScopes
+    url: scopes/lakekeeper-scopes.yml
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/management-plus/
+  - type: Pricing
+    url: https://vakamo.com/pricing
+- aid: lakekeeper:lakekeeper-oauth2-api-api
+  name: Lakekeeper OAuth2 API
+  description: The OAuth2 API API from Lakekeeper — 1 operation(s) for oauth2 api.
+  humanURL: https://docs.lakekeeper.io/docs/latest/api/management/
+  baseURL: '{scheme}://{host}/management/v1'
+  tags:
+  - OAuth2 API
+  properties:
+  - type: OpenAPI
+    url: openapi/lakekeeper-oauth2-api-api-openapi.yml
+  - type: Documentation
+    url: https://docs.lakekeeper.io/docs/latest/api-overview/
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/management/
+  - type: Authentication
+    url: authentication/lakekeeper-authentication.yml
+  - type: Conventions
+    url: conventions/lakekeeper-conventions.yml
+  - type: ErrorCatalog
+    url: errors/lakekeeper-problem-types.yml
+  - type: DataModel
+    url: data-model/lakekeeper-data-model.yml
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/catalog/
+  - type: Conformance
+    url: conformance/lakekeeper-conformance.yml
+  - type: OAuthScopes
+    url: scopes/lakekeeper-scopes.yml
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/management-plus/
+  - type: Pricing
+    url: https://vakamo.com/pricing
+- aid: lakekeeper:lakekeeper-permissions-cedar-api
+  name: Lakekeeper Permissions Cedar API
+  description: Cedar Authorization Management. Only available if Cedar authorization is enabled.
+  humanURL: https://docs.lakekeeper.io/docs/latest/api/management/
+  baseURL: '{scheme}://{host}/management/v1'
+  tags:
+  - permissions-cedar
+  properties:
+  - type: OpenAPI
+    url: openapi/lakekeeper-permissions-cedar-api-openapi.yml
+  - type: Documentation
+    url: https://docs.lakekeeper.io/docs/latest/api-overview/
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/management/
+  - type: Authentication
+    url: authentication/lakekeeper-authentication.yml
+  - type: Conventions
+    url: conventions/lakekeeper-conventions.yml
+  - type: ErrorCatalog
+    url: errors/lakekeeper-problem-types.yml
+  - type: DataModel
+    url: data-model/lakekeeper-data-model.yml
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/catalog/
+  - type: Conformance
+    url: conformance/lakekeeper-conformance.yml
+  - type: OAuthScopes
+    url: scopes/lakekeeper-scopes.yml
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/management-plus/
+  - type: Pricing
+    url: https://vakamo.com/pricing
+- aid: lakekeeper:lakekeeper-permissions-openfga-api
+  name: Lakekeeper Permissions Openfga API
+  description: Authorization and permissions management using OpenFGA
+  humanURL: https://docs.lakekeeper.io/docs/latest/api/management/
+  baseURL: '{scheme}://{host}/management/v1'
+  tags:
+  - permissions-openfga
+  properties:
+  - type: OpenAPI
+    url: openapi/lakekeeper-permissions-openfga-api-openapi.yml
+  - type: Documentation
+    url: https://docs.lakekeeper.io/docs/latest/api-overview/
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/management/
+  - type: Authentication
+    url: authentication/lakekeeper-authentication.yml
+  - type: Conventions
+    url: conventions/lakekeeper-conventions.yml
+  - type: ErrorCatalog
+    url: errors/lakekeeper-problem-types.yml
+  - type: DataModel
+    url: data-model/lakekeeper-data-model.yml
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/catalog/
+  - type: Conformance
+    url: conformance/lakekeeper-conformance.yml
+  - type: OAuthScopes
+    url: scopes/lakekeeper-scopes.yml
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/management-plus/
+  - type: Pricing
+    url: https://vakamo.com/pricing
+- aid: lakekeeper:lakekeeper-project-api
+  name: Lakekeeper Project API
+  description: Manage Projects
+  humanURL: https://docs.lakekeeper.io/docs/latest/api/management/
+  baseURL: '{scheme}://{host}/management/v1'
+  tags:
+  - project
+  properties:
+  - type: OpenAPI
+    url: openapi/lakekeeper-project-api-openapi.yml
+  - type: Documentation
+    url: https://docs.lakekeeper.io/docs/latest/api-overview/
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/management/
+  - type: Authentication
+    url: authentication/lakekeeper-authentication.yml
+  - type: Conventions
+    url: conventions/lakekeeper-conventions.yml
+  - type: ErrorCatalog
+    url: errors/lakekeeper-problem-types.yml
+  - type: DataModel
+    url: data-model/lakekeeper-data-model.yml
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/catalog/
+  - type: Conformance
+    url: conformance/lakekeeper-conformance.yml
+  - type: OAuthScopes
+    url: scopes/lakekeeper-scopes.yml
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/management-plus/
+  - type: Pricing
+    url: https://vakamo.com/pricing
+- aid: lakekeeper:lakekeeper-role-api
+  name: Lakekeeper Role API
+  description: Manage Roles
+  humanURL: https://docs.lakekeeper.io/docs/latest/api/management/
+  baseURL: '{scheme}://{host}/management/v1'
+  tags:
+  - role
+  properties:
+  - type: OpenAPI
+    url: openapi/lakekeeper-role-api-openapi.yml
+  - type: Documentation
+    url: https://docs.lakekeeper.io/docs/latest/api-overview/
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/management/
+  - type: Authentication
+    url: authentication/lakekeeper-authentication.yml
+  - type: Conventions
+    url: conventions/lakekeeper-conventions.yml
+  - type: ErrorCatalog
+    url: errors/lakekeeper-problem-types.yml
+  - type: DataModel
+    url: data-model/lakekeeper-data-model.yml
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/catalog/
+  - type: Conformance
+    url: conformance/lakekeeper-conformance.yml
+  - type: OAuthScopes
+    url: scopes/lakekeeper-scopes.yml
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/management-plus/
+  - type: Pricing
+    url: https://vakamo.com/pricing
+- aid: lakekeeper:lakekeeper-server-api
+  name: Lakekeeper Server API
+  description: Manage Server
+  humanURL: https://docs.lakekeeper.io/docs/latest/api/management/
+  baseURL: '{scheme}://{host}/management/v1'
+  tags:
+  - server
+  properties:
+  - type: OpenAPI
+    url: openapi/lakekeeper-server-api-openapi.yml
+  - type: Documentation
+    url: https://docs.lakekeeper.io/docs/latest/api-overview/
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/management/
+  - type: Authentication
+    url: authentication/lakekeeper-authentication.yml
+  - type: Conventions
+    url: conventions/lakekeeper-conventions.yml
+  - type: ErrorCatalog
+    url: errors/lakekeeper-problem-types.yml
+  - type: DataModel
+    url: data-model/lakekeeper-data-model.yml
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/catalog/
+  - type: Conformance
+    url: conformance/lakekeeper-conformance.yml
+  - type: OAuthScopes
+    url: scopes/lakekeeper-scopes.yml
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/management-plus/
+  - type: Pricing
+    url: https://vakamo.com/pricing
+- aid: lakekeeper:lakekeeper-tasks-api
+  name: Lakekeeper Tasks API
+  description: View & Manage Tasks
+  humanURL: https://docs.lakekeeper.io/docs/latest/api/management/
+  baseURL: '{scheme}://{host}/management/v1'
+  tags:
+  - tasks
+  properties:
+  - type: OpenAPI
+    url: openapi/lakekeeper-tasks-api-openapi.yml
+  - type: Documentation
+    url: https://docs.lakekeeper.io/docs/latest/api-overview/
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/management/
+  - type: Authentication
+    url: authentication/lakekeeper-authentication.yml
+  - type: Conventions
+    url: conventions/lakekeeper-conventions.yml
+  - type: ErrorCatalog
+    url: errors/lakekeeper-problem-types.yml
+  - type: DataModel
+    url: data-model/lakekeeper-data-model.yml
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/catalog/
+  - type: Conformance
+    url: conformance/lakekeeper-conformance.yml
+  - type: OAuthScopes
+    url: scopes/lakekeeper-scopes.yml
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/management-plus/
+  - type: Pricing
+    url: https://vakamo.com/pricing
+- aid: lakekeeper:lakekeeper-user-api
+  name: Lakekeeper User API
+  description: Manage Users
+  humanURL: https://docs.lakekeeper.io/docs/latest/api/management/
+  baseURL: '{scheme}://{host}/management/v1'
+  tags:
+  - user
+  properties:
+  - type: OpenAPI
+    url: openapi/lakekeeper-user-api-openapi.yml
+  - type: Documentation
+    url: https://docs.lakekeeper.io/docs/latest/api-overview/
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/management/
+  - type: Authentication
+    url: authentication/lakekeeper-authentication.yml
+  - type: Conventions
+    url: conventions/lakekeeper-conventions.yml
+  - type: ErrorCatalog
+    url: errors/lakekeeper-problem-types.yml
+  - type: DataModel
+    url: data-model/lakekeeper-data-model.yml
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/catalog/
+  - type: Conformance
+    url: conformance/lakekeeper-conformance.yml
+  - type: OAuthScopes
+    url: scopes/lakekeeper-scopes.yml
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/management-plus/
+  - type: Pricing
+    url: https://vakamo.com/pricing
+- aid: lakekeeper:lakekeeper-warehouse-api
+  name: Lakekeeper Warehouse API
+  description: Manage Warehouses
+  humanURL: https://docs.lakekeeper.io/docs/latest/api/management/
+  baseURL: '{scheme}://{host}/management/v1'
+  tags:
+  - warehouse
+  properties:
+  - type: OpenAPI
+    url: openapi/lakekeeper-warehouse-api-openapi.yml
+  - type: Documentation
+    url: https://docs.lakekeeper.io/docs/latest/api-overview/
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/management/
+  - type: Authentication
+    url: authentication/lakekeeper-authentication.yml
+  - type: Conventions
+    url: conventions/lakekeeper-conventions.yml
+  - type: ErrorCatalog
+    url: errors/lakekeeper-problem-types.yml
+  - type: DataModel
+    url: data-model/lakekeeper-data-model.yml
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/catalog/
+  - type: Conformance
+    url: conformance/lakekeeper-conformance.yml
+  - type: OAuthScopes
+    url: scopes/lakekeeper-scopes.yml
+  - type: APIReference
+    url: https://docs.lakekeeper.io/docs/latest/api/management-plus/
+  - type: Pricing
+    url: https://vakamo.com/pricing
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
 - FN: APIs.json
   email: info@apis.io
 common:
+- type: DomainSecurity
+  url: security/lakekeeper-domain-security.yml
 - type: Website
   url: https://lakekeeper.io/
+- type: DeveloperPortal
+  url: https://docs.lakekeeper.io/
+- type: Documentation
+  url: https://docs.lakekeeper.io/docs/latest/api-overview/
+- type: APIReference
+  url: https://docs.lakekeeper.io/docs/latest/api/
+- type: GettingStarted
+  url: https://docs.lakekeeper.io/getting-started/
+- type: Support
+  url: https://docs.lakekeeper.io/support/
+- type: GitHubOrganization
+  url: https://github.com/lakekeeper
+- type: Blog
+  url: https://vakamo.com/blog/
+- type: Pricing
+  url: https://vakamo.com/pricing
+- type: TermsOfService
+  url: https://docs.lakekeeper.io/about/license/
+- type: ChangeLog
+  url: https://docs.lakekeeper.io/about/release-notes/
+- type: LLMsTxt
+  url: https://docs.lakekeeper.io/llms.txt
+- type: Authentication
+  url: authentication/lakekeeper-authentication.yml
+- type: OAuthScopes
+  url: scopes/lakekeeper-scopes.yml
+- type: Conventions
+  url: conventions/lakekeeper-conventions.yml
+- type: Idempotency
+  url: conventions/lakekeeper-conventions.yml
+- type: ErrorCatalog
+  url: errors/lakekeeper-problem-types.yml
+- type: DataModel
+  url: data-model/lakekeeper-data-model.yml
+- type: Lifecycle
+  url: lifecycle/lakekeeper-lifecycle.yml
+- type: Conformance
+  url: conformance/lakekeeper-conformance.yml
+- type: Packages
+  url: packages/lakekeeper-packages.yml
+- type: SDKs
+  url: packages/lakekeeper-packages.yml
+- type: CLI
+  url: cli/lakekeeper-cli.yml
+- type: Sandbox
+  url: sandbox/lakekeeper-sandbox.yml
+- type: Plans
+  url: plans/lakekeeper-plans-pricing.yml
+- type: RateLimits
+  url: rate-limits/lakekeeper-rate-limits.yml
+- type: ChangeLog
+  url: changelog/lakekeeper-changelog.yml
+- type: AgentSkill
+  url: skills/_index.yml
+- type: LLMsTxt
+  url: llms/lakekeeper-llms.txt
+- type: Overlay
+  url: overlays/lakekeeper-management-api-overlay.yaml
+x-enrichment:
+  date: '2026-08-27'
+  status: enriched
+  artifacts_added: 30
+  pass: local-v1
