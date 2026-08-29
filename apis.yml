@@ -12,6 +12,17 @@ description: >-
   or Kubernetes service accounts, and change events are published as CloudEvents to Kafka or NATS. Lakekeeper is
   self-hosted software under Apache 2.0; commercial Lakekeeper+ and Lakekeeper Cloud are sold by Vakamo.
 url: https://raw.githubusercontent.com/api-evangelist/lakekeeper/refs/heads/main/apis.yml
+deliveryModel:
+  model: saas
+  open_source: false
+  commercial: true
+  callable_host: false
+  label: Hosted service · you call their endpoint
+  confidence: medium
+  source:
+  - pricing
+  generated: '2026-08-28'
+  method: derived
 image: https://docs.lakekeeper.io/assets/logos/LAKEKEEPER_IMAGE_TEXT_SIDE.svg
 x-type: company
 x-source: harvest:self-hosted-agent-stack
