@@ -30,18 +30,18 @@ specificationVersion: '0.23'
 created: '2026-08-27'
 modified: '2026-08-27'
 tags:
-- Apache Iceberg
-- Data Catalog
-- Lakehouse
-- Open Source
-- Rust
-- Data Governance
-- Access Control
-- Object Storage
+- apache-iceberg
+- data-catalog
+- lakehouse
+- Open-Source
+- rust
+- data-governance
+- access-control
+- object-storage
 - Metadata
-- Self-Hosted
-- OpenFGA
-- Data Engineering
+- self-hosted
+- openfga
+- data-engineering
 tags_raw:
 - apache-iceberg
 - data-catalog
@@ -66,10 +66,10 @@ apis:
   humanURL: https://docs.lakekeeper.io/docs/latest/generic-tables/
   baseURL: '{scheme}://{host}/lakekeeper/v1'
   tags:
-  - Data Catalog
-  - Lakehouse
+  - data-catalog
+  - lakehouse
   - Metadata
-  - Data Engineering
+  - data-engineering
   tags_raw:
   - data-catalog
   - lakehouse
@@ -88,6 +88,8 @@ apis:
   humanURL: https://docs.lakekeeper.io/docs/latest/api/management/
   baseURL: '{scheme}://{host}/management/v1'
   tags:
+  - Authorization
+  tags_raw:
   - authorization
   properties:
   - type: OpenAPI
@@ -280,6 +282,8 @@ apis:
   humanURL: https://docs.lakekeeper.io/docs/latest/api/management/
   baseURL: '{scheme}://{host}/management/v1'
   tags:
+  - Project
+  tags_raw:
   - project
   properties:
   - type: OpenAPI
@@ -312,6 +316,8 @@ apis:
   humanURL: https://docs.lakekeeper.io/docs/latest/api/management/
   baseURL: '{scheme}://{host}/management/v1'
   tags:
+  - Role
+  tags_raw:
   - role
   properties:
   - type: OpenAPI
@@ -344,6 +350,8 @@ apis:
   humanURL: https://docs.lakekeeper.io/docs/latest/api/management/
   baseURL: '{scheme}://{host}/management/v1'
   tags:
+  - Server
+  tags_raw:
   - server
   properties:
   - type: OpenAPI
@@ -376,6 +384,8 @@ apis:
   humanURL: https://docs.lakekeeper.io/docs/latest/api/management/
   baseURL: '{scheme}://{host}/management/v1'
   tags:
+  - Task
+  tags_raw:
   - tasks
   properties:
   - type: OpenAPI
@@ -408,6 +418,8 @@ apis:
   humanURL: https://docs.lakekeeper.io/docs/latest/api/management/
   baseURL: '{scheme}://{host}/management/v1'
   tags:
+  - User
+  tags_raw:
   - user
   properties:
   - type: OpenAPI
@@ -440,6 +452,8 @@ apis:
   humanURL: https://docs.lakekeeper.io/docs/latest/api/management/
   baseURL: '{scheme}://{host}/management/v1'
   tags:
+  - Warehouse
+  tags_raw:
   - warehouse
   properties:
   - type: OpenAPI
