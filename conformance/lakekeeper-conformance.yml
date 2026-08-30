@@ -1,0 +1,150 @@
+generated: '2026-08-27'
+method: searched
+source: >-
+  openapi/lakekeeper-catalog-api-openapi.yml, openapi/lakekeeper-management-api-openapi.yml,
+  https://docs.lakekeeper.io/docs/latest/api-overview/, https://docs.lakekeeper.io/docs/latest/authentication/,
+  https://docs.lakekeeper.io/docs/latest/authorization/, https://docs.lakekeeper.io/docs/latest/monitoring/,
+  https://docs.lakekeeper.io/docs/latest/configuration/
+domain_standard:
+  standard: Apache Iceberg REST Catalog specification
+  market: lakehouse table catalogs
+  conforms: true
+  evidence: >-
+    Lakekeeper does not merely claim the standard in prose — it serves the standard's own contract document.
+    openapi/lakekeeper-catalog-api-openapi.yml is the Apache Software Foundation's rest-catalog-open-api.yaml
+    (info.title "Apache Iceberg REST Catalog API", license "Apache 2.0"), republished by Lakekeeper at
+    https://docs.lakekeeper.io/docs/latest/api/rest-catalog-open-api.yaml as the reference for its own /catalog/v1
+    surface. The docs state the relationship plainly: "the standard Apache Iceberg REST specification. Query
+    engines (Spark, Trino, PyIceberg, ...) speak this API."
+  spec_location: openapi/lakekeeper-catalog-api-openapi.yml
+  upstream: https://github.com/apache/iceberg/blob/main/open-api/rest-catalog-open-api.yaml
+  buyer_impact: >-
+    Any engine that already speaks Iceberg REST — Spark, Trino, StarRocks, Flink, DuckDB, Athena, PyIceberg —
+    connects to Lakekeeper with configuration, not a bespoke connector. That is the whole point of the product.
+  verified_by_provider: >-
+    The lakekeeper repository runs integration tests against Spark, PyIceberg, Trino and StarRocks in CI.
+standards:
+- id: iceberg-rest-catalog
+  name: Apache Iceberg REST Catalog API
+  conforms: true
+  evidence: >-
+    Serves the ASF specification document verbatim as its /catalog/v1 contract; 30 operations across 18 paths
+    including planTableScan/fetchPlanningResult/cancelPlanning, commitTransaction, registerTable, loadCredentials
+    and the view surface.
+  spec: openapi/lakekeeper-catalog-api-openapi.yml
+- id: iceberg-rest-idempotency
+  name: Apache Iceberg REST Catalog Idempotency
+  conforms: true
+  evidence: >-
+    Documented explicitly — "Lakekeeper supports the Iceberg REST Catalog Idempotency specification. Clients can
+    send an Idempotency-Key header on mutation requests to guarantee at-most-once execution. The server advertises
+    support via the idempotency-key-lifetime field in the GET /v1/config response." Enabled by default, PT30M key
+    lifetime, warehouse-scoped.
+  source: https://docs.lakekeeper.io/docs/latest/configuration/
+- id: oauth2
+  name: OAuth 2.0
+  conforms: true
+  evidence: >-
+    components.securitySchemes.OAuth2 with a clientCredentials flow (tokenUrl /v1/oauth/tokens, scope `catalog`)
+    on the catalog API; HTTP bearer JWT on all three APIs. Client-credentials against an external IdP is the
+    documented production pattern for machine users.
+  spec: openapi/lakekeeper-catalog-api-openapi.yml
+- id: oidc
+  name: OpenID Connect
+  conforms: true
+  evidence: >-
+    LAKEKEEPER__OPENID_PROVIDER_URI requires the IdP to expose /.well-known/openid-configuration with jwks_uri and
+    issuer; tokens are validated on signature, issuer and (recommended) aud. Since v0.13.0 multiple providers can
+    be configured simultaneously via LAKEKEEPER__OPENID_PROVIDERS. Documented integrations: Keycloak, Microsoft
+    Entra ID, Okta (with DPoP on the role provider).
+  source: https://docs.lakekeeper.io/docs/latest/authentication/
+- id: cloudevents
+  name: CloudEvents
+  conforms: true
+  evidence: >-
+    Catalog change events are serialized as CloudEvents and fanned out to configured cloud_event_sinks; Kafka,
+    NATS and tracing sinks ship in the box. LAKEKEEPER__LOG_CLOUDEVENTS=true logs them locally when no broker is
+    available.
+  source: https://docs.lakekeeper.io/docs/latest/customize/
+- id: openfga-zanzibar
+  name: OpenFGA (Zanzibar-style ReBAC)
+  conforms: true
+  evidence: >-
+    OpenFGA is the default authorizer, with a shipped authorization model in authz/openfga/ and a
+    `lakekeeper openfga reconcile` CLI that rebuilds structural tuples from the Postgres catalog. Requires
+    OpenFGA v1.11+ for idempotent-write semantics; tested against v1.14. 39 permissions-openfga operations are
+    declared in the Management API.
+  source: https://docs.lakekeeper.io/docs/latest/authorization-openfga/
+- id: open-policy-agent
+  name: Open Policy Agent
+  conforms: true
+  evidence: >-
+    Ships an OPA bridge with Rego policies under authz/opa-bridge/, checked in CI with `opa` and `regal`, for
+    delegating multi-user engine authorization (e.g. Trino) to OPA.
+  source: https://docs.lakekeeper.io/docs/latest/opa/
+- id: cedar
+  name: AWS Cedar policy language
+  conforms: true
+  scope: Lakekeeper+ only
+  evidence: >-
+    Cedar permission-as-code is a Lakekeeper+ feature; the Plus Management API declares a `permissions-cedar` tag
+    absent from the open-source spec (131 vs 120 operations).
+  spec: openapi/lakekeeper-management-plus-api-openapi.yml
+- id: prometheus
+  name: Prometheus exposition / OpenMetrics
+  conforms: true
+  evidence: >-
+    Metrics endpoint on LAKEKEEPER__METRICS__PORT (default 9000), with named series including
+    lakekeeper_role_provider_up, lakekeeper_role_provider_get_roles_duration_seconds and
+    lakekeeper_role_provider_sync_errors_total, plus per-cache and per-project endpoint statistics.
+  source: https://docs.lakekeeper.io/docs/latest/monitoring/
+- id: openapi-31
+  name: OpenAPI 3.1.0
+  conforms: true
+  evidence: >-
+    All three first-party documents declare openapi 3.1.0 and are generated at build time by utoipa; the running
+    server serves a version-accurate Swagger-UI at /swagger-ui when LAKEKEEPER__SERVE_SWAGGER_UI is true.
+- id: rfc9457
+  name: RFC 9457 Problem Details for HTTP APIs
+  conforms: false
+  evidence: >-
+    Errors use the Iceberg REST wrapper {"error":{"message","type","code","stack"}} with media type
+    application/json, not application/problem+json. This is inherited from the Iceberg specification, not a
+    Lakekeeper choice.
+  spec: errors/lakekeeper-problem-types.yml
+- id: rfc8594
+  name: RFC 8594 Sunset HTTP header
+  conforms: false
+  evidence: >-
+    Deprecations are marked with OpenAPI `deprecated: true` on 12 Management operations but no Sunset or
+    Deprecation response headers are emitted and no removal window is published.
+  spec: lifecycle/lakekeeper-lifecycle.yml
+- id: rfc9116
+  name: RFC 9116 security.txt
+  conforms: false
+  evidence: >-
+    /.well-known/security.txt returns 404 on lakekeeper.io and docs.lakekeeper.io; vakamo.com answers 200 with an
+    SPA HTML catch-all rather than a document.
+  spec: well-known/lakekeeper-well-known.yml
+- id: conventional-commits
+  name: Conventional Commits
+  conforms: true
+  evidence: >-
+    "PR titles should follow Conventional Commits" (Developer Guide), and the generated CHANGELOG.md is grouped
+    into Features / Bug Fixes / BREAKING CHANGES accordingly.
+  source: https://docs.lakekeeper.io/docs/latest/developer-guide/
+certifications:
+  published: false
+  note: >-
+    No SOC 2, ISO 27001, HIPAA, PCI or FedRAMP attestation is published for Lakekeeper or Vakamo, and none would
+    be expected for a self-hosted Apache-2.0 project — the compliance boundary belongs to whoever runs the
+    deployment. The commercial site markets Lakekeeper+ to "regulated industries" without naming a certification.
+    One third-party validation does exist: Lakekeeper Plus carries a Red Hat Certified Container Stack listing
+    (https://catalog.redhat.com/en/software/container-stacks/detail/682ee84709d31ba132cf0e21). No `Compliance`
+    pointer is emitted, because no compliance program is published.
+license:
+  name: Apache License 2.0
+  url: https://docs.lakekeeper.io/about/license/
+  note: >-
+    Lakekeeper+ is separately licensed — the Plus OpenAPI document declares info.license.name "Vakamo Enterprise
+    License". The Rust crates forbid unsafe code at compile time (#![forbid(unsafe_code)]).

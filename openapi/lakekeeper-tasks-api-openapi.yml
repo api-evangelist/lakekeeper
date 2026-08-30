@@ -1,0 +1,1826 @@
+openapi: 3.2.0
+info:
+  title: Lakekeeper Tasks API
+  version: 0.0.0
+  description: 'Operations tagged tasks across 2 of this provider''s published API definitions: lakekeeper-management-api-openapi.yml, lakekeeper-management-plus-api-openapi.yml. Each path carries the servers of the definition it was published in.'
+servers:
+- url: '{scheme}://{host}{basePath}'
+  description: Lakekeeper Management API
+  variables:
+    basePath:
+      default: ''
+      description: Optional path prefix (starting with '/') to be prepended to all routes
+    host:
+      default: localhost
+      description: The host (and optional port) for the specified server
+    scheme:
+      default: https
+      description: The scheme of the URI, either http or https
+security:
+- bearerAuth: []
+tags:
+- name: tasks
+  description: View & Manage Tasks
+paths:
+  /management/v1/project/task-queue/task_log_cleanup/config:
+    get:
+      tags:
+      - tasks
+      summary: Get the configuration for a Project-level Task Queue.
+      description: These configurations are global per project and shared across all instances of this kind of task.
+      operationId: get_project_task_queue_config_task_log_cleanup
+      parameters:
+      - name: x-project-id
+        in: header
+        description: Project ID (optional; falls back to the default project if not provided)
+        required: false
+        schema:
+          type:
+          - string
+          - 'null'
+      responses:
+        '200':
+          description: ''
+          headers:
+            x-request-id:
+              schema:
+                type: string
+                format: uuid
+              description: Request identifier, add this to your bug reports.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTaskLogCleanupConfig'
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    post:
+      tags:
+      - tasks
+      summary: Set the configuration for a Project-level Task Queue.
+      description: These configurations are global per project and shared across all instances of this kind of task.
+      operationId: set_project_task_queue_config_task_log_cleanup
+      parameters:
+      - name: x-project-id
+        in: header
+        description: Project ID (optional; falls back to the default project if not provided)
+        required: false
+        schema:
+          type:
+          - string
+          - 'null'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetTaskLogCleanupConfig'
+        required: true
+      responses:
+        '204':
+          description: Project-level Task queue config set successfully
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/project/task/by-id/{task_id}:
+    get:
+      tags:
+      - tasks
+      summary: Get Details about a specific Project-level task by its ID.
+      operationId: get_project_task_details
+      parameters:
+      - name: task_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: numAttempts
+        in: query
+        description: 'Number of attempts to retrieve (default: 5)'
+        required: false
+        schema:
+          type:
+          - integer
+          - 'null'
+          format: int32
+          default: 5
+          minimum: 0
+      - name: x-project-id
+        in: header
+        description: Project ID (optional; falls back to the default project if not provided)
+        required: false
+        schema:
+          type:
+          - string
+          - 'null'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetProjectTaskDetailsResponse'
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/project/task/control:
+    post:
+      tags:
+      - tasks
+      summary: Control a set of Project-level tasks by their IDs (e.g., cancel, request stop, run now)
+      description: Accepts at most 100 task IDs in one request.
+      operationId: control_project_tasks
+      parameters:
+      - name: x-project-id
+        in: header
+        description: Project ID (optional; falls back to the default project if not provided)
+        required: false
+        schema:
+          type:
+          - string
+          - 'null'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ControlTasksRequest'
+        required: true
+      responses:
+        '204':
+          description: All requested actions were successful
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/project/task/list:
+    post:
+      tags:
+      - tasks
+      summary: List active and historic Project-level tasks.
+      operationId: list_project_tasks
+      parameters:
+      - name: x-project-id
+        in: header
+        description: Project ID (optional; falls back to the default project if not provided)
+        required: false
+        schema:
+          type:
+          - string
+          - 'null'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListProjectTasksRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListProjectTasksResponse'
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/warehouse/{warehouse_id}/task-queue/tabular_expiration/config:
+    get:
+      tags:
+      - tasks
+      summary: Get the configuration for a Task Queue.
+      description: These configurations are global per warehouse and shared across all instances of this kind of task.
+      operationId: get_task_queue_config_tabular_expiration
+      parameters:
+      - name: warehouse_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: ''
+          headers:
+            x-request-id:
+              schema:
+                type: string
+                format: uuid
+              description: Request identifier, add this to your bug reports.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTabularExpirationQueueConfig'
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    post:
+      tags:
+      - tasks
+      summary: Set the configuration for a Task Queue.
+      description: These configurations are global per warehouse and shared across all instances of this kind of task.
+      operationId: set_task_queue_config_tabular_expiration
+      parameters:
+      - name: warehouse_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetTabularExpirationQueueConfig'
+        required: true
+      responses:
+        '204':
+          description: Task queue config set successfully
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/warehouse/{warehouse_id}/task-queue/tabular_purge/config:
+    get:
+      tags:
+      - tasks
+      summary: Get the configuration for a Task Queue.
+      description: These configurations are global per warehouse and shared across all instances of this kind of task.
+      operationId: get_task_queue_config_tabular_purge
+      parameters:
+      - name: warehouse_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: ''
+          headers:
+            x-request-id:
+              schema:
+                type: string
+                format: uuid
+              description: Request identifier, add this to your bug reports.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetPurgeQueueConfig'
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    post:
+      tags:
+      - tasks
+      summary: Set the configuration for a Task Queue.
+      description: These configurations are global per warehouse and shared across all instances of this kind of task.
+      operationId: set_task_queue_config_tabular_purge
+      parameters:
+      - name: warehouse_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetPurgeQueueConfig'
+        required: true
+      responses:
+        '204':
+          description: Task queue config set successfully
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/warehouse/{warehouse_id}/task/by-id/{task_id}:
+    get:
+      tags:
+      - tasks
+      summary: Get Details about a specific task by its ID.
+      operationId: get_task_details
+      parameters:
+      - name: warehouse_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: task_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: numAttempts
+        in: query
+        description: 'Number of attempts to retrieve (default: 5)'
+        required: false
+        schema:
+          type:
+          - integer
+          - 'null'
+          format: int32
+          default: 5
+          minimum: 0
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTaskDetailsResponse'
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/warehouse/{warehouse_id}/task/control:
+    post:
+      tags:
+      - tasks
+      summary: Control a set of tasks by their IDs (e.g., cancel, request stop, run now)
+      description: Accepts at most 100 task IDs in one request.
+      operationId: control_tasks
+      parameters:
+      - name: warehouse_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ControlTasksRequest'
+        required: true
+      responses:
+        '204':
+          description: All requested actions were successful
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/warehouse/{warehouse_id}/task/list:
+    post:
+      tags:
+      - tasks
+      summary: List active and historic tasks.
+      operationId: list_tasks
+      parameters:
+      - name: warehouse_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListTasksRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListTasksResponse'
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/warehouse/{warehouse_id}/task-queue/expire_snapshots/config:
+    get:
+      tags:
+      - tasks
+      summary: Get the configuration for a Task Queue.
+      description: These configurations are global per warehouse and shared across all instances of this kind of task.
+      operationId: get_task_queue_config_expire_snapshots
+      parameters:
+      - name: warehouse_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: ''
+          headers:
+            x-request-id:
+              schema:
+                type: string
+                format: uuid
+              description: Request identifier, add this to your bug reports.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetExpireSnapshotsQueueConfig'
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    post:
+      tags:
+      - tasks
+      summary: Set the configuration for a Task Queue.
+      description: These configurations are global per warehouse and shared across all instances of this kind of task.
+      operationId: set_task_queue_config_expire_snapshots
+      parameters:
+      - name: warehouse_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetExpireSnapshotsQueueConfig'
+        required: true
+      responses:
+        '204':
+          description: Task queue config set successfully
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/warehouse/{warehouse_id}/task-queue/expire_snapshots/schedule:
+    post:
+      tags:
+      - tasks
+      summary: Schedule a task for an entity.
+      description: 'Pre-checks run against the warehouse config and target entity
+
+        properties before the task is enqueued. A failure surfaces as `400`
+
+        with a specific error code (see the operator guide for the full set
+
+        of pre-check codes).
+
+
+        When a task is already active for the same (warehouse, entity,
+
+        queue) triple, the call returns `409 TaskAlreadyActive` with the
+
+        existing `task-id` in the body — chain to `POST /task/control`
+
+        with `run-now` or `run-at` to retime it without an extra
+
+        `task/list` round-trip.'
+      operationId: schedule_task_expire_snapshots
+      parameters:
+      - name: warehouse_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleExpireSnapshotsTaskRequest'
+        required: true
+      responses:
+        '200':
+          description: Task scheduled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleTaskResponse'
+        '400':
+          description: Pre-check failed (e.g. scheduling disabled at the warehouse, entity opted out, unsupported entity type) or the request violates a shape limit (e.g. scheduled-for too far in the future).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+        '404':
+          description: Target entity not found in this warehouse.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+        '409':
+          description: A task is already active for this (warehouse, entity, queue). The error message includes the existing task-id; retime or cancel via POST /task/control.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/warehouse/{warehouse_id}/task-queue/remove_orphan_files/config:
+    get:
+      tags:
+      - tasks
+      summary: Get the configuration for a Task Queue.
+      description: These configurations are global per warehouse and shared across all instances of this kind of task.
+      operationId: get_task_queue_config_remove_orphan_files
+      parameters:
+      - name: warehouse_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: ''
+          headers:
+            x-request-id:
+              schema:
+                type: string
+                format: uuid
+              description: Request identifier, add this to your bug reports.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetRemoveOrphanFilesQueueConfig'
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    post:
+      tags:
+      - tasks
+      summary: Set the configuration for a Task Queue.
+      description: These configurations are global per warehouse and shared across all instances of this kind of task.
+      operationId: set_task_queue_config_remove_orphan_files
+      parameters:
+      - name: warehouse_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetRemoveOrphanFilesQueueConfig'
+        required: true
+      responses:
+        '204':
+          description: Task queue config set successfully
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/warehouse/{warehouse_id}/task-queue/remove_orphan_files/schedule:
+    post:
+      tags:
+      - tasks
+      summary: Schedule a task for an entity.
+      description: 'Pre-checks run against the warehouse config and target entity
+
+        properties before the task is enqueued. A failure surfaces as `400`
+
+        with a specific error code (see the operator guide for the full set
+
+        of pre-check codes).
+
+
+        When a task is already active for the same (warehouse, entity,
+
+        queue) triple, the call returns `409 TaskAlreadyActive` with the
+
+        existing `task-id` in the body — chain to `POST /task/control`
+
+        with `run-now` or `run-at` to retime it without an extra
+
+        `task/list` round-trip.'
+      operationId: schedule_task_remove_orphan_files
+      parameters:
+      - name: warehouse_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleRemoveOrphanFilesTaskRequest'
+        required: true
+      responses:
+        '200':
+          description: Task scheduled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleTaskResponse'
+        '400':
+          description: Pre-check failed (e.g. scheduling disabled at the warehouse, entity opted out, unsupported entity type) or the request violates a shape limit (e.g. scheduled-for too far in the future).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+        '404':
+          description: Target entity not found in this warehouse.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+        '409':
+          description: A task is already active for this (warehouse, entity, queue). The error message includes the existing task-id; retime or cancel via POST /task/control.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+components:
+  schemas:
+    GetTaskLogCleanupConfig:
+      type: object
+      required:
+      - queue-config
+      properties:
+        max-seconds-since-last-heartbeat:
+          type:
+          - integer
+          - 'null'
+          format: int64
+        queue-config:
+          $ref: '#/components/schemas/TaskLogCleanupConfig'
+    TaskLogCleanupConfig:
+      type: object
+      properties:
+        cleanup-period:
+          type:
+          - string
+          - 'null'
+          description: 'How often to run the cleanup task in ISO8601 duration format. Defaults to once a day (P1D).
+
+            If a value below 1 day is provided, it will be set to the default of 1 day.'
+          example: PT1H30M45.5S
+        retention-period:
+          type:
+          - string
+          - 'null'
+          description: How long to retain task logs before deletion in ISO8601 duration format. Defaults to 90 days.
+          example: PT1H30M45.5S
+    SetTaskLogCleanupConfig:
+      type: object
+      required:
+      - queue-config
+      properties:
+        max-seconds-since-last-heartbeat:
+          type:
+          - integer
+          - 'null'
+          format: int64
+        queue-config:
+          $ref: '#/components/schemas/TaskLogCleanupConfig'
+    IcebergErrorResponse:
+      type: object
+      description: JSON wrapper for all error responses (non-2xx)
+      required:
+      - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorModel'
+    ListProjectTasksResponse:
+      type: object
+      required:
+      - tasks
+      properties:
+        next-page-token:
+          type:
+          - string
+          - 'null'
+          description: Token for the next page of results
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectTaskInfo'
+          description: List of tasks
+    WarehouseTaskEntityId:
+      oneOf:
+      - type: object
+        required:
+        - table-id
+        - type
+        properties:
+          table-id:
+            type: string
+            format: uuid
+          type:
+            type: string
+            enum:
+            - table
+      - type: object
+        required:
+        - view-id
+        - type
+        properties:
+          type:
+            type: string
+            enum:
+            - view
+          view-id:
+            type: string
+            format: uuid
+      - type: object
+        required:
+        - generic-table-id
+        - type
+        properties:
+          generic-table-id:
+            type: string
+            format: uuid
+          type:
+            type: string
+            enum:
+            - generic-table
+    TaskStatus:
+      type: string
+      enum:
+      - RUNNING
+      - SCHEDULED
+      - STOPPING
+      - CANCELLED
+      - SUCCESS
+      - FAILED
+    ListTasksRequest:
+      type: object
+      properties:
+        created-after:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Filter tasks created after this timestamp
+          example: 2025-12-31 23:59:59+00:00
+        created-before:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Filter tasks created before this timestamp
+          example: 2025-12-31 23:59:59+00:00
+        entities:
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/WarehouseTaskEntityFilter'
+          description: Filter by specific entity
+        page-size:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          description: Number of results per page
+        page-token:
+          type:
+          - string
+          - 'null'
+          description: 'Next page token, re-use the same request as for the original request,
+
+            but set this to the `next_page_token` from the previous response.
+
+            Stop iterating when no more items are returned in a page.'
+        queue-name:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+          description: Filter by one or more queue names
+        status:
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/TaskStatus'
+          description: Filter by task status
+    GetProjectTaskDetailsResponse:
+      allOf:
+      - $ref: '#/components/schemas/ProjectTaskInfo'
+        description: Most recent task information
+      - type: object
+        required:
+        - task-data
+        - attempts
+        properties:
+          attempts:
+            type: array
+            items:
+              $ref: '#/components/schemas/TaskAttempt'
+            description: History of past attempts
+          execution-details:
+            type:
+            - object
+            - 'null'
+            description: Execution details for the current attempt
+          message:
+            type:
+            - string
+            - 'null'
+            description: 'Message for the current attempt: success result details if it
+
+              succeeded, or the failure reason if it failed. `null` while the
+
+              attempt is still running or scheduled.'
+          task-data:
+            type: object
+            description: Task-specific data
+    ListTasksResponse:
+      type: object
+      required:
+      - tasks
+      properties:
+        next-page-token:
+          type:
+          - string
+          - 'null'
+          description: Token for the next page of results
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/WarehouseTaskInfo'
+          description: List of tasks
+    WarehouseTaskInfo:
+      type: object
+      required:
+      - task-id
+      - project-id
+      - warehouse-id
+      - queue-name
+      - status
+      - scheduled-for
+      - attempt
+      - progress
+      - created-at
+      properties:
+        attempt:
+          type: integer
+          format: int32
+          description: Current attempt number
+        created-at:
+          type: string
+          format: date-time
+          description: When this task attempt was created
+        entity:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/WarehouseTaskEntityId'
+            description: Type of the sub-entity this task operates on. None if this is a warehouse-level task.
+        entity-name:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+          description: Name of the entity this task operates on. None if this is a warehouse-level task.
+        last-heartbeat-at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Last heartbeat timestamp for running tasks
+        parent-task-id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          description: Parent task ID if this is a sub-task
+        picked-up-at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: When the latest attempt of the task was picked up for processing by a worker.
+        progress:
+          type: number
+          format: float
+          description: Progress of the task (0.0 to 1.0)
+        project-id:
+          type: string
+          description: Project ID associated with the task
+        queue-name:
+          type: string
+          description: Name of the queue processing this task
+        scheduled-for:
+          type: string
+          format: date-time
+          description: When the latest attempt of the task is scheduled for
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+          description: Current status of the task
+        task-id:
+          type: string
+          format: uuid
+          description: Unique identifier for the task
+        updated-at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: When the task was last updated
+        warehouse-id:
+          type: string
+          format: uuid
+          description: Warehouse ID associated with the task
+    TabularExpirationQueueConfig:
+      type: object
+      description: Warehouse-specific configuration for the tabular expiration (Soft-Deletion) queue.
+    WarehouseTaskEntityFilter:
+      oneOf:
+      - type: object
+        description: Get tasks for a specific table
+        required:
+        - table-id
+        - type
+        properties:
+          table-id:
+            type: string
+            format: uuid
+          type:
+            type: string
+            enum:
+            - table
+      - type: object
+        description: Get tasks for a specific view
+        required:
+        - view-id
+        - type
+        properties:
+          type:
+            type: string
+            enum:
+            - view
+          view-id:
+            type: string
+            format: uuid
+      - type: object
+        description: Get tasks for a specific generic table
+        required:
+        - generic-table-id
+        - type
+        properties:
+          generic-table-id:
+            type: string
+            format: uuid
+          type:
+            type: string
+            enum:
+            - generic-table
+      - type: object
+        description: 'Get Warehouse-level tasks which are not associated with a specific entity
+
+          inside the warehouse'
+        required:
+        - type
+        properties:
+          type:
+            type: string
+            enum:
+            - warehouse
+    ListProjectTasksRequest:
+      type: object
+      properties:
+        created-after:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Filter tasks created after this timestamp
+          example: 2025-12-31 23:59:59+00:00
+        created-before:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Filter tasks created before this timestamp
+          example: 2025-12-31 23:59:59+00:00
+        page-size:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          description: Number of results per page
+        page-token:
+          type:
+          - string
+          - 'null'
+          description: 'Next page token, re-use the same request as for the original request,
+
+            but set this to the `next_page_token` from the previous response.
+
+            Stop iterating when no more items are returned in a page.'
+        queue-name:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+          description: Filter by one or more queue names
+        status:
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/TaskStatus'
+          description: Filter by task status
+    TaskAttempt:
+      type: object
+      required:
+      - attempt
+      - status
+      - scheduled-for
+      - created-at
+      - progress
+      properties:
+        attempt:
+          type: integer
+          format: int32
+          description: Attempt number
+        created-at:
+          type: string
+          format: date-time
+          description: When this attempt was created
+        duration:
+          type:
+          - string
+          - 'null'
+          description: How long this attempt took
+          example: PT1H30M45.5S
+        execution-details:
+          type:
+          - object
+          - 'null'
+          description: Execution details for this attempt
+        message:
+          type:
+          - string
+          - 'null'
+          description: Message associated with this attempt
+        progress:
+          type: number
+          format: float
+          description: Progress achieved in this attempt
+        scheduled-for:
+          type: string
+          format: date-time
+          description: When this attempt was scheduled for
+        started-at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: When this attempt started
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+          description: Status of this attempt
+    GetTaskDetailsResponse:
+      allOf:
+      - $ref: '#/components/schemas/WarehouseTaskInfo'
+        description: Most recent task information
+      - type: object
+        required:
+        - task-data
+        - attempts
+        properties:
+          attempts:
+            type: array
+            items:
+              $ref: '#/components/schemas/TaskAttempt'
+            description: History of past attempts
+          execution-details:
+            type:
+            - object
+            - 'null'
+            description: Execution details for the current attempt
+          message:
+            type:
+            - string
+            - 'null'
+            description: 'Message for the current attempt: success result details if it
+
+              succeeded, or the failure reason if it failed. `null` while the
+
+              attempt is still running or scheduled.'
+          task-data:
+            type: object
+            description: Task-specific data
+    GetPurgeQueueConfig:
+      type: object
+      required:
+      - queue-config
+      properties:
+        max-seconds-since-last-heartbeat:
+          type:
+          - integer
+          - 'null'
+          format: int64
+        queue-config:
+          $ref: '#/components/schemas/PurgeQueueConfig'
+    ControlTaskAction:
+      oneOf:
+      - type: object
+        description: Stop the task gracefully. The task will be retried.
+        required:
+        - action-type
+        properties:
+          action-type:
+            type: string
+            enum:
+            - stop
+      - type: object
+        description: Cancel the task permanently. The task is not retried.
+        required:
+        - action-type
+        properties:
+          action-type:
+            type: string
+            enum:
+            - cancel
+      - type: object
+        description: 'Run the task immediately, moving the `scheduled_for` time to now.
+
+          Affects only tasks in `Scheduled` or `Stopping` state.'
+        required:
+        - action-type
+        properties:
+          action-type:
+            type: string
+            enum:
+            - run-now
+      - type: object
+        description: 'Run the task at the specified time, moving the `scheduled_for` time to the provided timestamp.
+
+          Affects only tasks in `Scheduled` or `Stopping` state.
+
+          Timestamps must be in RFC 3339 format.'
+        required:
+        - scheduled-for
+        - action-type
+        properties:
+          action-type:
+            type: string
+            enum:
+            - run-at
+          scheduled-for:
+            type: string
+            format: date-time
+            description: The time to run the task at
+            example: 2025-12-31 23:59:59+00:00
+    ErrorModel:
+      type: object
+      description: JSON error payload returned in a response with further details on the error
+      required:
+      - message
+      - type
+      - code
+      properties:
+        code:
+          type: integer
+          format: int32
+          description: HTTP response code
+          minimum: 0
+        message:
+          type: string
+          description: Human-readable error message
+        stack:
+          type: array
+          items:
+            type: string
+        type:
+          type: string
+          description: Internal type definition of the error
+    ProjectTaskInfo:
+      type: object
+      required:
+      - task-id
+      - project-id
+      - queue-name
+      - status
+      - scheduled-for
+      - attempt
+      - progress
+      - created-at
+      properties:
+        attempt:
+          type: integer
+          format: int32
+          description: Current attempt number
+        created-at:
+          type: string
+          format: date-time
+          description: When this task attempt was created
+        last-heartbeat-at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Last heartbeat timestamp for running tasks
+        parent-task-id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          description: Parent task ID if this is a sub-task
+        picked-up-at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: When the latest attempt of the task was picked up for processing by a worker.
+        progress:
+          type: number
+          format: float
+          description: Progress of the task (0.0 to 1.0)
+        project-id:
+          type: string
+          description: Project ID associated with the task
+        queue-name:
+          type: string
+          description: Name of the queue processing this task
+        scheduled-for:
+          type: string
+          format: date-time
+          description: When the latest attempt of the task is scheduled for
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+          description: Current status of the task
+        task-id:
+          type: string
+          format: uuid
+          description: Unique identifier for the task
+        updated-at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: When the task was last updated
+    SetPurgeQueueConfig:
+      type: object
+      required:
+      - queue-config
+      properties:
+        max-seconds-since-last-heartbeat:
+          type:
+          - integer
+          - 'null'
+          format: int64
+        queue-config:
+          $ref: '#/components/schemas/PurgeQueueConfig'
+    SetTabularExpirationQueueConfig:
+      type: object
+      required:
+      - queue-config
+      properties:
+        max-seconds-since-last-heartbeat:
+          type:
+          - integer
+          - 'null'
+          format: int64
+        queue-config:
+          $ref: '#/components/schemas/TabularExpirationQueueConfig'
+    PurgeQueueConfig:
+      type: object
+    ControlTasksRequest:
+      type: object
+      required:
+      - action
+      - task-ids
+      properties:
+        action:
+          $ref: '#/components/schemas/ControlTaskAction'
+          description: The action to perform on the task
+        task-ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: Tasks to apply the action to
+    GetTabularExpirationQueueConfig:
+      type: object
+      required:
+      - queue-config
+      properties:
+        max-seconds-since-last-heartbeat:
+          type:
+          - integer
+          - 'null'
+          format: int64
+        queue-config:
+          $ref: '#/components/schemas/TabularExpirationQueueConfig'
+    GetExpireSnapshotsQueueConfig:
+      type: object
+      required:
+      - queue-config
+      properties:
+        max-seconds-since-last-heartbeat:
+          type:
+          - integer
+          - 'null'
+          format: int64
+        queue-config:
+          $ref: '#/components/schemas/ExpireSnapshotsQueueConfig'
+    ScheduleRemoveOrphanFilesTaskRequest:
+      type: object
+      description: Request body for scheduling a task.
+      required:
+      - entity
+      properties:
+        entity:
+          $ref: '#/components/schemas/WarehouseTaskEntityId'
+          description: 'Entity to schedule the task for. Unsupported entity types return
+
+            `400` from the pre-check.'
+        scheduled-for:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: 'When the task should run. Omit (or pass `null`) to run on the next
+
+            worker poll. RFC 3339 / ISO 8601 format. Must be within roughly one
+
+            year of now; further-out values return
+
+            `400 ScheduledForTooFarInFuture`.'
+          example: 2026-12-31 23:59:59+00:00
+    SetExpireSnapshotsQueueConfig:
+      type: object
+      required:
+      - queue-config
+      properties:
+        max-seconds-since-last-heartbeat:
+          type:
+          - integer
+          - 'null'
+          format: int64
+        queue-config:
+          $ref: '#/components/schemas/ExpireSnapshotsQueueConfig'
+    ScheduleExpireSnapshotsTaskRequest:
+      type: object
+      description: Request body for scheduling a task.
+      required:
+      - entity
+      properties:
+        entity:
+          $ref: '#/components/schemas/WarehouseTaskEntityId'
+          description: 'Entity to schedule the task for. Unsupported entity types return
+
+            `400` from the pre-check.'
+        scheduled-for:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: 'When the task should run. Omit (or pass `null`) to run on the next
+
+            worker poll. RFC 3339 / ISO 8601 format. Must be within roughly one
+
+            year of now; further-out values return
+
+            `400 ScheduledForTooFarInFuture`.'
+          example: 2026-12-31 23:59:59+00:00
+    SetRemoveOrphanFilesQueueConfig:
+      type: object
+      required:
+      - queue-config
+      properties:
+        max-seconds-since-last-heartbeat:
+          type:
+          - integer
+          - 'null'
+          format: int64
+        queue-config:
+          $ref: '#/components/schemas/RemoveOrphanFilesQueueConfig'
+    ExpireSnapshotsQueueConfig:
+      type: object
+      description: 'Warehouse-specific configuration for the expiration queue.
+
+        Parameters can be overridden with table properties. Please see the documentation of each parameter for details.'
+      properties:
+        enable-expire-snapshots:
+          type:
+          - boolean
+          - 'null'
+          description: 'Enable or disable automatic expiration of snapshots for all tables in this warehouse.
+
+            Can be overridden on a per-table level with the table property `lakekeeper.history.expire.enabled`.
+
+            Tables with the `gc.enabled` flag set to false, are also excluded from automatic expiration.'
+          default: 'false'
+        max-ref-age-ms:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          description: 'For snapshot references except the main branch, default max age of snapshot references to keep while expiring snapshots.
+
+            The main branch never expires.
+
+            If not set, defaults to `i64::MAX` (no expiration).'
+          default: 9223372036854775807
+        max-snapshot-age-ms:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          description: 'Default maximum age of a snapshot in milliseconds before it is considered expired.
+
+            If not set, defaults to `432000000` (5 days).
+
+            Can be overridden on a per-table level with the table property `history.expire.max-snapshot-age-ms`.'
+          default: 432000000
+        min-snapshots-to-expire:
+          type:
+          - integer
+          - 'null'
+          format: int32
+          description: 'Minimum number of snapshots that must be eligible for expiration before the job runs.
+
+            This prevents expensive expiration jobs from running when there are only a few snapshots to expire.
+
+            If not set, defaults to `20`.
+
+            Can be overridden on a per-table level with the table property `lakekeeper.history.expire.min-snapshots-to-expire`.'
+          default: 20
+          minimum: 0
+        min-snapshots-to-keep:
+          type:
+          - integer
+          - 'null'
+          format: int32
+          description: 'Default min number of snapshots to keep on the table and all of its branches while expiring snapshots.
+
+            If not set, defaults to `1`.
+
+            Can be overridden on a per-table level with the table property `history.expire.min-snapshots-to-keep`.'
+          default: 1
+    RemoveOrphanFilesQueueConfig:
+      type: object
+      properties:
+        default-older-than-ms:
+          type: integer
+          format: int64
+          description: 'Only remove files older than this duration (in milliseconds).
+
+            Defaults to 604800000 (7 days). **24-hour safety floor** is
+
+            enforced at task pickup (`RemoveOrphanFilesRetentionTooShort`
+
+            error code); values below it cause the worker to refuse to
+
+            run, unless `disable-min-older-than-check` is set on this same
+
+            config. Mirrors Spark''s `retentionDurationCheck.enabled =
+
+            false` escape.
+
+
+            Negative, zero, or sub-day values still deserialize cleanly —
+
+            the runtime check is what blocks them. Out-of-range i64 values
+
+            that don''t fit in `chrono::TimeDelta` fall back to a zero
+
+            duration rather than panicking.'
+          default: 604800000
+        disable-min-older-than-check:
+          type: boolean
+          description: 'Bypass the 24-hour minimum on `default-older-than-ms`. When
+
+            `false` (the default), the worker refuses to run a task whose
+
+            configured retention is shorter than 24h — a typo like
+
+            `default-older-than-ms: 6000` (6 seconds) would otherwise
+
+            silently delete in-flight writer uploads. Set to `true` only
+
+            when you genuinely need sub-day retention (dev/test). Mirrors
+
+            Spark''s `retentionDurationCheck.enabled = false` escape.'
+          default: false
+        dry-run:
+          type: boolean
+          description: 'When `true`, identify orphan files but do not delete them. The
+
+            task still completes normally and records `would_delete_count` /
+
+            `would_delete_bytes` in its result; `deleted_bytes` is zero, so
+
+            the adaptive scheduler observes a rate of zero and falls back
+
+            to `maximum-interval-seconds`. Useful for previewing what a
+
+            run would remove before enabling deletion. Defaults to `false`.'
+          default: false
+        enable-remove-orphan-files:
+          type: boolean
+          description: 'Master switch for adaptive scheduling on this warehouse. When
+
+            `false` (the default), no tables are scheduled for the orphan-
+
+            files queue unless they have
+
+            `lakekeeper.remove-orphan-files.enabled=true` set explicitly.'
+          default: false
+        max-run-time-seconds:
+          type: integer
+          format: int64
+          description: 'Maximum wall-clock duration of a single task attempt, in seconds.
+
+            On timeout the task is marked failed and is retried at most once
+
+            before being recorded as a terminal failure. Operators with very
+
+            large tables can raise this; in exchange a single attempt may hold
+
+            a worker slot for the configured duration. Defaults to 3600 (60
+
+            minutes). Must be at least 60.'
+          default: 3600
+          minimum: 60
+        maximum-interval-seconds:
+          type: integer
+          format: int64
+          description: 'Upper bound on the adaptive next-run interval, in seconds. Even
+
+            idle tables get a periodic safety check at this cadence.
+
+            Defaults to 90 days. Must be at least 86400 (1 day).'
+          default: 7776000
+          minimum: 86400
+        target-reclaim-bytes:
+          type: integer
+          format: int64
+          description: 'Discovery-rate target in bytes. The hook schedules the next run
+
+            at the time the previous run''s observed orphan-bytes-per-second
+
+            rate is expected to accumulate this much reclaimable data,
+
+            clamped to the internal floor (1 day) and the configured ceiling
+
+            (`maximum-interval-seconds`). Defaults to 1 GiB.
+
+
+            `0` is accepted and means "always schedule at the floor (1 day)
+
+            whenever any orphan is found." Useful for setups that want
+
+            scheduling driven solely by the floor/ceiling clamp instead of
+
+            by observed rate.'
+          default: 1073741824
+          minimum: 0
+    GetRemoveOrphanFilesQueueConfig:
+      type: object
+      required:
+      - queue-config
+      properties:
+        max-seconds-since-last-heartbeat:
+          type:
+          - integer
+          - 'null'
+          format: int64
+        queue-config:
+          $ref: '#/components/schemas/RemoveOrphanFilesQueueConfig'
+    ScheduleTaskResponse:
+      type: object
+      description: Response returned on a successful schedule call.
+      required:
+      - task-id
+      properties:
+        task-id:
+          type: string
+          format: uuid
+          description: The id of the newly scheduled task.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+x-refined-from:
+- lakekeeper-management-api-openapi.yml
+- lakekeeper-management-plus-api-openapi.yml

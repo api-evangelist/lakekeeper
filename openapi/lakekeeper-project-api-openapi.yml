@@ -1,0 +1,844 @@
+openapi: 3.2.0
+info:
+  title: Lakekeeper Project API
+  version: 0.0.0
+  description: 'Operations tagged project across 2 of this provider''s published API definitions: lakekeeper-management-api-openapi.yml, lakekeeper-management-plus-api-openapi.yml. Each path carries the servers of the definition it was published in.'
+servers:
+- url: '{scheme}://{host}{basePath}'
+  description: Lakekeeper Management API
+  variables:
+    basePath:
+      default: ''
+      description: Optional path prefix (starting with '/') to be prepended to all routes
+    host:
+      default: localhost
+      description: The host (and optional port) for the specified server
+    scheme:
+      default: https
+      description: The scheme of the URI, either http or https
+security:
+- bearerAuth: []
+tags:
+- name: project
+  description: Manage Projects
+paths:
+  /management/v1/endpoint-statistics:
+    post:
+      tags:
+      - project
+      summary: Get API Statistics
+      description: "Retrieves detailed endpoint call statistics for your project, allowing you to monitor API usage patterns,\ntrack frequency of operations, and analyze response codes.\n\n## Data Collection\n\nThe statistics include:\n- Endpoint paths and HTTP methods\n- Response status codes\n- Call counts per endpoint\n- Warehouse context (when applicable)\n- Timestamps of activity\n\n## Time Aggregation\n\nStatistics are aggregated hourly. Within each hour window:\n- An initial entry is created on the first API call\n- Subsequent calls update the existing hourly entry\n- Each hour boundary creates a new aggregation bucket\n- Hours with no API activity have no entries (gaps in data)\n\n## Response Format\n\nThe response includes timestamp buckets (in UTC) and corresponding endpoint metrics,\nallowing for time-series analysis of API usage patterns.\n\nExample:\n- 00:00:00-00:16:32: no activity\n    - `timestamps: []`\n- 00:16:32: warehouse created:\n    - `{timestamps: [\"01:00:00\"], called_endpoints: [[{\"count\": 1, \"http_route\": \"POST /management/v1/warehouse\", \"status_code\": 201, \"warehouse_id\": null, \"warehouse_name\": null, \"created_at\": \"00:16:32\", \"updated_at\": null}]]}`\n- 00:30:00: table created:\n    - `timestamps: [\"01:00:00\"], called_endpoints: [[{\"count\": 1, \"http_route\": \"POST /management/v1/warehouse\", \"status_code\": 201, \"warehouse_id\": null, \"warehouse_name\": null, \"created_at\": \"00:16:32\", \"updated_at\": null}, {\"count\": 1, \"http_route\": \"POST /catalog/v1/{prefix}/namespaces/{namespace}/tables\", \"status_code\": 201, \"warehouse_id\": \"ff17f1d0-90ad-4e7d-bf02-be718b78c2ee\", \"warehouse_name\": \"staging\", \"created_at\": \"00:30:00\", \"updated_at\": null}]]`\n- 00:45:00: table created:\n    - `timestamps: [\"01:00:00\"], called_endpoints: [[{\"count\": 1, \"http_route\": \"POST /management/v1/warehouse\", \"status_code\": 201, \"warehouse_id\": null, \"warehouse_name\": null, \"created_at\": \"00:16:32\", \"updated_at\": null}, {\"count\": 1, \"http_route\": \"POST /catalog/v1/{prefix}/namespaces/{namespace}/tables\", \"status_code\": 201, \"warehouse_id\": \"ff17f1d0-90ad-4e7d-bf02-be718b78c2ee\", \"warehouse_name\": \"staging\", \"created_at\": \"00:30:00\", \"updated_at\": \"00:45:00\"}]]`\n- 01:00:36: table deleted:\n    - `timestamps: [\"01:00:00\",\"02:00:00\"], called_endpoints: [[{\"count\": 1, \"http_route\": \"POST /management/v1/warehouse\", \"status_code\": 201, \"warehouse_id\": null, \"warehouse_name\": null, \"created_at\": \"00:16:32\", \"updated_at\": null},{\"count\": 1, \"http_route\": \"POST /catalog/v1/{prefix}/namespaces/{namespace}/tables\", \"status_code\": 201, \"warehouse_id\": \"ff17f1d0-90ad-4e7d-bf02-be718b78c2ee\", \"warehouse_name\": \"staging\", \"created_at\": \"00:30:00\", \"updated_at\": \"00:45:00\"}],[{\"count\": 1, \"http_route\": \"DELETE /catalog/v1/{prefix}/namespaces/{namespace}/tables/{table}\", \"status_code\": 200, \"warehouse_id\": \"ff17f1d0-90ad-4e7d-bf02-be718b78c2ee\", \"warehouse_name\": \"staging\", \"created_at\": \"01:00:36\", \"updated_at\": \"null\"}]]`"
+      operationId: get_endpoint_statistics
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetEndpointStatisticsRequest'
+        required: true
+      responses:
+        '200':
+          description: Endpoint statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EndpointStatisticsResponse'
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/project:
+    get:
+      tags:
+      - project
+      summary: Get Project
+      description: Retrieves information about the user's default project.
+      operationId: get_project
+      parameters:
+      - name: x-project-id
+        in: header
+        description: Project ID (optional; falls back to the default project if not provided)
+        required: false
+        schema:
+          type:
+          - string
+          - 'null'
+      responses:
+        '200':
+          description: Project details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetProjectResponse'
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    post:
+      tags:
+      - project
+      summary: Create Project
+      description: Creates a new project with the specified configuration.
+      operationId: create_project
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectRequest'
+        required: true
+      responses:
+        '201':
+          description: Project created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateProjectResponse'
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    delete:
+      tags:
+      - project
+      summary: Delete Project
+      operationId: delete_project
+      parameters:
+      - name: x-project-id
+        in: header
+        description: Project ID (optional; falls back to the default project if not provided)
+        required: false
+        schema:
+          type:
+          - string
+          - 'null'
+      responses:
+        '204':
+          description: Project deleted successfully
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/project-list:
+    get:
+      tags:
+      - project
+      summary: List Projects
+      description: Lists all projects that the requesting user has access to.
+      operationId: list_projects
+      responses:
+        '200':
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListProjectsResponse'
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/project/actions:
+    get:
+      tags:
+      - project
+      summary: Get allowed actions for a project
+      operationId: get_project_actions
+      parameters:
+      - name: principalUser
+        in: query
+        description: 'The user to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+      - name: principalRole
+        in: query
+        description: 'The role to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: x-project-id
+        in: header
+        description: Project ID (optional; falls back to the default project if not provided)
+        required: false
+        schema:
+          type:
+          - string
+          - 'null'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetLakekeeperProjectActionsResponse'
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/project/rename:
+    post:
+      tags:
+      - project
+      summary: Rename Project
+      operationId: rename_project
+      parameters:
+      - name: x-project-id
+        in: header
+        description: Project ID (optional; falls back to the default project if not provided)
+        required: false
+        schema:
+          type:
+          - string
+          - 'null'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RenameProjectRequest'
+        required: true
+      responses:
+        '200':
+          description: Project renamed successfully
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/project/{project_id}:
+    get:
+      tags:
+      - project
+      summary: Get Project
+      operationId: get_project_by_id_deprecated
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Project details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetProjectResponse'
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+      deprecated: true
+    delete:
+      tags:
+      - project
+      summary: Delete Project by ID
+      description: Permanently removes a specific project and all its associated resources.
+      operationId: delete_project_by_id_deprecated
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Project deleted successfully
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+      deprecated: true
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/project/{project_id}/rename:
+    post:
+      tags:
+      - project
+      summary: Rename Project by ID
+      description: Updates the name of a specific project.
+      operationId: rename_project_by_id_deprecated
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RenameProjectRequest'
+        required: true
+      responses:
+        '200':
+          description: Project renamed successfully
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+      deprecated: true
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+components:
+  schemas:
+    EndpointStatisticsResponse:
+      type: object
+      required:
+      - timestamps
+      - called-endpoints
+      - previous-page-token
+      - next-page-token
+      properties:
+        called-endpoints:
+          type: array
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/EndpointStatistic'
+          description: 'Array of arrays of statistics detailing each called endpoint for each `timestamp`.
+
+
+            See docs of `timestamps` for more details.'
+        next-page-token:
+          type: string
+          description: 'Token to get the next page of results.
+
+
+            Inverse of `previous-page-token`, see its documentation above.'
+        previous-page-token:
+          type: string
+          description: 'Token to get the previous page of results.
+
+
+            Endpoint statistics are not paginated through page-limits, we paginate them by stepping
+
+            through time. By default, the list-statistics endpoint will return all statistics for
+
+            `now()` - 1 day to `now()`. In the request, you can specify a `range_specifier` to set the end
+
+            date and step interval. The `previous-page-token` will then move to the neighboring window.
+
+            E.g. in the default case of `now()` and 1 day, it''d be `now()` - 2 days to `now()` - 1 day.'
+        timestamps:
+          type: array
+          items:
+            type: string
+            format: date-time
+          description: 'Array of timestamps indicating the time at which each entry in the `called_endpoints` array
+
+            is valid.
+
+
+            We lazily create a new statistics entry every hour, in between hours, the existing entry
+
+            is being updated. If any endpoint is called in the following hour, there''ll be an entry in
+
+            `timestamps` for the following hour. If not, then there''ll be no entry.'
+    CreateProjectRequest:
+      type: object
+      required:
+      - project-name
+      properties:
+        project-id:
+          type:
+          - string
+          - 'null'
+          description: 'Request a specific project ID - optional.
+
+            If not provided, a new project ID will be generated (recommended).'
+        project-name:
+          type: string
+          description: Name of the project to create.
+    EndpointStatistic:
+      type: object
+      required:
+      - count
+      - http-route
+      - status-code
+      - created-at
+      properties:
+        count:
+          type: integer
+          format: int64
+          description: Number of requests to this endpoint for the current time-slice.
+        created-at:
+          type: string
+          format: date-time
+          description: 'Timestamp at which the datapoint was created in the database.
+
+
+            This is the exact time at which the current endpoint-status-warehouse combination was called
+
+            for the first time in the current time-slice.'
+        http-route:
+          type: string
+          description: 'The route of the endpoint.
+
+
+            Format: `METHOD /path/to/endpoint`'
+        status-code:
+          type: integer
+          format: int32
+          description: The status code of the response.
+          minimum: 0
+        updated-at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: 'Timestamp at which the datapoint was last updated.
+
+
+            This is the exact time at which the current datapoint was last updated.'
+        warehouse-id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          description: 'The ID of the warehouse that handled the request.
+
+
+            Only present for requests that could be associated with a warehouse. Some management
+
+            endpoints cannot be associated with a warehouse, e.g. warehouse creation or user management
+
+            will not have a `warehouse-id`.'
+        warehouse-name:
+          type:
+          - string
+          - 'null'
+          description: 'The name of the warehouse that handled the request.
+
+
+            Only present for requests that could be associated with a warehouse. Some management
+
+            endpoints cannot be associated with a warehouse, e.g. warehouse creation or user management
+
+            will not have a `warehouse-id`'
+    GetEndpointStatisticsRequest:
+      type: object
+      required:
+      - warehouse
+      properties:
+        range-specifier:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/TimeWindowSelector'
+            description: 'Range specifier
+
+
+              Either for an explicit range or a page token to paginate through the results. See the docs of
+
+              `TimeWindowSelector` for more details.'
+        status-codes:
+          type:
+          - array
+          - 'null'
+          items:
+            type: integer
+            format: int32
+            minimum: 0
+          description: 'Status code filter
+
+
+            Optional filter to only return statistics for requests with specific status codes.'
+        warehouse:
+          $ref: '#/components/schemas/WarehouseFilter'
+          description: 'Warehouse filter
+
+
+            Can return statistics for a specific warehouse, all warehouses or requests that could not be
+
+            associated to any warehouse.'
+    GetLakekeeperProjectActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LakekeeperProjectActionKind'
+    TimeWindowSelector:
+      oneOf:
+      - type: object
+        required:
+        - end
+        - interval
+        - type
+        properties:
+          end:
+            type: string
+            format: date-time
+            description: 'End timestamp of the time window
+
+              Specify'
+            example: 2023-12-31 23:59:59+00:00
+          interval:
+            type: string
+            description: 'Duration/span of the time window
+
+
+              The returned statistics will be for the time window from `end` - `interval` to `end`.
+
+              Specify a ISO8601 duration string, e.g. `PT1H` for 1 hour, `P1D` for 1 day.'
+            example: P1D
+          type:
+            type: string
+            enum:
+            - window
+        example:
+          type: window
+          end: 2023-12-31 23:59:59+00:00
+          interval: P1D
+      - type: object
+        required:
+        - token
+        - type
+        properties:
+          token:
+            type: string
+            description: 'Opaque Token from previous response for paginating through time windows
+
+
+              Use the `next_page_token` or `previous_page_token` from a previous response'
+          type:
+            type: string
+            enum:
+            - page-token
+        example:
+          type: page-token
+          token: xyz
+    LakekeeperProjectActionKind:
+      oneOf:
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - create_warehouse
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - delete
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - rename
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - get_metadata
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - list_warehouses
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - include_in_list
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - create_role
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - list_roles
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - search_roles
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - get_endpoint_statistics
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - modify_task_queue_config
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - get_task_queue_config
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - get_project_tasks
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - control_project_tasks
+    GetProjectResponse:
+      type: object
+      required:
+      - project-id
+      - project-name
+      properties:
+        project-id:
+          type: string
+          description: ID of the project.
+        project-name:
+          type: string
+          description: Name of the project
+    ListProjectsResponse:
+      type: object
+      required:
+      - projects
+      properties:
+        projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/GetProjectResponse'
+          description: List of projects
+    WarehouseFilter:
+      oneOf:
+      - type: object
+        description: Filter for a specific warehouse
+        required:
+        - id
+        - type
+        properties:
+          id:
+            type: string
+            format: uuid
+          type:
+            type: string
+            enum:
+            - warehouse-id
+      - type: object
+        description: Filter for items that are not associated with a warehouse
+        required:
+        - type
+        properties:
+          type:
+            type: string
+            enum:
+            - unmapped
+      - type: object
+        description: Return all items in the current project, regardless of warehouse association
+        required:
+        - type
+        properties:
+          type:
+            type: string
+            enum:
+            - all
+    IcebergErrorResponse:
+      type: object
+      description: JSON wrapper for all error responses (non-2xx)
+      required:
+      - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorModel'
+    CreateProjectResponse:
+      type: object
+      required:
+      - project-id
+      properties:
+        project-id:
+          type: string
+          description: ID of the created project.
+    RenameProjectRequest:
+      type: object
+      required:
+      - new-name
+      properties:
+        new-name:
+          type: string
+          description: New name for the project.
+    ErrorModel:
+      type: object
+      description: JSON error payload returned in a response with further details on the error
+      required:
+      - message
+      - type
+      - code
+      properties:
+        code:
+          type: integer
+          format: int32
+          description: HTTP response code
+          minimum: 0
+        message:
+          type: string
+          description: Human-readable error message
+        stack:
+          type: array
+          items:
+            type: string
+        type:
+          type: string
+          description: Internal type definition of the error
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+x-refined-from:
+- lakekeeper-management-api-openapi.yml
+- lakekeeper-management-plus-api-openapi.yml

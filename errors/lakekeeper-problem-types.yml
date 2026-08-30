@@ -1,0 +1,147 @@
+generated: '2026-08-27'
+method: derived
+source: >-
+  openapi/lakekeeper-management-api-openapi.yml, openapi/lakekeeper-catalog-api-openapi.yml,
+  openapi/lakekeeper-generic-table-api-openapi.yml, https://docs.lakekeeper.io/docs/latest/gotchas/
+format: iceberg-rest-error-wrapper
+rfc9457: false
+media_type: application/json
+envelope:
+  schema: IcebergErrorResponse
+  description: JSON wrapper for all error responses (non-2xx)
+  required:
+  - error
+  fields:
+  - name: error.message
+    type: string
+    required: true
+    description: Human-readable error message.
+  - name: error.type
+    type: string
+    required: true
+    description: Internal type definition of the error.
+  - name: error.code
+    type: integer
+    required: true
+    description: HTTP response code, repeated in the body.
+  - name: error.stack
+    type: array<string>
+    required: false
+    description: Optional stack of contributing causes.
+coverage:
+  management_api:
+    note: >-
+      The Management API declares a single catch-all 4XX response per operation (81 of them) rather than
+      enumerating statuses, plus 500 on 2 operations and 501 on 3. Every one is application/json carrying
+      IcebergErrorResponse. This is a real gap in the contract: an agent cannot tell from the spec whether a
+      warehouse call can 404 or 409 — it has to read the message string.
+    declared:
+      4XX: 81
+      '500': 2
+      '501': 3
+  catalog_api:
+    note: The Iceberg REST Catalog spec enumerates statuses properly, and Lakekeeper serves it verbatim.
+    declared:
+      '400': 30
+      '401': 30
+      '403': 28
+      '404': 27
+      '406': 5
+      '409': 10
+      '419': 29
+      '422': 1
+      '500': 3
+      '502': 3
+      '503': 29
+      '504': 3
+  generic_table_api:
+    declared:
+      4XX: 6
+problem_types:
+- status: 400
+  title: Bad Request
+  meaning: Malformed request body, invalid namespace/table identifier, or a validation failure on a storage profile.
+  remediation: Fix the request payload. Storage-profile validation happens server-side on create_warehouse.
+  source: openapi/lakekeeper-catalog-api-openapi.yml
+- status: 401
+  title: Unauthorized
+  meaning: >-
+    The bearer token is missing, expired, or fails signature/issuer/audience validation against the configured
+    OIDC provider.
+  remediation: >-
+    Re-mint a token from the configured IdP. Check LAKEKEEPER__OPENID_AUDIENCE matches the token's aud claim.
+  source: openapi/lakekeeper-catalog-api-openapi.yml
+- status: 403
+  title: Forbidden
+  meaning: >-
+    The authenticated principal is not authorized for this action by the configured Authorizer (OpenFGA, OPA
+    bridge, or Cedar in Lakekeeper+), OR an admission gate returned a terminal deny.
+  remediation: >-
+    Call the matching `*/actions` endpoint (get_warehouse_actions, get_table_actions, get_namespace_actions,
+    get_role_actions, get_server_actions, get_project_actions) to see what the caller may actually do before
+    retrying.
+  gotcha: >-
+    IMPORTANT — Lakekeeper deliberately does not always return 404 for missing objects. A 403 received while
+    holding what look like correct grants very often means the object does not exist. This is an anti-enumeration
+    measure, and it is the single most misread status on this API.
+  gotcha_source: https://docs.lakekeeper.io/docs/latest/gotchas/
+- status: 404
+  title: Not Found
+  meaning: Namespace, table, view or other resource does not exist and the caller is permitted to know that.
+  remediation: See the 403 gotcha above before assuming a resource is present.
+  source: openapi/lakekeeper-catalog-api-openapi.yml
+- status: 406
+  title: Not Acceptable
+  meaning: Unsupported content negotiation on the Iceberg catalog surface.
+  source: openapi/lakekeeper-catalog-api-openapi.yml
+- status: 409
+  title: Conflict
+  meaning: >-
+    Concurrent-modification conflict on a table/view commit, or an attempt to create a resource that already
+    exists.
+  remediation: Reload metadata and retry the commit. Use Idempotency-Key so a retried mutation is not applied twice.
+  source: openapi/lakekeeper-catalog-api-openapi.yml
+- status: 419
+  title: Credentials Expired
+  meaning: >-
+    Iceberg REST-specific status — the authentication credentials have expired mid-operation. Declared on 29
+    catalog operations.
+  remediation: Refresh the token and retry.
+  source: openapi/lakekeeper-catalog-api-openapi.yml
+- status: 422
+  title: Unprocessable Entity
+  meaning: Semantically invalid request on the catalog surface.
+  source: openapi/lakekeeper-catalog-api-openapi.yml
+- status: 500
+  title: Internal Server Error
+  meaning: Unhandled server-side failure.
+  source: openapi/lakekeeper-management-api-openapi.yml
+- status: 501
+  title: Not Implemented
+  meaning: >-
+    Declared on 3 Management operations — the surface exists in the contract but the configured backend does not
+    implement it (for example a permissions endpoint when the AllowAll authorizer is in use).
+  source: openapi/lakekeeper-management-api-openapi.yml
+- status: 502
+  title: Bad Gateway
+  meaning: An upstream dependency (object store, IdP) failed.
+  source: openapi/lakekeeper-catalog-api-openapi.yml
+- status: 503
+  title: Service Unavailable
+  meaning: >-
+    Declared on 29 catalog operations. Also the deliberate response when an admission gate fails closed because
+    the entitlement service it depends on is unreachable — in that case a Retry-After header accompanies it. Since
+    v0.13.0 /health also returns 503 rather than 200 when unhealthy.
+  remediation: Honour Retry-After when present.
+  source: https://docs.lakekeeper.io/docs/latest/admission/
+- status: 504
+  title: Gateway Timeout
+  meaning: Upstream timed out. LAKEKEEPER__MAX_REQUEST_TIME defaults to 30s.
+  source: openapi/lakekeeper-catalog-api-openapi.yml
+gaps:
+- >-
+  No published error-code registry. `error.type` carries an internal type string, but Lakekeeper does not document
+  the set of values it can take, so a client cannot switch on it reliably.
+- >-
+  The Management API's blanket 4XX declaration means 81 operations give an agent no machine-readable indication of
+  which client errors are reachable.

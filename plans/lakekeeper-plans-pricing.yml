@@ -1,0 +1,56 @@
+generated: '2026-08-27'
+method: searched
+source: https://vakamo.com/pricing
+plan_count: 3
+currency: null
+note: >-
+  Lakekeeper itself is free and Apache-2.0 licensed — there is no paid tier for the open-source catalog, and no
+  metering, quota or usage limit attached to it. The two commercial offerings are sold by Vakamo, the company that
+  maintains Lakekeeper, and neither publishes a number: both are "Contact Sales", with only the BASIS of pricing
+  disclosed. Recorded here as three tiers because a self-hosted open-source tier with no price is a real
+  commercial position, not an absence.
+plans:
+- name: Lakekeeper (Open Source)
+  price: 0
+  currency: USD
+  period: perpetual
+  contact_sales: false
+  license: Apache License 2.0
+  included:
+  - Full Apache Iceberg REST Catalog
+  - Management API (120 operations) and Generic Table API
+  - OpenFGA and Open Policy Agent authorization
+  - Credential vending for S3, GCS, Azure ADLS and Microsoft OneLake/Fabric
+  - Built-in Console UI, Helm chart, Kubernetes operator, container images
+  limits: none published
+  url: https://docs.lakekeeper.io/getting-started/
+  source: https://docs.lakekeeper.io/about/license/
+- name: Lakekeeper+ (Self Managed)
+  price: null
+  currency: null
+  period: null
+  contact_sales: true
+  billing_basis: Priced by reserved capacity and data volume
+  included:
+  - Deploy on your own cloud or on-premise
+  - Full control over your data and infrastructure
+  - Reserved capacity sizing to match your workload
+  - Cedar permission-as-code, admission gates, UI branding, autonomous table maintenance
+  - Enterprise support
+  url: https://vakamo.com/pricing
+- name: Lakekeeper Cloud (Fully Managed)
+  price: null
+  currency: null
+  period: null
+  contact_sales: true
+  billing_basis: Priced by API calls and processed data volume
+  included:
+  - Zero infrastructure to operate or maintain
+  - Ideal for variable workloads and regulated industries
+  - Scales automatically with your usage
+  url: https://vakamo.com/pricing
+gaps:
+- No list price, no starting price, and no published unit rate for either commercial tier.
+- >-
+  "Reserved capacity and data volume" and "API calls and processed data volume" name the meters but not the
+  units, so no cost can be estimated without a sales conversation.

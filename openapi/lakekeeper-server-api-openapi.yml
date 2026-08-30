@@ -1,0 +1,441 @@
+openapi: 3.2.0
+info:
+  title: Lakekeeper Server API
+  version: 0.0.0
+  description: 'Operations tagged server across 2 of this provider''s published API definitions: lakekeeper-management-api-openapi.yml, lakekeeper-management-plus-api-openapi.yml. Each path carries the servers of the definition it was published in.'
+servers:
+- url: '{scheme}://{host}{basePath}'
+  description: Lakekeeper Management API
+  variables:
+    basePath:
+      default: ''
+      description: Optional path prefix (starting with '/') to be prepended to all routes
+    host:
+      default: localhost
+      description: The host (and optional port) for the specified server
+    scheme:
+      default: https
+      description: The scheme of the URI, either http or https
+security:
+- bearerAuth: []
+tags:
+- name: server
+  description: Manage Server
+paths:
+  /management/v1/bootstrap:
+    post:
+      tags:
+      - server
+      summary: Bootstrap
+      description: 'Initializes the Lakekeeper server and sets the initial administrator account.
+
+        This operation can only be performed once.'
+      operationId: bootstrap
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BootstrapRequest'
+        required: true
+      responses:
+        '204':
+          description: Server bootstrapped successfully
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+        '500':
+          description: InternalError
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/info:
+    get:
+      tags:
+      - server
+      summary: Get Server Info
+      description: Returns basic information about the server configuration and status.
+      operationId: get_server_info
+      responses:
+        '200':
+          description: Server info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerInfo'
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+        '500':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/server/actions:
+    get:
+      tags:
+      - server
+      summary: Get allowed server actions
+      operationId: get_server_actions
+      parameters:
+      - name: principalUser
+        in: query
+        description: 'The user to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+      - name: principalRole
+        in: query
+        description: 'The role to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetLakekeeperServerActionsResponse'
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+components:
+  schemas:
+    BootstrapRequest:
+      type: object
+      required:
+      - accept-terms-of-use
+      properties:
+        accept-terms-of-use:
+          type: boolean
+          description: Set to true if you accept LAKEKEEPER terms of use.
+        is-operator:
+          type: boolean
+          description: 'If set to true, the calling user is treated as an operator and obtain
+
+            a corresponding role. If not specified, the user is treated as a human.'
+        user-email:
+          type:
+          - string
+          - 'null'
+          description: 'Email of the user performing bootstrap. Optional. If not provided
+
+            the server will try to parse the email from the provided token.'
+        user-name:
+          type:
+          - string
+          - 'null'
+          description: 'Name of the user performing bootstrap. Optional. If not provided
+
+            the server will try to parse the name from the provided token.
+
+            The initial user will become the global admin.'
+        user-type:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/UserType'
+            description: 'Type of the user performing bootstrap. Optional. If not provided
+
+              the server will try to parse the type from the provided token.'
+    ConsoleInfo:
+      type: object
+      description: Information about the UI (console) shipped with this binary.
+      required:
+      - edition
+      - version
+      properties:
+        commit-sha:
+          type:
+          - string
+          - 'null'
+          description: Git commit SHA of the console source, if known.
+        edition:
+          type: string
+          description: 'Edition / crate name of the bundled console.
+
+            e.g. `lakekeeper-console` for the OSS console or
+
+            `lakekeeper-console-plus` for the enterprise console.'
+        version:
+          type: string
+          description: SemVer of the console crate.
+    ServerInfo:
+      type: object
+      required:
+      - version
+      - lakekeeper-version
+      - bootstrapped
+      - server-id
+      - authz-backend
+      - aws-system-identities-enabled
+      - azure-system-identities-enabled
+      - gcp-system-identities-enabled
+      - queues
+      - license-status
+      properties:
+        authz-backend:
+          type: string
+          description: '`AuthZ` backend in use.'
+        aws-system-identities-enabled:
+          type: boolean
+          description: If using AWS system identities for S3 storage profiles are enabled.
+        azure-system-identities-enabled:
+          type: boolean
+          description: If using Azure system identities for Azure storage profiles are enabled.
+        bootstrapped:
+          type: boolean
+          description: Whether the catalog has been bootstrapped.
+        console:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/ConsoleInfo'
+            description: Information about the bundled console (UI), if any.
+        default-project-id:
+          type:
+          - string
+          - 'null'
+          description: Default Project ID. Null if not set
+        gcp-system-identities-enabled:
+          type: boolean
+          description: If using GCP system identities for GCS storage profiles are enabled.
+        lakekeeper-commit-sha:
+          type:
+          - string
+          - 'null'
+          description: 'Git commit SHA of the upstream `lakekeeper` crate, if the binary
+
+            reported it at build time.'
+        lakekeeper-enterprise-commit-sha:
+          type:
+          - string
+          - 'null'
+          description: Git commit SHA of the enterprise binary, if known.
+        lakekeeper-enterprise-version:
+          type:
+          - string
+          - 'null'
+          description: 'SemVer of the enterprise binary (e.g. `lakekeeper-plus`) when this
+
+            server is an enterprise build. `None` on OSS builds.'
+        lakekeeper-version:
+          type: string
+          description: 'SemVer of the upstream `lakekeeper` crate the server was built
+
+            against.'
+        license-status:
+          $ref: '#/components/schemas/LicenseStatus'
+          description: License status information
+        queues:
+          type: array
+          items:
+            type: string
+          description: List of queues that are registered for the server.
+        server-id:
+          type: string
+          format: uuid
+          description: 'ID of the server.
+
+            Returns null if the catalog has not been bootstrapped.'
+        version:
+          type: string
+          description: 'Deprecated alias of `lakekeeper-version`. Always equal to it; kept
+
+            for clients that read the plain `version` field. New clients should
+
+            read `lakekeeper-version` and/or `lakekeeper-enterprise-version`.'
+          deprecated: true
+    GetLakekeeperServerActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LakekeeperServerActionKind'
+    LicenseStatus:
+      type: object
+      description: Status of license validation
+      required:
+      - license-type
+      - valid
+      properties:
+        audience:
+          type:
+          - string
+          - 'null'
+          description: Audience or entity the license is issued to
+        customer:
+          type:
+          - string
+          - 'null'
+          description: Customer name the license is issued to (None for open source)
+        error:
+          type:
+          - string
+          - 'null'
+          description: Any validation error that occurred
+        expiration:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: License expiration date (None for perpetual licenses like Apache)
+        issuer:
+          type:
+          - string
+          - 'null'
+          description: Organization or entity that issued the license for Lakekeeper
+        license-id:
+          type:
+          - string
+          - 'null'
+          description: License ID or identifier
+        license-type:
+          type: string
+          description: License type (e.g., "Apache-2.0", "Vakamo-Enterprise", etc.)
+        valid:
+          type: boolean
+          description: If the license is valid and active
+    IcebergErrorResponse:
+      type: object
+      description: JSON wrapper for all error responses (non-2xx)
+      required:
+      - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorModel'
+    UserType:
+      type: string
+      description: Type of a User
+      enum:
+      - human
+      - application
+    LakekeeperServerActionKind:
+      oneOf:
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - create_project
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - update_users
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - delete_users
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - list_users
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - provision_users
+    ErrorModel:
+      type: object
+      description: JSON error payload returned in a response with further details on the error
+      required:
+      - message
+      - type
+      - code
+      properties:
+        code:
+          type: integer
+          format: int32
+          description: HTTP response code
+          minimum: 0
+        message:
+          type: string
+          description: Human-readable error message
+        stack:
+          type: array
+          items:
+            type: string
+        type:
+          type: string
+          description: Internal type definition of the error
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+x-refined-from:
+- lakekeeper-management-api-openapi.yml
+- lakekeeper-management-plus-api-openapi.yml

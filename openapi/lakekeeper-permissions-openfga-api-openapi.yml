@@ -1,0 +1,2980 @@
+openapi: 3.2.0
+info:
+  title: Lakekeeper Permissions Openfga API
+  version: 0.0.0
+  description: 'Operations tagged permissions-openfga across 2 of this provider''s published API definitions: lakekeeper-management-api-openapi.yml, lakekeeper-management-plus-api-openapi.yml. Each path carries the servers of the definition it was published in.'
+servers:
+- url: '{scheme}://{host}{basePath}'
+  description: Lakekeeper Management API
+  variables:
+    basePath:
+      default: ''
+      description: Optional path prefix (starting with '/') to be prepended to all routes
+    host:
+      default: localhost
+      description: The host (and optional port) for the specified server
+    scheme:
+      default: https
+      description: The scheme of the URI, either http or https
+security:
+- bearerAuth: []
+tags:
+- name: permissions-openfga
+  description: Authorization and permissions management using OpenFGA
+paths:
+  /management/v1/permissions/check:
+    post:
+      tags:
+      - permissions-openfga
+      summary: Check if a specific action is allowed on the given object
+      operationId: check
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/namespace/{namespace_id}:
+    get:
+      tags:
+      - permissions-openfga
+      summary: Get Authorization properties of a namespace
+      operationId: get_namespace_by_id
+      parameters:
+      - name: namespace_id
+        in: path
+        description: Namespace ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetNamespaceAuthPropertiesResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/namespace/{namespace_id}/access:
+    get:
+      tags:
+      - permissions-openfga
+      summary: Get my access to a namespace
+      description: '**Deprecated:** Use `/management/v1/permissions/namespace/{namespace_id}/authorizer-actions` for Authorizer permissions
+
+        or `/management/v1/warehouse/{warehouse_id}/namespace/{namespace_id}/actions` for Catalog permissions instead.'
+      operationId: get_namespace_access_by_id
+      parameters:
+      - name: principalUser
+        in: query
+        description: 'The user to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+      - name: principalRole
+        in: query
+        description: 'The role to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: namespace_id
+        in: path
+        description: Namespace ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Server Relations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetNamespaceAccessResponse'
+      deprecated: true
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/namespace/{namespace_id}/assignments:
+    get:
+      tags:
+      - permissions-openfga
+      summary: Get user and role assignments for a namespace
+      operationId: get_namespace_assignments_by_id
+      parameters:
+      - name: relations
+        in: query
+        description: Relations to be loaded. If not specified, all relations are returned.
+        required: false
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/NamespaceRelation'
+      - name: namespace_id
+        in: path
+        description: Namespace ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetNamespaceAssignmentsResponse'
+    post:
+      tags:
+      - permissions-openfga
+      summary: Update permissions for a namespace
+      operationId: update_namespace_assignments_by_id
+      parameters:
+      - name: namespace_id
+        in: path
+        description: Namespace ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateNamespaceAssignmentsRequest'
+        required: true
+      responses:
+        '204':
+          description: Permissions updated successfully
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/namespace/{namespace_id}/authorizer-actions:
+    get:
+      tags:
+      - permissions-openfga
+      summary: Get allowed Authorizer actions on a namespace
+      description: 'Returns Authorizer permissions (OpenFGA relations) for the specified namespace.
+
+        For Catalog permissions, use `/management/v1/warehouse/{warehouse_id}/namespace/{namespace_id}/actions` instead.'
+      operationId: get_authorizer_namespace_actions
+      parameters:
+      - name: principalUser
+        in: query
+        description: 'The user to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+      - name: principalRole
+        in: query
+        description: 'The role to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: namespace_id
+        in: path
+        description: Namespace ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Namespace Authorizer Actions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetOpenFGANamespaceActionsResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/namespace/{namespace_id}/managed-access:
+    post:
+      tags:
+      - permissions-openfga
+      summary: Set managed access property of a namespace
+      operationId: set_namespace_managed_access
+      parameters:
+      - name: namespace_id
+        in: path
+        description: Namespace ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetManagedAccessRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/project/access:
+    get:
+      tags:
+      - permissions-openfga
+      summary: Get my access to the default project
+      description: '**Deprecated:** Use `/management/v1/permissions/project/authorizer-actions` for Authorizer permissions
+
+        or `/management/v1/project/actions` for Catalog permissions instead.'
+      operationId: get_project_access
+      parameters:
+      - name: principalUser
+        in: query
+        description: 'The user to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+      - name: principalRole
+        in: query
+        description: 'The role to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Server Relations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetProjectAccessResponse'
+      deprecated: true
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/project/assignments:
+    get:
+      tags:
+      - permissions-openfga
+      summary: Get user and role assignments of a project
+      operationId: get_project_assignments
+      parameters:
+      - name: relations
+        in: query
+        description: Relations to be loaded. If not specified, all relations are returned.
+        required: false
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectRelation'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetProjectAssignmentsResponse'
+    post:
+      tags:
+      - permissions-openfga
+      summary: Update permissions for the default project
+      operationId: update_project_assignments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProjectAssignmentsRequest'
+        required: true
+      responses:
+        '204':
+          description: Permissions updated successfully
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/project/authorizer-actions:
+    get:
+      tags:
+      - permissions-openfga
+      summary: Get allowed Authorizer actions on the default project
+      description: 'Returns Authorizer permissions (OpenFGA relations) for the default project.
+
+        For Catalog permissions, use `/management/v1/project/actions` instead.'
+      operationId: get_authorizer_project_actions
+      parameters:
+      - name: principalUser
+        in: query
+        description: 'The user to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+      - name: principalRole
+        in: query
+        description: 'The role to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: x-project-id
+        in: header
+        description: Optional project ID
+        required: false
+        schema:
+          type:
+          - string
+          - 'null'
+      responses:
+        '200':
+          description: Project Authorizer Actions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetOpenFGAProjectActionsResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/project/{project_id}/access:
+    get:
+      tags:
+      - permissions-openfga
+      summary: Get my access to a project
+      description: '**Deprecated:** Use `/management/v1/permissions/project/authorizer-actions` for Authorizer permissions
+
+        or `/management/v1/project/actions` for Catalog permissions instead.'
+      operationId: get_project_access_by_id
+      parameters:
+      - name: principalUser
+        in: query
+        description: 'The user to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+      - name: principalRole
+        in: query
+        description: 'The role to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: project_id
+        in: path
+        description: Project ID (optional; falls back to the default project if not provided)
+        required: true
+        schema:
+          type:
+          - string
+          - 'null'
+      responses:
+        '200':
+          description: Server Relations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetProjectAccessResponse'
+      deprecated: true
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/project/{project_id}/assignments:
+    get:
+      tags:
+      - permissions-openfga
+      summary: Get user and role assignments to a project
+      description: '**Deprecated:** Use `/management/v1/permissions/project/assignments` instead.'
+      operationId: get_project_assignments_by_id
+      parameters:
+      - name: relations
+        in: query
+        description: Relations to be loaded. If not specified, all relations are returned.
+        required: false
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectRelation'
+      - name: project_id
+        in: path
+        description: Project ID (optional; falls back to the default project if not provided)
+        required: true
+        schema:
+          type:
+          - string
+          - 'null'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetProjectAssignmentsResponse'
+      deprecated: true
+    post:
+      tags:
+      - permissions-openfga
+      summary: Update permissions for a project
+      operationId: update_project_assignments_by_id
+      parameters:
+      - name: project_id
+        in: path
+        description: Project ID (optional; falls back to the default project if not provided)
+        required: true
+        schema:
+          type:
+          - string
+          - 'null'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProjectAssignmentsRequest'
+        required: true
+      responses:
+        '204':
+          description: Permissions updated successfully
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/role/{role_id}/access:
+    get:
+      tags:
+      - permissions-openfga
+      summary: Get my access to a role
+      description: '**Deprecated:** Use `/management/v1/permissions/role/{role_id}/authorizer-actions` for Authorizer permissions
+
+        or `/management/v1/role/{role_id}/actions` for Catalog permissions instead.'
+      operationId: get_role_access_by_id
+      parameters:
+      - name: role_id
+        in: path
+        description: Role ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetRoleAccessResponse'
+      deprecated: true
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/role/{role_id}/assignments:
+    get:
+      tags:
+      - permissions-openfga
+      summary: Get user and role assignments of a role
+      operationId: get_role_assignments_by_id
+      parameters:
+      - name: relations
+        in: query
+        description: Relations to be loaded. If not specified, all relations are returned.
+        required: false
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleRelation'
+      - name: role_id
+        in: path
+        description: Role ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetRoleAssignmentsResponse'
+    post:
+      tags:
+      - permissions-openfga
+      operationId: update_role_assignments_by_id
+      parameters:
+      - name: role_id
+        in: path
+        description: Role ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRoleAssignmentsRequest'
+        required: true
+      responses:
+        '204':
+          description: Permissions updated successfully
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/role/{role_id}/authorizer-actions:
+    get:
+      tags:
+      - permissions-openfga
+      summary: Get allowed Authorizer actions on a role
+      description: 'Returns Authorizer permissions (OpenFGA relations) for the specified role.
+
+        For Catalog permissions, use `/management/v1/role/{role_id}/actions` instead.'
+      operationId: get_authorizer_role_actions
+      parameters:
+      - name: principalUser
+        in: query
+        description: 'The user to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+      - name: principalRole
+        in: query
+        description: 'The role to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: role_id
+        in: path
+        description: Role ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetOpenFGARoleActionsResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/server/access:
+    get:
+      tags:
+      - permissions-openfga
+      summary: Get my access to the server
+      description: '**Deprecated:** Use `/management/v1/permissions/server/authorizer-actions` for Authorizer permissions
+
+        or `/management/v1/server/actions` for Catalog permissions instead.'
+      operationId: get_server_access
+      parameters:
+      - name: principalUser
+        in: query
+        description: 'The user to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+      - name: principalRole
+        in: query
+        description: 'The role to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Server Access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetServerAccessResponse'
+      deprecated: true
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/server/assignments:
+    get:
+      tags:
+      - permissions-openfga
+      summary: Get user and role assignments of the server
+      operationId: get_server_assignments
+      parameters:
+      - name: relations
+        in: query
+        description: Relations to be loaded. If not specified, all relations are returned.
+        required: false
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServerRelation'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetServerAssignmentsResponse'
+    post:
+      tags:
+      - permissions-openfga
+      summary: Update permissions for this server
+      operationId: update_server_assignments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateServerAssignmentsRequest'
+        required: true
+      responses:
+        '204':
+          description: Permissions updated successfully
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/server/authorizer-actions:
+    get:
+      tags:
+      - permissions-openfga
+      summary: Get allowed Authorizer actions on the server
+      description: 'Returns Authorizer permissions (OpenFGA relations) for the server.
+
+        For Catalog permissions, use `/management/v1/server/actions` instead.'
+      operationId: get_authorizer_server_actions
+      parameters:
+      - name: principalUser
+        in: query
+        description: 'The user to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+      - name: principalRole
+        in: query
+        description: 'The role to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Server Access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetOpenFGAServerActionsResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/warehouse/{warehouse_id}:
+    get:
+      tags:
+      - permissions-openfga
+      summary: Get Authorization properties of a warehouse
+      operationId: get_warehouse_by_id
+      parameters:
+      - name: warehouse_id
+        in: path
+        description: Warehouse ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetWarehouseAuthPropertiesResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/warehouse/{warehouse_id}/access:
+    get:
+      tags:
+      - permissions-openfga
+      summary: Get my access to a warehouse
+      description: '**Deprecated:** Use `/management/v1/permissions/warehouse/{warehouse_id}/authorizer-actions` for Authorizer permissions
+
+        or `/management/v1/warehouse/{warehouse_id}/actions` for Catalog permissions instead.'
+      operationId: get_warehouse_access_by_id
+      parameters:
+      - name: principalUser
+        in: query
+        description: 'The user to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+      - name: principalRole
+        in: query
+        description: 'The role to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: warehouse_id
+        in: path
+        description: Warehouse ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetWarehouseAccessResponse'
+      deprecated: true
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/warehouse/{warehouse_id}/assignments:
+    get:
+      tags:
+      - permissions-openfga
+      summary: Get user and role assignments for a warehouse
+      operationId: get_warehouse_assignments_by_id
+      parameters:
+      - name: relations
+        in: query
+        description: Relations to be loaded. If not specified, all relations are returned.
+        required: false
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/WarehouseRelation'
+      - name: warehouse_id
+        in: path
+        description: Warehouse ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetWarehouseAssignmentsResponse'
+    post:
+      tags:
+      - permissions-openfga
+      summary: Update permissions for a warehouse
+      operationId: update_warehouse_assignments_by_id
+      parameters:
+      - name: warehouse_id
+        in: path
+        description: Warehouse ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWarehouseAssignmentsRequest'
+        required: true
+      responses:
+        '204':
+          description: Permissions updated successfully
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/warehouse/{warehouse_id}/authorizer-actions:
+    get:
+      tags:
+      - permissions-openfga
+      summary: Get allowed Authorizer actions on a warehouse
+      description: 'Returns Authorizer permissions (OpenFGA relations) for the specified warehouse.
+
+        For Catalog permissions, use `/management/v1/warehouse/{warehouse_id}/actions` instead.'
+      operationId: get_authorizer_warehouse_actions
+      parameters:
+      - name: principalUser
+        in: query
+        description: 'The user to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+      - name: principalRole
+        in: query
+        description: 'The role to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: warehouse_id
+        in: path
+        description: Warehouse ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Warehouse Authorizer Actions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetOpenFGAWarehouseActionsResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/warehouse/{warehouse_id}/generic-table/{generic_table_id}/assignments:
+    get:
+      tags:
+      - permissions-openfga
+      summary: Get user and role assignments for a generic table
+      operationId: get_generic_table_assignments_by_id
+      parameters:
+      - name: relations
+        in: query
+        description: Relations to be loaded. If not specified, all relations are returned.
+        required: false
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/GenericTableRelation'
+      - name: warehouse_id
+        in: path
+        description: Warehouse ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: generic_table_id
+        in: path
+        description: Generic Table ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetGenericTableAssignmentsResponse'
+    post:
+      tags:
+      - permissions-openfga
+      summary: Update permissions for a generic table
+      operationId: update_generic_table_assignments_by_id
+      parameters:
+      - name: warehouse_id
+        in: path
+        description: Warehouse ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: generic_table_id
+        in: path
+        description: Generic Table ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateGenericTableAssignmentsRequest'
+        required: true
+      responses:
+        '204':
+          description: Permissions updated successfully
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/warehouse/{warehouse_id}/generic-table/{generic_table_id}/authorizer-actions:
+    get:
+      tags:
+      - permissions-openfga
+      summary: Get allowed Authorizer actions on a generic table
+      description: 'Returns Authorizer permissions (OpenFGA relations) for the specified generic table.
+
+        For Catalog permissions, use `/management/v1/warehouse/{warehouse_id}/generic-table/{generic_table_id}/actions` instead.'
+      operationId: get_authorizer_generic_table_actions
+      parameters:
+      - name: principalUser
+        in: query
+        description: 'The user to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+      - name: principalRole
+        in: query
+        description: 'The role to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: warehouse_id
+        in: path
+        description: Warehouse ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: generic_table_id
+        in: path
+        description: Generic Table ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Generic Table Authorizer Actions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetOpenFGAGenericTableActionsResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/warehouse/{warehouse_id}/managed-access:
+    post:
+      tags:
+      - permissions-openfga
+      summary: Set managed access property of a warehouse
+      operationId: set_warehouse_managed_access
+      parameters:
+      - name: warehouse_id
+        in: path
+        description: Warehouse ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetManagedAccessRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/warehouse/{warehouse_id}/table/{table_id}/access:
+    get:
+      tags:
+      - permissions-openfga
+      summary: Get my access to a table
+      description: '**Deprecated:** Use `/management/v1/permissions/warehouse/{warehouse_id}/table/{table_id}/authorizer-actions` for Authorizer permissions
+
+        or `/management/v1/warehouse/{warehouse_id}/table/{table_id}/actions` for Catalog permissions instead.'
+      operationId: get_table_access_by_id
+      parameters:
+      - name: principalUser
+        in: query
+        description: 'The user to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+      - name: principalRole
+        in: query
+        description: 'The role to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: warehouse_id
+        in: path
+        description: Warehouse ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: table_id
+        in: path
+        description: Table ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Server Relations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTableAccessResponse'
+      deprecated: true
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/warehouse/{warehouse_id}/table/{table_id}/assignments:
+    get:
+      tags:
+      - permissions-openfga
+      summary: Get user and role assignments for a table
+      operationId: get_table_assignments_by_id
+      parameters:
+      - name: relations
+        in: query
+        description: Relations to be loaded. If not specified, all relations are returned.
+        required: false
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/TableRelation'
+      - name: warehouse_id
+        in: path
+        description: Warehouse ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: table_id
+        in: path
+        description: Table ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTableAssignmentsResponse'
+    post:
+      tags:
+      - permissions-openfga
+      summary: Update permissions for a table
+      operationId: update_table_assignments_by_id
+      parameters:
+      - name: warehouse_id
+        in: path
+        description: Warehouse ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: table_id
+        in: path
+        description: Table ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTableAssignmentsRequest'
+        required: true
+      responses:
+        '204':
+          description: Permissions updated successfully
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/warehouse/{warehouse_id}/table/{table_id}/authorizer-actions:
+    get:
+      tags:
+      - permissions-openfga
+      summary: Get allowed Authorizer actions on a table
+      description: 'Returns Authorizer permissions (OpenFGA relations) for the specified table.
+
+        For Catalog permissions, use `/management/v1/warehouse/{warehouse_id}/table/{table_id}/actions` instead.'
+      operationId: get_authorizer_table_actions
+      parameters:
+      - name: principalUser
+        in: query
+        description: 'The user to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+      - name: principalRole
+        in: query
+        description: 'The role to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: warehouse_id
+        in: path
+        description: Warehouse ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: table_id
+        in: path
+        description: Table ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Table Authorizer Actions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetOpenFGATableActionsResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/warehouse/{warehouse_id}/view/{view_id}/access:
+    get:
+      tags:
+      - permissions-openfga
+      summary: Get my access to a view
+      description: '**Deprecated:** Use `/management/v1/permissions/warehouse/{warehouse_id}/view/{view_id}/authorizer-actions` for Authorizer permissions
+
+        or `/management/v1/warehouse/{warehouse_id}/view/{view_id}/actions` for Catalog permissions instead.'
+      operationId: get_view_access_by_id
+      parameters:
+      - name: principalUser
+        in: query
+        description: 'The user to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+      - name: principalRole
+        in: query
+        description: 'The role to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: warehouse_id
+        in: path
+        description: Warehouse ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: view_id
+        in: path
+        description: View ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetViewAccessResponse'
+      deprecated: true
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/warehouse/{warehouse_id}/view/{view_id}/assignments:
+    get:
+      tags:
+      - permissions-openfga
+      summary: Get user and role assignments for a view
+      operationId: get_view_assignments_by_id
+      parameters:
+      - name: relations
+        in: query
+        description: Relations to be loaded. If not specified, all relations are returned.
+        required: false
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/ViewRelation'
+      - name: warehouse_id
+        in: path
+        description: Warehouse ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: view_id
+        in: path
+        description: View ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetViewAssignmentsResponse'
+    post:
+      tags:
+      - permissions-openfga
+      summary: Update permissions for a view
+      operationId: update_view_assignments_by_id
+      parameters:
+      - name: warehouse_id
+        in: path
+        description: Warehouse ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: view_id
+        in: path
+        description: View ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateViewAssignmentsRequest'
+        required: true
+      responses:
+        '204':
+          description: Permissions updated successfully
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/permissions/warehouse/{warehouse_id}/view/{view_id}/authorizer-actions:
+    get:
+      tags:
+      - permissions-openfga
+      summary: Get allowed Authorizer actions on a view
+      description: 'Returns Authorizer permissions (OpenFGA relations) for the specified view.
+
+        For Catalog permissions, use `/management/v1/warehouse/{warehouse_id}/view/{view_id}/actions` instead.'
+      operationId: get_authorizer_view_actions
+      parameters:
+      - name: principalUser
+        in: query
+        description: 'The user to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+      - name: principalRole
+        in: query
+        description: 'The role to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: warehouse_id
+        in: path
+        description: Warehouse ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: view_id
+        in: path
+        description: View ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: View Authorizer Actions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetOpenFGAViewActionsResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+components:
+  schemas:
+    GetOpenFGAWarehouseActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpenFGAWarehouseAction'
+    GetNamespaceAssignmentsResponse:
+      type: object
+      required:
+      - assignments
+      properties:
+        assignments:
+          type: array
+          items:
+            $ref: '#/components/schemas/NamespaceAssignment'
+    CheckRequest:
+      type: object
+      description: Check if a specific action is allowed on the given object
+      required:
+      - operation
+      properties:
+        identity:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/UserOrRole'
+            description: The user or role to check access for.
+        operation:
+          $ref: '#/components/schemas/CheckOperation'
+          description: The operation to check.
+    GetOpenFGARoleActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpenFGARoleAction'
+    ViewAssignment:
+      oneOf:
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - ownership
+        title: ViewAssignmentOwnership
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - pass_grants
+        title: ViewAssignmentPassGrants
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - manage_grants
+        title: ViewAssignmentManageGrants
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - describe
+        title: ViewAssignmentDescribe
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - select
+        title: ViewAssignmentSelect
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - modify
+        title: ViewAssignmentModify
+    GetOpenFGATableActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpenFGATableAction'
+    GetViewAccessResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ViewAction'
+    OpenFGAGenericTableAction:
+      type: string
+      enum:
+      - read_assignments
+      - grant_pass_grants
+      - grant_manage_grants
+      - grant_describe
+      - grant_select
+      - grant_modify
+      - change_ownership
+    OpenFGARoleAction:
+      type: string
+      enum:
+      - assume
+      - can_grant_assignee
+      - can_change_ownership
+      - read_assignments
+    UpdateGenericTableAssignmentsRequest:
+      type: object
+      properties:
+        deletes:
+          type: array
+          items:
+            $ref: '#/components/schemas/GenericTableAssignment'
+        writes:
+          type: array
+          items:
+            $ref: '#/components/schemas/GenericTableAssignment'
+    WarehouseRelation:
+      type: string
+      enum:
+      - ownership
+      - pass_grants
+      - manage_grants
+      - describe
+      - select
+      - create
+      - modify
+    RoleRelation:
+      type: string
+      enum:
+      - assignee
+      - ownership
+    NamespaceAction:
+      type: string
+      enum:
+      - create_table
+      - create_view
+      - create_generic_table
+      - create_namespace
+      - delete
+      - update_properties
+      - get_metadata
+      - read_assignments
+      - grant_create
+      - grant_describe
+      - grant_modify
+      - grant_select
+      - grant_pass_grants
+      - grant_manage_grants
+      - set_protection
+    GenericTableAction:
+      type: string
+      enum:
+      - drop
+      - undrop
+      - write_data
+      - read_data
+      - get_metadata
+      - rename
+      - include_in_list
+      - get_tasks
+      - control_tasks
+      - set_protection
+      - read_assignments
+      - grant_pass_grants
+      - grant_manage_grants
+      - grant_describe
+      - grant_select
+      - grant_modify
+      - change_ownership
+    OpenFGAWarehouseAction:
+      type: string
+      enum:
+      - read_assignments
+      - grant_create
+      - grant_describe
+      - grant_modify
+      - grant_select
+      - grant_pass_grants
+      - grant_manage_grants
+      - change_ownership
+    ServerRelation:
+      type: string
+      enum:
+      - admin
+      - operator
+    ProjectAssignment:
+      oneOf:
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - project_admin
+        title: ProjectAssignmentProjectAdmin
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - security_admin
+        title: ProjectAssignmentSecurityAdmin
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - data_admin
+        title: ProjectAssignmentDataAdmin
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - role_creator
+        title: ProjectAssignmentRoleCreator
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - describe
+        title: ProjectAssignmentDescribe
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - select
+        title: ProjectAssignmentSelect
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - create
+        title: ProjectAssignmentCreate
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - modify
+        title: ProjectAssignmentModify
+    UpdateViewAssignmentsRequest:
+      type: object
+      properties:
+        deletes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ViewAssignment'
+        writes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ViewAssignment'
+    UpdateWarehouseAssignmentsRequest:
+      type: object
+      properties:
+        deletes:
+          type: array
+          items:
+            $ref: '#/components/schemas/WarehouseAssignment'
+        writes:
+          type: array
+          items:
+            $ref: '#/components/schemas/WarehouseAssignment'
+    GetRoleAssignmentsResponse:
+      type: object
+      required:
+      - assignments
+      properties:
+        assignments:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleAssignment'
+    NamespaceRelation:
+      type: string
+      enum:
+      - ownership
+      - pass_grants
+      - manage_grants
+      - describe
+      - select
+      - create
+      - modify
+    ProjectAction:
+      type: string
+      enum:
+      - create_warehouse
+      - delete
+      - rename
+      - list_warehouses
+      - create_role
+      - list_roles
+      - search_roles
+      - read_assignments
+      - grant_role_creator
+      - grant_create
+      - grant_describe
+      - grant_modify
+      - grant_select
+      - grant_project_admin
+      - grant_security_admin
+      - grant_data_admin
+      - get_endpoint_statistics
+    GenericTableRelation:
+      type: string
+      enum:
+      - ownership
+      - pass_grants
+      - manage_grants
+      - describe
+      - select
+      - modify
+    ProjectRelation:
+      type: string
+      enum:
+      - project_admin
+      - security_admin
+      - data_admin
+      - role_creator
+      - describe
+      - select
+      - create
+      - modify
+    ServerAction:
+      type: string
+      enum:
+      - create_project
+      - update_users
+      - delete_users
+      - list_users
+      - grant_admin
+      - provision_users
+      - read_assignments
+    GenericTableAssignment:
+      oneOf:
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - ownership
+        title: GenericTableAssignmentOwnership
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - pass_grants
+        title: GenericTableAssignmentPassGrants
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - manage_grants
+        title: GenericTableAssignmentManageGrants
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - describe
+        title: GenericTableAssignmentDescribe
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - select
+        title: GenericTableAssignmentSelect
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - modify
+        title: GenericTableAssignmentModify
+    UserOrRole:
+      oneOf:
+      - type: object
+        title: UserOrRoleUser
+        description: Id of the user
+        required:
+        - user
+        properties:
+          user:
+            type: string
+            description: Id of the user
+      - type: object
+        title: UserOrRoleRole
+        description: Id of the role
+        required:
+        - role
+        properties:
+          role:
+            type: string
+            format: uuid
+            description: Id of the role
+      description: Identifies a user or a role
+    UpdateProjectAssignmentsRequest:
+      type: object
+      properties:
+        deletes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectAssignment'
+        writes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectAssignment'
+    GetRoleAccessResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleAction'
+    RoleAction:
+      type: string
+      enum:
+      - assume
+      - can_grant_assignee
+      - can_change_ownership
+      - delete
+      - update
+      - read
+      - read_assignments
+    WarehouseAction:
+      type: string
+      enum:
+      - create_namespace
+      - delete
+      - modify_storage
+      - modify_storage_credential
+      - get_config
+      - get_metadata
+      - list_namespaces
+      - include_in_list
+      - deactivate
+      - activate
+      - rename
+      - list_deleted_tabulars
+      - read_assignments
+      - grant_create
+      - grant_describe
+      - grant_modify
+      - grant_select
+      - grant_pass_grants
+      - grant_manage_grants
+      - change_ownership
+      - get_all_tasks
+      - control_all_tasks
+      - set_protection
+      - set_format_version_policy
+      - get_endpoint_statistics
+    NamespaceIdentOrUuid:
+      oneOf:
+      - type: object
+        required:
+        - namespace-id
+        - warehouse-id
+        properties:
+          namespace-id:
+            type: string
+            format: uuid
+          warehouse-id:
+            type: string
+            format: uuid
+      - type: object
+        required:
+        - namespace
+        - warehouse-id
+        properties:
+          namespace:
+            type: array
+            items:
+              type: string
+          warehouse-id:
+            type: string
+            format: uuid
+      description: Identifier for a namespace, either a UUID or its name and warehouse ID
+    OpenFGANamespaceAction:
+      type: string
+      enum:
+      - read_assignments
+      - grant_create
+      - grant_describe
+      - grant_modify
+      - grant_select
+      - grant_pass_grants
+      - grant_manage_grants
+    GetWarehouseAuthPropertiesResponse:
+      type: object
+      required:
+      - managed-access
+      properties:
+        managed-access:
+          type: boolean
+    GetOpenFGAProjectActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpenFGAProjectAction'
+    GetTableAccessResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/TableAction'
+    GetProjectAccessResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectAction'
+    ViewAction:
+      type: string
+      enum:
+      - drop
+      - commit
+      - get_metadata
+      - select
+      - rename
+      - read_assignments
+      - grant_pass_grants
+      - grant_manage_grants
+      - grant_describe
+      - grant_select
+      - grant_modify
+      - change_ownership
+      - get_tasks
+      - control_tasks
+      - set_protection
+    GetOpenFGANamespaceActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpenFGANamespaceAction'
+    ViewRelation:
+      type: string
+      enum:
+      - ownership
+      - pass_grants
+      - manage_grants
+      - describe
+      - select
+      - modify
+    GetOpenFGAViewActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpenFGAViewAction'
+    TableAssignment:
+      oneOf:
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - ownership
+        title: TableAssignmentOwnership
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - pass_grants
+        title: TableAssignmentPassGrants
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - manage_grants
+        title: TableAssignmentManageGrants
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - describe
+        title: TableAssignmentDescribe
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - select
+        title: TableAssignmentSelect
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - modify
+        title: TableAssignmentModify
+    OpenFGAServerAction:
+      type: string
+      enum:
+      - read_assignments
+      - grant_admin
+    UpdateRoleAssignmentsRequest:
+      type: object
+      properties:
+        deletes:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleAssignment'
+        writes:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleAssignment'
+    CheckOperation:
+      oneOf:
+      - type: object
+        required:
+        - server
+        properties:
+          server:
+            type: object
+            required:
+            - action
+            properties:
+              action:
+                $ref: '#/components/schemas/ServerAction'
+      - type: object
+        required:
+        - project
+        properties:
+          project:
+            type: object
+            required:
+            - action
+            properties:
+              action:
+                $ref: '#/components/schemas/ProjectAction'
+              project-id:
+                type:
+                - string
+                - 'null'
+                format: uuid
+      - type: object
+        required:
+        - warehouse
+        properties:
+          warehouse:
+            type: object
+            required:
+            - action
+            - warehouse-id
+            properties:
+              action:
+                $ref: '#/components/schemas/WarehouseAction'
+              warehouse-id:
+                type: string
+                format: uuid
+      - type: object
+        required:
+        - namespace
+        properties:
+          namespace:
+            allOf:
+            - $ref: '#/components/schemas/NamespaceIdentOrUuid'
+            - type: object
+              required:
+              - action
+              properties:
+                action:
+                  $ref: '#/components/schemas/NamespaceAction'
+      - type: object
+        required:
+        - table
+        properties:
+          table:
+            allOf:
+            - $ref: '#/components/schemas/TabularIdentOrUuid'
+            - type: object
+              required:
+              - action
+              properties:
+                action:
+                  $ref: '#/components/schemas/TableAction'
+      - type: object
+        required:
+        - view
+        properties:
+          view:
+            allOf:
+            - $ref: '#/components/schemas/TabularIdentOrUuid'
+            - type: object
+              required:
+              - action
+              properties:
+                action:
+                  $ref: '#/components/schemas/ViewAction'
+      - type: object
+        required:
+        - generic-table
+        properties:
+          generic-table:
+            allOf:
+            - $ref: '#/components/schemas/TabularIdentOrUuid'
+            - type: object
+              required:
+              - action
+              properties:
+                action:
+                  $ref: '#/components/schemas/GenericTableAction'
+      description: Represents an action on an object
+    GetViewAssignmentsResponse:
+      type: object
+      required:
+      - assignments
+      properties:
+        assignments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ViewAssignment'
+    WarehouseAssignment:
+      oneOf:
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - ownership
+        title: WarehouseAssignmentOwnership
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - pass_grants
+        title: WarehouseAssignmentPassGrants
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - manage_grants
+        title: WarehouseAssignmentManageGrants
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - describe
+        title: WarehouseAssignmentDescribe
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - select
+        title: WarehouseAssignmentSelect
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - create
+        title: WarehouseAssignmentCreate
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - modify
+        title: WarehouseAssignmentModify
+    GetWarehouseAccessResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/WarehouseAction'
+    UpdateTableAssignmentsRequest:
+      type: object
+      properties:
+        deletes:
+          type: array
+          items:
+            $ref: '#/components/schemas/TableAssignment'
+        writes:
+          type: array
+          items:
+            $ref: '#/components/schemas/TableAssignment'
+    SetManagedAccessRequest:
+      type: object
+      required:
+      - managed-access
+      properties:
+        managed-access:
+          type: boolean
+    ServerAssignment:
+      oneOf:
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - admin
+        title: ServerAssignmentAdmin
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - operator
+        title: ServerAssignmentOperator
+    GetNamespaceAccessResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/NamespaceAction'
+    TableAction:
+      type: string
+      enum:
+      - drop
+      - write_data
+      - read_data
+      - get_metadata
+      - commit
+      - rename
+      - read_assignments
+      - grant_pass_grants
+      - grant_manage_grants
+      - grant_describe
+      - grant_select
+      - grant_modify
+      - change_ownership
+      - get_tasks
+      - control_tasks
+      - set_protection
+    RoleAssignment:
+      oneOf:
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - assignee
+        title: RoleAssignmentAssignee
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - ownership
+        title: RoleAssignmentOwnership
+    GetGenericTableAssignmentsResponse:
+      type: object
+      required:
+      - assignments
+      properties:
+        assignments:
+          type: array
+          items:
+            $ref: '#/components/schemas/GenericTableAssignment'
+    GetServerAssignmentsResponse:
+      type: object
+      required:
+      - assignments
+      properties:
+        assignments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServerAssignment'
+    GetWarehouseAssignmentsResponse:
+      type: object
+      required:
+      - assignments
+      properties:
+        assignments:
+          type: array
+          items:
+            $ref: '#/components/schemas/WarehouseAssignment'
+    TableRelation:
+      type: string
+      enum:
+      - ownership
+      - pass_grants
+      - manage_grants
+      - describe
+      - select
+      - modify
+    GetOpenFGAServerActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpenFGAServerAction'
+    OpenFGAViewAction:
+      type: string
+      enum:
+      - read_assignments
+      - grant_pass_grants
+      - grant_manage_grants
+      - grant_describe
+      - grant_select
+      - grant_modify
+      - change_ownership
+    GetProjectAssignmentsResponse:
+      type: object
+      required:
+      - assignments
+      - project-id
+      properties:
+        assignments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectAssignment'
+        project-id:
+          type: string
+          format: uuid
+    NamespaceAssignment:
+      oneOf:
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - ownership
+        title: NamespaceAssignmentOwnership
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - pass_grants
+        title: NamespaceAssignmentPassGrants
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - manage_grants
+        title: NamespaceAssignmentManageGrants
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - describe
+        title: NamespaceAssignmentDescribe
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - select
+        title: NamespaceAssignmentSelect
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - create
+        title: NamespaceAssignmentCreate
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - modify
+        title: NamespaceAssignmentModify
+    GetTableAssignmentsResponse:
+      type: object
+      required:
+      - assignments
+      properties:
+        assignments:
+          type: array
+          items:
+            $ref: '#/components/schemas/TableAssignment'
+    GetOpenFGAGenericTableActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpenFGAGenericTableAction'
+    GetServerAccessResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServerAction'
+    CheckResponse:
+      type: object
+      required:
+      - allowed
+      properties:
+        allowed:
+          type: boolean
+          description: Whether the action is allowed.
+    TabularIdentOrUuid:
+      oneOf:
+      - type: object
+        required:
+        - warehouse-id
+        - table-id
+        properties:
+          table-id:
+            type: string
+            format: uuid
+          warehouse-id:
+            type: string
+            format: uuid
+      - type: object
+        required:
+        - namespace
+        - table
+        - warehouse-id
+        properties:
+          namespace:
+            type: array
+            items:
+              type: string
+          table:
+            type: string
+            description: Name of the table, view, or generic table.
+          warehouse-id:
+            type: string
+            format: uuid
+      description: 'Identifier for a tabular (table, view, or generic table) — either a UUID
+
+        or its name and namespace. Wire format primary names are `table-id` and
+
+        `table`; `view_id` / `view` and `generic_table_id` / `generic_table` are
+
+        accepted as input aliases for client ergonomics.'
+    UpdateServerAssignmentsRequest:
+      type: object
+      properties:
+        deletes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServerAssignment'
+        writes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServerAssignment'
+    OpenFGAProjectAction:
+      type: string
+      enum:
+      - read_assignments
+      - grant_role_creator
+      - grant_create
+      - grant_describe
+      - grant_modify
+      - grant_select
+      - grant_project_admin
+      - grant_security_admin
+      - grant_data_admin
+    OpenFGATableAction:
+      type: string
+      enum:
+      - read_assignments
+      - grant_pass_grants
+      - grant_manage_grants
+      - grant_describe
+      - grant_select
+      - grant_modify
+      - change_ownership
+    UpdateNamespaceAssignmentsRequest:
+      type: object
+      properties:
+        deletes:
+          type: array
+          items:
+            $ref: '#/components/schemas/NamespaceAssignment'
+        writes:
+          type: array
+          items:
+            $ref: '#/components/schemas/NamespaceAssignment'
+    GetNamespaceAuthPropertiesResponse:
+      type: object
+      required:
+      - managed-access
+      - managed-access-inherited
+      properties:
+        managed-access:
+          type: boolean
+        managed-access-inherited:
+          type: boolean
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+x-refined-from:
+- lakekeeper-management-api-openapi.yml
+- lakekeeper-management-plus-api-openapi.yml

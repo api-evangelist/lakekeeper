@@ -1,0 +1,55 @@
+generated: '2026-08-27'
+method: searched
+source: >-
+  https://docs.lakekeeper.io/docs/latest/configuration/, https://docs.lakekeeper.io/docs/latest/monitoring/,
+  https://docs.lakekeeper.io/docs/latest/admission/, https://docs.lakekeeper.io/llms-full.txt
+limit_count: 0
+note: >-
+  Lakekeeper publishes NO rate limits and returns NO rate-limit response headers, and that is a property of the
+  product rather than a documentation gap: it is self-hosted server software, so throughput is bounded by the
+  operator's own Postgres, object store and pod count, not by a vendor quota. A full-text search of the published
+  documentation corpus (llms-full.txt, 580KB) finds no X-RateLimit-*, no RateLimit-*, and no documented 429
+  response from Lakekeeper itself. Every 429 mentioned in the docs is one Lakekeeper RECEIVES from an upstream
+  (Microsoft Graph, cloud STS/SAS endpoints) and retries with Retry-After — the client side, not the server side.
+limits: []
+response_headers:
+  published: []
+  note: No X-RateLimit-*, RateLimit-* or Retry-After header is documented on a Lakekeeper response.
+exhaustion_status: null
+request_guards:
+- name: LAKEKEEPER__MAX_REQUEST_BODY_SIZE
+  default: 2 MB
+  description: Rejects oversized request bodies. Introduced in v0.12.0.
+  source: https://docs.lakekeeper.io/docs/latest/configuration/
+- name: LAKEKEEPER__MAX_REQUEST_TIME
+  default: 30s
+  description: Rejects slow requests. Introduced in v0.12.0.
+  source: https://docs.lakekeeper.io/docs/latest/configuration/
+- name: LAKEKEEPER__PAGINATION_SIZE_MAX
+  default: not stated
+  description: >-
+    Caps page size on list operations. Setting it to 4294967295 (u32::MAX) restores the Iceberg spec's
+    return-everything behaviour when pageToken is unset.
+  source: https://docs.lakekeeper.io/docs/latest/configuration/
+- name: LAKEKEEPER__MAINTENANCE_MODE
+  default: 'off'
+  description: 'Set to `read-only` to refuse writes server-wide. Captured at startup, not dynamic.'
+adjacent_controls:
+- name: Admission gates
+  description: >-
+    A pluggable post-authentication hook that can deny a request before it reaches a handler — the closest thing
+    Lakekeeper has to per-tenant throttling. A gate returns a terminal 403, or 503 with Retry-After when it fails
+    closed. Gates run on every authenticated request and are expected to cache aggressively.
+  source: https://docs.lakekeeper.io/docs/latest/admission/
+- name: Endpoint statistics
+  description: >-
+    Per-project, per-endpoint API call counts, readable via POST /management/v1/endpoint-statistics
+    (get_endpoint_statistics) and routable to a custom EndpointStatisticsSink. This is the metering surface an
+    operator would build chargeback or quotas on — Lakekeeper measures, the operator enforces.
+  source: https://docs.lakekeeper.io/docs/latest/monitoring/
+outbound_retry_behaviour:
+  description: >-
+    As a CLIENT, Lakekeeper retries transient upstream failures (429 honouring Retry-After, transient 5xx,
+    connection/timeout errors) a few times with exponential backoff before falling back to the last good cached
+    result. Applies to identity-provider role lookups and cloud STS/SAS credential minting.
+  source: https://docs.lakekeeper.io/llms-full.txt

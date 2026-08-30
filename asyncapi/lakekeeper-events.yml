@@ -1,0 +1,63 @@
+generated: '2026-08-27'
+method: searched
+source: >-
+  https://docs.lakekeeper.io/docs/latest/configuration/, https://docs.lakekeeper.io/docs/latest/customize/,
+  https://docs.lakekeeper.io/docs/latest/concepts/
+asyncapi_published: false
+webhooks_published: false
+note: >-
+  Lakekeeper HAS a real event surface, but it publishes neither an AsyncAPI document nor an HTTP webhook catalog,
+  so no AsyncAPI or Webhooks pointer is emitted for it — that would assert a contract the provider does not ship.
+  What exists is a CloudEvents publisher: catalog change events are serialized as CloudEvents and fanned out to
+  whatever sinks the OPERATOR configures. Because the broker, topic and credentials are all deployment
+  configuration, there is no single channel address that could be written into a spec on the provider's behalf.
+  The event TYPE names and payload schemas are likewise not published in the documentation — they live in the
+  Rust EventListener trait — so they are deliberately not enumerated here rather than guessed.
+surface:
+  kind: change-event stream
+  encoding: CloudEvents (https://cloudevents.io)
+  delivery: push to broker
+  trigger: catalog mutations — table created/dropped/renamed/registered, transaction committed, view changes, and more
+  source_of_truth: >-
+    crates/lakekeeper/src/service/events/publisher.rs (CloudEventBackend) and
+    crates/lakekeeper/src/service/events/dispatch.rs (EventListener)
+sinks:
+- name: Apache Kafka
+  crate: lakekeeper-events-kafka
+  configuration:
+  - LAKEKEEPER__KAFKA_TOPIC (example: lakekeeper)
+  - LAKEKEEPER__KAFKA_CONFIG (librdkafka configuration as a dictionary)
+  - LAKEKEEPER__KAFKA_CONFIG_FILE (mutually exclusive with the above; values are not merged)
+  note: Built on rust-rdkafka with librdkafka statically linked.
+- name: NATS
+  crate: lakekeeper-events-nats
+  configuration:
+  - LAKEKEEPER__NATS_ADDRESS (example: nats://localhost:4222)
+  - LAKEKEEPER__NATS_TOPIC (example: iceberg)
+  - LAKEKEEPER__NATS_USER + LAKEKEEPER__NATS_PASSWORD
+  - LAKEKEEPER__NATS_CREDS_FILE
+  - LAKEKEEPER__NATS_TOKEN
+- name: Tracing / log
+  configuration:
+  - LAKEKEEPER__LOG_CLOUDEVENTS=true
+  note: Writes CloudEvents to the log when no Kafka or NATS broker is available — useful for local inspection.
+- name: Custom
+  note: >-
+    Any implementation of the CloudEventBackend trait can be registered via ServeConfiguration.cloud_event_sinks;
+    this is a compile-time/wiring extension, not runtime plugin loading.
+related_surfaces:
+- name: Audit events
+  detail: >-
+    Authorization decisions and catalog operations emit dedicated audit events with exactly-once-per-call
+    delivery (v0.12.0). Delivered through the logging pipeline, tagged event_source = "audit", and since v0.13.0
+    they can surface the contributing policies behind a decision.
+  docs: https://docs.lakekeeper.io/docs/latest/logging/
+- name: Endpoint statistics
+  detail: >-
+    Per-project, per-endpoint call statistics routable to a custom EndpointStatisticsSink, or read over HTTP via
+    get_endpoint_statistics.
+  docs: https://docs.lakekeeper.io/docs/latest/monitoring/
+gaps:
+- No AsyncAPI document is published for the CloudEvents stream.
+- Event type names and payload schemas are not documented outside the Rust source.
+- No HTTP webhook delivery — a consumer must operate a Kafka or NATS broker.

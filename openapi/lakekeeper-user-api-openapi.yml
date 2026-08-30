@@ -1,0 +1,793 @@
+openapi: 3.2.0
+info:
+  title: Lakekeeper User API
+  version: 0.0.0
+  description: 'Operations tagged user across 2 of this provider''s published API definitions: lakekeeper-management-api-openapi.yml, lakekeeper-management-plus-api-openapi.yml. Each path carries the servers of the definition it was published in.'
+servers:
+- url: '{scheme}://{host}{basePath}'
+  description: Lakekeeper Management API
+  variables:
+    basePath:
+      default: ''
+      description: Optional path prefix (starting with '/') to be prepended to all routes
+    host:
+      default: localhost
+      description: The host (and optional port) for the specified server
+    scheme:
+      default: https
+      description: The scheme of the URI, either http or https
+security:
+- bearerAuth: []
+tags:
+- name: user
+  description: Manage Users
+paths:
+  /management/v1/search/user:
+    post:
+      tags:
+      - user
+      summary: Search User
+      description: Performs a fuzzy search for users based on the provided criteria.
+      operationId: search_user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchUserRequest'
+        required: true
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchUserResponse'
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/user:
+    get:
+      tags:
+      - user
+      summary: List Users
+      description: Returns a paginated list of users based on the provided query parameters.
+      operationId: list_user
+      parameters:
+      - name: name
+        in: query
+        description: Search for a specific username
+        required: false
+        schema:
+          type:
+          - string
+          - 'null'
+      - name: pageToken
+        in: query
+        description: Next page token
+        required: false
+        schema:
+          type:
+          - string
+          - 'null'
+      - name: pageSize
+        in: query
+        description: 'Signals an upper bound of the number of results that a client will receive.
+
+          Default: 100'
+        required: false
+        schema:
+          type:
+          - integer
+          - 'null'
+          format: int64
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListUsersResponse'
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    post:
+      tags:
+      - user
+      summary: Provision User
+      description: 'Creates a new user or updates an existing user''s metadata from the provided token.
+
+        The token should include "profile" and "email" scopes for complete user information.'
+      operationId: create_user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+        required: true
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/user/{user_id}:
+    get:
+      tags:
+      - user
+      summary: Get User by ID
+      description: Retrieves detailed information about a specific user.
+      operationId: get_user
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    put:
+      tags:
+      - user
+      summary: Replace User
+      description: 'Replaces the current user details with the new details provided in the request.
+
+        If a field is not provided, it will be set to `None`.'
+      operationId: update_user
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+        required: true
+      responses:
+        '200':
+          description: User details updated successfully
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    delete:
+      tags:
+      - user
+      summary: Delete User
+      description: 'Permanently removes a user and all their associated permissions.
+
+        If the user is re-registered later, their permissions will need to be re-added.'
+      operationId: delete_user
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: User deleted successfully
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/user/{user_id}/actions:
+    get:
+      tags:
+      - user
+      summary: Get allowed actions on a user
+      operationId: get_user_actions
+      parameters:
+      - name: principalUser
+        in: query
+        description: 'The user to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+      - name: principalRole
+        in: query
+        description: 'The role to show actions for.
+
+          If neither user nor role is specified, shows actions for the current user.'
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetLakekeeperUserActionsResponse'
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/user/{user_id}/roles:
+    get:
+      tags:
+      - user
+      summary: List User Roles
+      description: Lists the roles a user is directly assigned to, keyset-paginated.
+      operationId: list_user_roles
+      parameters:
+      - name: pageToken
+        in: query
+        required: false
+        schema:
+          type:
+          - string
+          - 'null'
+      - name: pageSize
+        in: query
+        description: 'Upper bound on the number of results returned. Default: 100.'
+        required: false
+        schema:
+          type:
+          - integer
+          - 'null'
+          format: int64
+      - name: user_id
+        in: path
+        description: User ID
+        required: true
+        schema:
+          type: string
+      - name: x-project-id
+        in: header
+        description: Project ID (optional; falls back to the default project if not provided)
+        required: false
+        schema:
+          type:
+          - string
+          - 'null'
+      responses:
+        '200':
+          description: Roles the user is assigned to
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListRoleMembershipsResponse'
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/user/{user_id}/roles/transitive:
+    get:
+      tags:
+      - user
+      summary: List Transitive User Roles
+      description: 'Lists the full effective (transitive) role set a user holds — direct
+
+        assignments plus every role reachable upward through membership — keyset-
+
+        paginated. Supported only when assignments are catalog-managed; an
+
+        assignment-managing authorizer (e.g. OpenFGA) returns `501`.'
+      operationId: list_user_transitive_roles
+      parameters:
+      - name: pageToken
+        in: query
+        required: false
+        schema:
+          type:
+          - string
+          - 'null'
+      - name: pageSize
+        in: query
+        description: 'Upper bound on the number of results returned. Default: 100.'
+        required: false
+        schema:
+          type:
+          - integer
+          - 'null'
+          format: int64
+      - name: user_id
+        in: path
+        description: User ID
+        required: true
+        schema:
+          type: string
+      - name: x-project-id
+        in: header
+        description: Project ID (optional; falls back to the default project if not provided)
+        required: false
+        schema:
+          type:
+          - string
+          - 'null'
+      responses:
+        '200':
+          description: Transitive roles the user holds
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListRoleMembershipsResponse'
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+        '501':
+          description: Transitive listing is not supported under the configured authorizer backend
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+  /management/v1/whoami:
+    get:
+      tags:
+      - user
+      summary: Whoami
+      description: Returns information about the user associated with the current authentication token.
+      operationId: whoami
+      responses:
+        '200':
+          description: Current user and instance-admin status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WhoamiResponse'
+        4XX:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IcebergErrorResponse'
+    servers:
+    - url: '{scheme}://{host}{basePath}'
+      description: Lakekeeper Management API
+      variables:
+        basePath:
+          default: ''
+          description: Optional path prefix (starting with '/') to be prepended to all routes
+        host:
+          default: localhost
+          description: The host (and optional port) for the specified server
+        scheme:
+          default: https
+          description: The scheme of the URI, either http or https
+components:
+  schemas:
+    User:
+      type: object
+      description: User of the catalog
+      required:
+      - name
+      - id
+      - user-type
+      - last-updated-with
+      - created-at
+      properties:
+        created-at:
+          type: string
+          format: date-time
+          description: Timestamp when the user was created
+        email:
+          type:
+          - string
+          - 'null'
+          description: Email of the user
+        id:
+          type: string
+          description: The user's ID
+        last-updated-with:
+          $ref: '#/components/schemas/UserLastUpdatedWith'
+          description: The endpoint that last updated the user
+        name:
+          type: string
+          description: Name of the user
+        updated-at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Timestamp when the user was last updated
+        user-type:
+          $ref: '#/components/schemas/UserType'
+          description: Type of the user
+    CreateUserRequest:
+      type: object
+      properties:
+        email:
+          type:
+          - string
+          - 'null'
+          description: 'Email of the user. If id is not specified, the email is extracted
+
+            from the provided token.'
+        id:
+          type:
+          - string
+          - 'null'
+          description: 'Subject id of the user - allows user provisioning.
+
+            The id must be identical to the subject in JWT tokens, prefixed
+
+            with `<idp-identifier>~`. For example: `oidc~1234567890` for OIDC users
+
+            or `kubernetes~1234567890` for Kubernetes users.
+
+            To create users in self-service manner, do not set the id.
+
+            The id is then extracted from the passed JWT token.'
+        name:
+          type:
+          - string
+          - 'null'
+          description: 'Name of the user. If id is not specified, the name is extracted
+
+            from the provided token.'
+        update-if-exists:
+          type: boolean
+          description: 'Update the user if it already exists
+
+            Default: false'
+        user-type:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/UserType'
+            description: Type of the user. Useful to override wrongly classified users
+    GetLakekeeperUserActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LakekeeperUserAction'
+    SearchUserRequest:
+      type: object
+      required:
+      - search
+      properties:
+        search:
+          type: string
+          description: 'Search string for fuzzy search.
+
+            Length is truncated to 64 characters.'
+    SearchUserResponse:
+      type: object
+      description: Search result for users
+      required:
+      - users
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchUser'
+          description: List of users matching the search criteria
+    LakekeeperUserAction:
+      oneOf:
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - read
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - update
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - delete
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - read_role_assignments
+    ErrorModel:
+      type: object
+      description: JSON error payload returned in a response with further details on the error
+      required:
+      - message
+      - type
+      - code
+      properties:
+        code:
+          type: integer
+          format: int32
+          description: HTTP response code
+          minimum: 0
+        message:
+          type: string
+          description: Human-readable error message
+        stack:
+          type: array
+          items:
+            type: string
+        type:
+          type: string
+          description: Internal type definition of the error
+    ListUsersResponse:
+      type: object
+      required:
+      - users
+      properties:
+        next-page-token:
+          type:
+          - string
+          - 'null'
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+    UserLastUpdatedWith:
+      type: string
+      description: How the user was last updated
+      enum:
+      - create-endpoint
+      - config-call-creation
+      - update-endpoint
+      - role-provider
+    RoleMembership:
+      type: object
+      description: 'A role''s display identity in a membership listing: the role-member variant of
+
+        [`RoleMember`], and the item type of `/member-of` and `/user/{id}/roles`.
+
+        `ident` (`provider/source-id`) is the stable external handle a client references
+
+        the role by; `id` is the internal UUID. All fields are always present — a role
+
+        whose id no longer resolves in the catalog (a dangling authorizer edge) is
+
+        dropped from the listing and logged, never surfaced with a null identity.'
+      required:
+      - id
+      - ident
+      - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        ident:
+          type: string
+        name:
+          type: string
+    ListRoleMembershipsResponse:
+      type: object
+      description: 'One page of roles — the `member-of` set or a user''s roles, direct or transitive
+
+        depending on the endpoint.'
+      required:
+      - roles
+      properties:
+        next-page-token:
+          type:
+          - string
+          - 'null'
+          description: 'Token for the next page; `null`/absent once the listing is exhausted.
+
+            Note for SDK authors: **stop when `next-page-token` is null/absent.** The
+
+            final page of results may itself return a null token, so don''t rely on
+
+            receiving a separate trailing empty page — keep requesting until the token
+
+            is null.'
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleMembership'
+    SearchUser:
+      type: object
+      required:
+      - name
+      - id
+      - user-type
+      properties:
+        email:
+          type:
+          - string
+          - 'null'
+          description: 'Email of the user. If id is not specified, the email is extracted
+
+            from the provided token.'
+        id:
+          type: string
+          description: ID of the user
+        name:
+          type: string
+          description: Name of the user
+        user-type:
+          $ref: '#/components/schemas/UserType'
+          description: Type of the user
+    IcebergErrorResponse:
+      type: object
+      description: JSON wrapper for all error responses (non-2xx)
+      required:
+      - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorModel'
+    UpdateUserRequest:
+      type: object
+      required:
+      - name
+      - user-type
+      properties:
+        email:
+          type:
+          - string
+          - 'null'
+        name:
+          type: string
+        user-type:
+          $ref: '#/components/schemas/UserType'
+    UserType:
+      type: string
+      description: Type of a User
+      enum:
+      - human
+      - application
+    WhoamiResponse:
+      allOf:
+      - $ref: '#/components/schemas/User'
+      - type: object
+        required:
+        - is-instance-admin
+        properties:
+          is-instance-admin:
+            type: boolean
+            description: 'Whether the authenticated principal is an instance admin (configured via
+
+              `LAKEKEEPER__INSTANCE_ADMINS`). Instance admins may modify the spec of
+
+              warehouses marked `managed-by: instance-admin`. Only ever `true` for a
+
+              principal acting directly; role-assumed requests do not inherit it.'
+      description: 'Response of the `whoami` endpoint: the catalog user for the current token,
+
+        plus request-scoped privilege not stored on the user record.'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+x-refined-from:
+- lakekeeper-management-api-openapi.yml
+- lakekeeper-management-plus-api-openapi.yml

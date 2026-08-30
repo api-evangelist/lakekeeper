@@ -1,0 +1,153 @@
+generated: '2026-08-27'
+method: derived
+source: >-
+  openapi/lakekeeper-management-api-openapi.yml (221 schemas), openapi/lakekeeper-catalog-api-openapi.yml (158
+  schemas), openapi/lakekeeper-generic-table-api-openapi.yml (11 schemas),
+  https://docs.lakekeeper.io/docs/latest/concepts/
+summary: >-
+  Lakekeeper's object graph is a strict containment hierarchy — Server > Project > Warehouse > Namespace (nestable)
+  > Table | View | GenericTable — crossed by a principal graph of Users and Roles that are granted permissions at
+  any level of that hierarchy. Permissions are inherited downwards, which is why OpenFGA (a Zanzibar-style ReBAC
+  engine with bi-directional inheritance) is the default authorizer rather than a flat RBAC table.
+id_conventions:
+  format: UUID
+  style: >-
+    Identifiers are kebab-case in JSON (`project-id`, `warehouse-id`, `task-id`, `parent-task-id`, `source-id`,
+    `provider-id`, `default-project-id`, `server-id`) — the whole API uses kebab-case field names, not snake_case,
+    while operationIds are snake_case.
+  external_principals: 'User ids from an OIDC provider take the form `oidc~<subject from the provider>`.'
+  note: Ids are opaque UUIDs with no type prefix, so an id alone does not tell an agent what kind of object it is.
+entities:
+- name: Server
+  description: >-
+    The Lakekeeper deployment itself. Not created through the API — it is brought into existence by
+    POST /management/v1/bootstrap, which runs exactly once per catalog. Carries server-id and default-project-id.
+  operations: [bootstrap, get_server_info, get_server_actions]
+  schemas: [ServerInfo]
+- name: Project
+  description: The top-level tenant boundary. Selected on a request with the x-project-id header.
+  operations: [create_project, get_project, list_projects, rename_project, delete_project, get_project_actions, get_endpoint_statistics]
+  schemas: [CreateProjectRequest, CreateProjectResponse, GetProjectResponse]
+- name: Warehouse
+  description: >-
+    A uniquely-owned location on object storage, described by a storage-profile and an optional
+    storage-credential. Locations must never be shared between Warehouses or vended credentials could leak data
+    across tenants. Carries the delete profile, protection flag, activation status, format-version policy and
+    managed-by marker.
+  operations: [create_warehouse, get_warehouse, list_warehouses, rename_warehouse, delete_warehouse, activate_warehouse, deactivate_warehouse, update_storage_profile, update_storage_credential, update_warehouse_delete_profile, update_warehouse_format_version_policy, set_warehouse_protection, set_warehouse_managed_by, get_warehouse_statistics, get_warehouse_actions, search_tabular]
+  schemas: [CreateWarehouseRequest, CreateWarehouseResponse, GetWarehouseResponse, TabularDeleteProfile]
+- name: Namespace
+  description: >-
+    A nestable container for further Namespaces, Tables, Views and GenericTables. Cannot be dropped through the
+    /catalog API unless empty — and soft-deleted tables still count as children.
+  operations: [createNamespace, listNamespaces, loadNamespaceMetadata, namespaceExists, dropNamespace, updateProperties, set_namespace_protection, get_namespace_protection, get_namespace_actions]
+- name: Table
+  description: An Iceberg table. Metadata commits go through updateTable or commitTransaction.
+  operations: [createTable, loadTable, updateTable, dropTable, tableExists, listTables, renameTable, registerTable, loadCredentials, reportMetrics, planTableScan, fetchPlanningResult, cancelPlanning, fetchScanTasks, set_table_protection, get_table_protection, get_table_actions]
+- name: View
+  description: An Iceberg view, with DEFINER and INVOKER security models for context-aware authorization through view chains.
+  operations: [createView, loadView, replaceView, dropView, viewExists, listViews, renameView, set_view_protection, get_view_protection, get_view_actions]
+- name: GenericTable
+  description: >-
+    A non-Iceberg table (Lance, Delta, CSV, Parquet) cataloged in the same Namespace as Iceberg tables, with the
+    same credential vending and access control. Served by the Data API at /lakekeeper/v1.
+  operations: [create_generic_table, load_generic_table, list_generic_tables, drop_generic_table, rename_generic_table, load_generic_table_credentials, set_generic_table_protection, get_generic_table_protection, get_generic_table_actions]
+- name: User
+  description: A principal provisioned in the catalog, normally mirrored from the OIDC provider.
+  operations: [create_user, get_user, update_user, delete_user, list_user, search_user, whoami, list_user_roles, list_user_transitive_roles, get_user_actions]
+  schemas: [User, SearchUser, CreateUserRequest, UserMembership]
+- name: Role
+  description: >-
+    A first-class principal that can be granted permissions and assumed. Roles nest — a Role can be a member of
+    another Role — with the nesting depth bounded at write time. May be bound to an external source system
+    (provider-id + source-id) so memberships are resolved from an IdP such as Entra ID, Okta or LDAP.
+  operations: [create_role, get_role, update_role, delete_role, list_roles, search_role, get_role_metadata, add_role_members, remove_role_member, list_role_members, list_role_transitive_members, list_role_member_of, list_role_transitive_member_of, update_role_source_system, get_role_actions]
+  schemas: [Role, RoleMetadata, RoleMembership]
+- name: Task
+  description: >-
+    A persisted background job on Lakekeeper's own task infrastructure — built-in queues are tabular_expiration,
+    tabular_purge and task_log_cleanup. Tasks nest via parent-task-id.
+  operations: [list_tasks, get_task_details, control_tasks, list_project_tasks, get_project_task_details, control_project_tasks, get_task_queue_config_tabular_expiration, set_task_queue_config_tabular_expiration, get_task_queue_config_tabular_purge, set_task_queue_config_tabular_purge, get_project_task_queue_config_task_log_cleanup, set_project_task_queue_config_task_log_cleanup]
+  schemas: [WarehouseTaskInfo, ProjectTaskInfo, ScheduleTaskResponse]
+- name: DeletedTabular
+  description: A Table or View in the soft-deleted state, awaiting expiration or an undrop.
+  operations: [list_deleted_tabulars, undrop_tabulars]
+  schemas: [DeletedTabularResponse, ListDeletedTabularsResponse]
+relationships:
+- from: Server
+  to: Project
+  type: has_many
+  via: default-project-id names the fallback Project
+- from: Project
+  to: Warehouse
+  type: has_many
+  via: CreateWarehouseRequest.project-id
+  note: A Warehouse's Project cannot be changed after creation.
+- from: Warehouse
+  to: Namespace
+  type: has_many
+  via: path containment (/management/v1/warehouse/{warehouse_id}/namespace/{namespace_id})
+- from: Namespace
+  to: Namespace
+  type: has_many
+  via: nesting — Namespaces contain Namespaces
+- from: Namespace
+  to: Table
+  type: has_many
+  via: path containment
+- from: Namespace
+  to: View
+  type: has_many
+  via: path containment
+- from: Namespace
+  to: GenericTable
+  type: has_many
+  via: path containment (/lakekeeper/v1/{prefix}/namespaces/{namespace}/generic-tables)
+- from: Warehouse
+  to: DeletedTabular
+  type: has_many
+  via: /management/v1/warehouse/{warehouse_id}/deleted-tabulars
+- from: Warehouse
+  to: Task
+  type: has_many
+  via: WarehouseTaskInfo.warehouse-id
+- from: Project
+  to: Task
+  type: has_many
+  via: ProjectTaskInfo.project-id
+- from: Task
+  to: Task
+  type: belongs_to
+  via: parent-task-id
+- from: Project
+  to: Role
+  type: has_many
+  via: Role.project-id
+- from: Role
+  to: Role
+  type: has_many
+  via: role-in-role membership (add_role_members / list_role_member_of), depth-bounded
+- from: User
+  to: Role
+  type: has_many
+  via: list_user_roles / list_user_transitive_roles
+- from: Role
+  to: ExternalRoleSource
+  type: belongs_to
+  via: provider-id + source-id (update_role_source_system)
+- from: View
+  to: Table
+  type: references
+  via: 'the catalog `referenced-by` query, added in v0.12.0, resolves which views reference a table or view'
+authorization_graph:
+  note: >-
+    Permissions are not a field on these entities. They live in the configured Authorizer (OpenFGA by default) and
+    are read through 39 permissions-openfga operations plus the per-object `*/actions` endpoints
+    (get_server_actions, get_project_actions, get_warehouse_actions, get_namespace_actions, get_table_actions,
+    get_view_actions, get_generic_table_actions, get_role_actions, get_user_actions). Those `*/actions` endpoints
+    are the correct way for an agent to ask "what may I do here?" before attempting an operation — see the 403
+    gotcha in errors/lakekeeper-problem-types.yml.
+  reconciliation: >-
+    Postgres is the source of truth for the structural hierarchy; `lakekeeper openfga reconcile` rebuilds OpenFGA
+    tuples from it. Grants, ownership records and role assignments live only in OpenFGA and cannot be
+    reconstructed from the catalog.
