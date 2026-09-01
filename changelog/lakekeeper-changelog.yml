@@ -1,0 +1,101 @@
+generated: '2026-08-27'
+method: searched
+source: >-
+  https://docs.lakekeeper.io/about/release-notes/, https://docs.lakekeeper.io/about/enterprise-release-notes/,
+  https://github.com/lakekeeper/lakekeeper/releases.atom,
+  https://raw.githubusercontent.com/lakekeeper/lakekeeper/main/CHANGELOG.md
+scheme: >-
+  Two published streams. The narrative release notes at docs.lakekeeper.io/about/release-notes/ (open source) and
+  /about/enterprise-release-notes/ (Lakekeeper+) are hand-written highlights; CHANGELOG.md in the repo is generated
+  from Conventional Commits and grouped into BREAKING CHANGES / Features / Bug Fixes. GitHub Releases carry the
+  same content per tag and are available as an Atom feed.
+feeds:
+- type: atom
+  url: https://github.com/lakekeeper/lakekeeper/releases.atom
+- type: html
+  url: https://docs.lakekeeper.io/about/release-notes/
+- type: markdown
+  url: https://raw.githubusercontent.com/lakekeeper/lakekeeper/main/CHANGELOG.md
+- type: html
+  url: https://docs.lakekeeper.io/about/enterprise-release-notes/
+  scope: Lakekeeper+
+subscribe: https://docs.lakekeeper.io/about/subscribe/
+current_version: v0.13.3
+current_version_date: '2026-08-17'
+entries:
+- version: v0.13.3
+  date: '2026-08-17'
+  breaking: false
+  url: https://github.com/lakekeeper/lakekeeper/releases/tag/v0.13.3
+- version: v0.13.1
+  date: '2026-06-30'
+  breaking: false
+  highlights:
+  - 'UI: Console updated to 0.19.0; removed a leading slash from the default client_id.'
+  url: https://github.com/lakekeeper/lakekeeper/releases/tag/v0.13.1
+- version: v0.13.0
+  date: '2026-06-30'
+  breaking: true
+  breaking_changes:
+  - >-
+    Default storage layout for new namespaces changed from <base>/<parent-namespace-uuid>/<tabular-uuid> to
+    <base>/<tabular-uuid>. Not retroactive.
+  - >-
+    authz: CatalogRoleAction gains a non-unit variant and RoleAction is no longer Copy; downstream authorizers must
+    handle UpdateSourceSystem.
+  - >-
+    authz: Authorizer::are_allowed_*_actions_impl now returns Result<Vec<AuthorizationDecision>, _> instead of
+    Result<Vec<bool>, _>.
+  - 'events: NATS and Kafka backends split into separate crates (lakekeeper-events-nats, lakekeeper-events-kafka).'
+  - 'storage: lakekeeper-storage-postgres split into a separate crate.'
+  highlights:
+  - Generic Table API with Lance — non-Iceberg formats as first-class catalog objects with credential vending.
+  - Pluggable post-authentication admission gates, which can contribute resolved roles and see the caller's token.
+  - Multiple OIDC providers at once via LAKEKEEPER__OPENID_PROVIDERS.
+  - Role-in-role membership with bounded nesting depth, plus an authorizer-independent role-membership API.
+  - Customer-managed KMS encryption — warehouses with aws-kms-key-arn advertise s3.sse.type=kms.
+  - Microsoft OneLake / Fabric storage profiles including workspace private-link endpoints.
+  - Per-warehouse table format-version policy.
+  - 'Downgrade protection: serve refuses to start against a database migrated by a newer binary.'
+  - /health now returns 503 rather than 200 when unhealthy.
+  url: https://github.com/lakekeeper/lakekeeper/releases/tag/v0.13.0
+- version: v0.12.4
+  date: '2026-06-17'
+  breaking: false
+  url: https://github.com/lakekeeper/lakekeeper/releases/tag/v0.12.4
+- version: v0.12.3
+  date: '2026-05-26'
+  breaking: false
+  url: https://github.com/lakekeeper/lakekeeper/releases/tag/v0.12.3
+- version: v0.12.2
+  date: '2026-05-21'
+  breaking: false
+  url: https://github.com/lakekeeper/lakekeeper/releases/tag/v0.12.2
+- version: v0.12.1
+  date: '2026-05-05'
+  breaking: false
+  url: https://github.com/lakekeeper/lakekeeper/releases/tag/v0.12.1
+- version: v0.12.0
+  date: '2026-04-03'
+  breaking: false
+  highlights:
+  - Idempotency keys for safe retries — Idempotency-Key header, on by default, warehouse-scoped, 30-minute lifetime.
+  - Audit Event System with exactly-once-per-call delivery for authorization decisions and catalog operations.
+  - Customizable storage layouts using {uuid} / {name} placeholders on S3/GCS/ADLS.
+  - Structured JSON logs ready for log-pipeline ingestion.
+  - 'Request size/time limits: LAKEKEEPER__MAX_REQUEST_BODY_SIZE (2 MB) and LAKEKEEPER__MAX_REQUEST_TIME (30s).'
+  - Instance Admins — a server-wide admin role independent of project membership.
+  - '`referenced-by` lookup to discover views referencing a table or view.'
+  url: https://github.com/lakekeeper/lakekeeper/releases/tag/v0.12.0
+- version: v0.11.6
+  date: '2026-05-10'
+  breaking: false
+  url: https://github.com/lakekeeper/lakekeeper/releases/tag/v0.11.6
+- version: v0.11.5
+  date: '2026-04-02'
+  breaking: false
+  url: https://github.com/lakekeeper/lakekeeper/releases/tag/v0.11.5
+note: >-
+  Window captured: 2026-04-02 to 2026-08-17 (the ten most recent tags). Highlights are transcribed from the
+  provider's own release notes; releases with no highlights listed here were not summarised on the docs site
+  beyond their tag.

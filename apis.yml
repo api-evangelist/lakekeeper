@@ -30,18 +30,18 @@ specificationVersion: '0.23'
 created: '2026-08-27'
 modified: '2026-08-27'
 tags:
-- apache-iceberg
-- data-catalog
-- lakehouse
+- Apache Iceberg
+- Data Catalog
+- Lakehouse
 - Open-Source
-- rust
-- data-governance
-- access-control
-- object-storage
+- Rust
+- Data Governance
+- Access Control
+- Object Storage
 - Metadata
-- self-hosted
+- Self-Hosted
 - openfga
-- data-engineering
+- Data Engineering
 tags_raw:
 - apache-iceberg
 - data-catalog
@@ -66,10 +66,10 @@ apis:
   humanURL: https://docs.lakekeeper.io/docs/latest/generic-tables/
   baseURL: '{scheme}://{host}/lakekeeper/v1'
   tags:
-  - data-catalog
-  - lakehouse
+  - Data Catalog
+  - Lakehouse
   - Metadata
-  - data-engineering
+  - Data Engineering
   tags_raw:
   - data-catalog
   - lakehouse

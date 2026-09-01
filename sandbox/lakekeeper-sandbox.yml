@@ -1,0 +1,55 @@
+generated: '2026-08-27'
+method: searched
+source: >-
+  https://docs.lakekeeper.io/getting-started/, https://docs.lakekeeper.io/docs/latest/api-overview/,
+  https://docs.lakekeeper.io/docs/latest/bootstrap/, https://github.com/lakekeeper/lakekeeper/tree/main/examples
+summary: >-
+  Lakekeeper has no hosted sandbox and no test-mode credentials, because there is no vendor-operated environment to
+  sandbox against. Its equivalent is a self-contained local deployment: a docker compose example that stands up the
+  catalog, its Postgres, an S3-compatible object store and (in the auth examples) an IdP, so a developer gets a
+  complete disposable lakehouse on localhost. There are no test keys, no test cards, and no magic identifiers to
+  record — everything is a real deployment with real credentials the developer generates.
+hosted_sandbox: false
+test_mode_keys: false
+default_endpoint: http://localhost:8181
+console_ui: http://localhost:8181 (built-in Lakekeeper Console, served by the same binary)
+interactive_reference: >-
+  http://localhost:8181/swagger-ui/#/ — a Swagger-UI accurate to the exact version and configuration running,
+  served when LAKEKEEPER__SERVE_SWAGGER_UI is true. This is the authoritative API reference for a given
+  deployment; the docs-site OpenAPI documents are the released-version snapshot.
+quickstart:
+  steps:
+  - git clone https://github.com/lakekeeper/lakekeeper.git
+  - cd lakekeeper/examples/minimal
+  - docker compose up
+  - open http://localhost:8181/swagger-ui/#/
+  source: https://docs.lakekeeper.io/docs/latest/api-overview/
+deployment_options:
+- name: Self-contained docker compose examples
+  detail: >-
+    examples/ in the repository. The minimal example needs no external services. Since v0.13.0 the compose
+    examples use SeaweedFS rather than MinIO as the S3-compatible store.
+- name: Kubernetes via Helm
+  detail: >-
+    The official chart can bundle Postgres and OpenFGA for a throwaway cluster install
+    (https://lakekeeper.github.io/lakekeeper-charts).
+- name: Prebuilt binary
+  detail: './lakekeeper migrate && ./lakekeeper serve'
+- name: From source
+  detail: cargo build; `just` is the task runner.
+bootstrap:
+  required: true
+  detail: >-
+    A fresh deployment must be bootstrapped once, through the Console UI or POST /management/v1/bootstrap. The
+    endpoint runs exactly once per catalog by design; `lakekeeper reopen-bootstrap` re-opens it without touching
+    server_id, catalog data or existing OpenFGA tuples.
+  docs: https://docs.lakekeeper.io/docs/latest/bootstrap/
+fixtures:
+  detail: >-
+    The repository carries integration tests against Spark, PyIceberg, Trino and StarRocks, which double as
+    worked examples of connecting each engine.
+  docs: https://docs.lakekeeper.io/docs/latest/engines/
+dry_run:
+  detail: >-
+    The only dry-run affordance is `lakekeeper openfga reconcile --dry-run`, which reports the OpenFGA tuple diff
+    without writing. No HTTP operation accepts a dry-run parameter.

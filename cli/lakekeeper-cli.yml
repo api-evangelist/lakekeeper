@@ -1,0 +1,90 @@
+generated: '2026-08-27'
+method: searched
+source: >-
+  https://raw.githubusercontent.com/lakekeeper/lakekeeper/main/crates/lakekeeper-bin/src/main.rs,
+  https://docs.lakekeeper.io/docs/latest/configuration/,
+  https://docs.lakekeeper.io/docs/latest/authorization-openfga/, https://docs.lakekeeper.io/getting-started/
+name: lakekeeper
+description: >-
+  The `lakekeeper` binary is the server itself, not a separate API client. It is an operator CLI (built with clap):
+  it migrates the database, starts the HTTP server, checks health, and reconciles OpenFGA. There is no
+  general-purpose command-line client for calling the Management or Catalog APIs — for that, the first-party
+  surface is the language clients in packages/ or plain HTTP.
+distribution:
+  container: quay.io/lakekeeper/catalog
+  binary: prebuilt binaries published on GitHub Releases
+  source: cargo build (Rust; `just` is the task runner)
+  helm: https://lakekeeper.github.io/lakekeeper-charts
+configuration: >-
+  Entirely environment-variable driven with the LAKEKEEPER__ prefix; there are almost no command flags for
+  behaviour. See https://docs.lakekeeper.io/docs/latest/configuration/.
+commands:
+- command: lakekeeper migrate
+  description: >-
+    Initialise and update the Postgres schema and install/update the OpenFGA authorization model. REQUIRED before
+    every upgrade and before the first `serve`; skipping intermediate versions is safe, and it exits immediately
+    when already current.
+- command: lakekeeper serve
+  description: Run the HTTP server. Refuses to start against an un-migrated or newer-migrated database.
+  flags:
+  - flag: -f, --force-start
+    description: >-
+      Start even if the DB is not up or migrations are incomplete. Also the documented escape hatch after a
+      version rollback, accepting schema-incompatibility risk.
+- command: lakekeeper wait-for-db
+  description: Block until the database is reachable and migrated — designed for container init/readiness ordering.
+  flags:
+  - flag: -d
+    description: Test the DB connection (requires postgres env values).
+  - flag: -m
+    description: Check migrations; implies -d.
+  - flag: --retries
+    description: Connection attempts. Default 15.
+  - flag: --backoff
+    description: Seconds between attempts. Default 2.
+- command: lakekeeper healthcheck
+  description: Check the health endpoint of the server.
+  flags:
+  - flag: -a
+    description: Check all services; implies -d and -s.
+  - flag: -d
+    description: Only test the DB connection.
+  - flag: -s
+    description: Only test the server.
+- command: lakekeeper openfga reconcile
+  description: >-
+    Rebuild structural OpenFGA hierarchy tuples from the Postgres catalog, which is the source of truth. Intended
+    for drift after a backup/restore where Postgres and OpenFGA were snapshotted at different times, after
+    repointing at a fresh OpenFGA store, or after enabling OpenFGA on an already-bootstrapped server. Run during a
+    low-traffic window — concurrent writes can create transient inconsistencies that self-heal on the next run.
+  flags:
+  - flag: --mode add-missing | add-and-delete-drift
+    description: >-
+      add-missing (default) is purely additive; add-and-delete-drift also removes structural tuples the catalog
+      contradicts.
+  - flag: --dry-run
+    description: Compute and report the diff without writing to OpenFGA. The product's only dry-run affordance.
+  caveat: >-
+    Reconcile rebuilds the structural hierarchy only. The initial server admin/operator tuple, ownership records,
+    grants and role assignments are not stored in the catalog and cannot be reconstructed from it.
+- command: lakekeeper reopen-bootstrap
+  description: >-
+    Re-open the catalog so POST /management/v1/bootstrap can be called again. /management/v1/bootstrap runs once
+    per catalog by design; this reopens it without touching server_id, catalog data or existing OpenFGA tuples.
+key_flows:
+- name: First deployment
+  steps:
+  - lakekeeper migrate
+  - lakekeeper serve
+  - POST /management/v1/bootstrap (or bootstrap through the Console UI)
+- name: Upgrade
+  steps:
+  - Stop the old version
+  - lakekeeper migrate
+  - lakekeeper serve
+- name: Enable OpenFGA on an existing deployment
+  steps:
+  - Configure the OpenFGA store (v1.11+ required; tested against v1.14)
+  - lakekeeper migrate
+  - lakekeeper openfga reconcile --mode add-missing --dry-run
+  - lakekeeper openfga reconcile --mode add-missing

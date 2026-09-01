@@ -1,0 +1,128 @@
+generated: '2026-08-27'
+method: derived
+source: >-
+  openapi/lakekeeper-management-api-openapi.yml, openapi/lakekeeper-catalog-api-openapi.yml,
+  openapi/lakekeeper-generic-table-api-openapi.yml
+status: candidate
+note: >-
+  NO MCP SERVER EXISTS. Lakekeeper ships no hosted MCP endpoint and no stdio MCP package — registry.npmjs.org
+  returns 404 for `lakekeeper`, `@lakekeeper/mcp` and `lakekeeper-mcp`, PyPI has no Lakekeeper MCP distribution,
+  and neither the documentation corpus nor the GitHub organization's 16 repositories contain an MCP server. The
+  tools below are a DERIVED CANDIDATE surface — what an MCP server over Lakekeeper's own OpenAPI would expose —
+  and nothing here is callable today. No endpoint URL is asserted, because guessing one that happened to answer
+  would read as a verified agent surface.
+  Worth recording as context: Lakekeeper markets itself as governing "every engine and AI agent" and its whole
+  value proposition — short-lived vended credentials, per-table authorization, an audit trail — is exactly the
+  control plane an agent-facing MCP server would need. The gap between that positioning and the absent MCP
+  surface is the finding.
+deployment:
+  mode: none
+  endpoint: null
+  install: null
+  package: null
+  auth: unknown
+  verified: derived
+discovery_probes:
+- target: npm registry.npmjs.org/lakekeeper
+  status: 404
+- target: npm registry.npmjs.org/@lakekeeper/mcp
+  status: 404
+- target: npm registry.npmjs.org/lakekeeper-mcp
+  status: 404
+- target: docs.lakekeeper.io/llms.txt + llms-full.txt full-text search for "mcp"
+  status: no first-party MCP server documented
+- target: github.com/lakekeeper organization repository listing (16 repos)
+  status: no MCP server repository
+candidate_tools:
+- tool: list_warehouses
+  rest: [list_warehouses]
+  api: management
+  category: discovery
+  description: List the Warehouses in a Project.
+- tool: get_warehouse
+  rest: [get_warehouse]
+  api: management
+  category: discovery
+  description: Read a Warehouse including its storage profile, delete profile and protection status.
+- tool: list_namespaces
+  rest: [listNamespaces]
+  api: catalog
+  category: discovery
+- tool: list_tables
+  rest: [listTables]
+  api: catalog
+  category: discovery
+- tool: load_table
+  rest: [loadTable]
+  api: catalog
+  category: read
+  description: Load Iceberg table metadata. Supports If-None-Match revalidation.
+- tool: list_views
+  rest: [listViews]
+  api: catalog
+  category: discovery
+- tool: load_view
+  rest: [loadView]
+  api: catalog
+  category: read
+- tool: search_tabular
+  rest: [search_tabular]
+  api: management
+  category: discovery
+  description: Search tables and views within a Warehouse.
+- tool: load_credentials
+  rest: [loadCredentials]
+  api: catalog
+  category: sensitive
+  description: >-
+    Vend short-lived, prefix-scoped storage credentials for a table. HIGH CONSEQUENCE — this hands out data-plane
+    access and should never be exposed to an agent without an explicit consent step.
+- tool: whoami
+  rest: [whoami]
+  api: management
+  category: read
+- tool: get_table_actions
+  rest: [get_table_actions, get_namespace_actions, get_warehouse_actions]
+  api: management
+  category: read
+  description: >-
+    Ask what the caller may do on an object before attempting it. This is the single most useful tool for an agent
+    on this API, because a 403 here does not reliably distinguish "denied" from "does not exist".
+- tool: list_deleted_tabulars
+  rest: [list_deleted_tabulars]
+  api: management
+  category: read
+- tool: undrop_tabular
+  rest: [undrop_tabulars]
+  api: management
+  category: write
+  description: Restore a soft-deleted table or view within the Warehouse's configured expiration window.
+- tool: list_tasks
+  rest: [list_tasks, get_task_details]
+  api: management
+  category: read
+- tool: get_warehouse_statistics
+  rest: [get_warehouse_statistics]
+  api: management
+  category: read
+- tool: get_endpoint_statistics
+  rest: [get_endpoint_statistics]
+  api: management
+  category: read
+excluded_from_candidate:
+  note: >-
+    Deliberately not proposed as agent tools. Table and view mutation on the Iceberg catalog surface (createTable,
+    updateTable, commitTransaction, dropTable, dropView, registerTable) is engine work, not agent work — engines
+    commit metadata transactions and expect exclusive control of that path. Principal and permission mutation
+    (create_user, delete_user, create_role, add_role_members, the 39 permissions-openfga operations) is
+    privilege-granting and belongs behind human review. delete_warehouse and delete_project have no reversal path
+    at all (see conventions/lakekeeper-conventions.yml reversibility.irreversible).
+agent_readiness_notes:
+  auth: OIDC/OAuth2 bearer JWT against the operator's own IdP. There is no API-key path.
+  idempotency: >-
+    Idempotency-Key is supported on the catalog plane with a discoverable 30-minute lifetime, which is the right
+    foundation for safe agent retries — but not on the Management plane.
+  self_hosting: >-
+    Every deployment has a different host, so an MCP server for Lakekeeper would have to be operator-deployed and
+    configured, not vendor-hosted. That is a real reason none exists, and also why a candidate list rather than a
+    guessed endpoint is the only honest artifact here.

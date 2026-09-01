@@ -1,0 +1,114 @@
+generated: '2026-08-27'
+method: searched
+source: >-
+  https://pypi.org/pypi/pylakekeeper/json, https://proxy.golang.org/github.com/lakekeeper/go-lakekeeper/@latest,
+  https://github.com/lakekeeper/lakekeeper-clients, https://quay.io/api/v1/repository/lakekeeper/catalog,
+  https://lakekeeper.github.io/lakekeeper-charts/index.yaml
+note: >-
+  Lakekeeper is self-hosted software, so its "packages" split into two groups: client libraries that talk to a
+  running Lakekeeper, and distribution artifacts that ARE Lakekeeper. Client libraries live in the
+  lakekeeper/lakekeeper-clients monorepo (Python, Java, Java/Spark) plus a separate Go client. Note that the Java
+  and Java/Spark clients are published to GitHub Packages, not Maven Central — a Maven Central search for
+  "lakekeeper" returns 0 results — and GitHub Packages has no unauthenticated metadata endpoint, so their latest
+  versions could not be read and are recorded as null rather than guessed. The Rust server crates are NOT published
+  to crates.io (a crates.io search for "lakekeeper" returns no crate of that name); the server is distributed as a
+  container image, a prebuilt binary and a Helm chart.
+packages:
+- name: pylakekeeper
+  language: Python
+  registry: pypi
+  official: true
+  url: https://pypi.org/project/pylakekeeper/
+  repository: https://github.com/lakekeeper/lakekeeper-clients
+  install: pip install pylakekeeper
+  version: 0.3.1
+  published: '2026-08-03'
+  description: >-
+    Official Lakekeeper Python client for the Generic Table API, with OAuth2 auth (static token or
+    client_credentials with refresh). Deliberately not a general Iceberg REST client.
+  docs: https://docs.lakekeeper.io/docs/latest/generic-tables-pylakekeeper/
+- name: io.lakekeeper:lakekeeper-client
+  language: Java
+  registry: github-packages
+  official: true
+  url: https://github.com/lakekeeper/lakekeeper-clients
+  repository: https://github.com/lakekeeper/lakekeeper-clients
+  version: null
+  published: null
+  note: >-
+    Published to GitHub Packages (Maven), which requires an authenticated token to read package metadata; absent
+    from Maven Central. Version could not be read from any anonymous registry endpoint — checked, nothing to record.
+  description: Official Lakekeeper Java client used by the Flink generic-tables integration.
+  docs: https://docs.lakekeeper.io/docs/latest/generic-tables-flink/
+- name: io.lakekeeper:lakekeeper-spark
+  language: Java
+  registry: github-packages
+  official: true
+  url: https://github.com/lakekeeper/lakekeeper-clients
+  repository: https://github.com/lakekeeper/lakekeeper-clients
+  version: null
+  published: null
+  note: >-
+    Same GitHub Packages distribution as lakekeeper-client; no anonymous metadata endpoint, so no version recorded.
+  description: Official Lakekeeper Spark integration for reading and writing generic tables from PySpark.
+  docs: https://docs.lakekeeper.io/docs/latest/generic-tables-spark/
+- name: github.com/lakekeeper/go-lakekeeper
+  language: Go
+  registry: pkg.go.dev
+  official: true
+  url: https://pkg.go.dev/github.com/lakekeeper/go-lakekeeper
+  repository: https://github.com/lakekeeper/go-lakekeeper
+  install: go get github.com/lakekeeper/go-lakekeeper
+  version: v0.1.0
+  published: '2026-05-12'
+  description: Go client for Lakekeeper, published under the lakekeeper GitHub organization.
+- name: quay.io/lakekeeper/catalog
+  language: container
+  registry: quay
+  official: true
+  url: https://quay.io/repository/lakekeeper/catalog
+  install: docker pull quay.io/lakekeeper/catalog:latest
+  version: v0.13.3
+  published: '2026-08-17'
+  note: >-
+    Version and date taken from the corresponding GitHub release tag (v0.13.3, 2026-08-17); the quay tag listing
+    also carries a continuously-rebuilt `latest-main` development tag, which is unpinned by design.
+  description: Official Lakekeeper server container image (amd64 + arm64).
+- name: lakekeeper (Helm chart)
+  language: helm
+  registry: helm
+  official: true
+  url: https://github.com/lakekeeper/lakekeeper-charts
+  install: helm repo add lakekeeper https://lakekeeper.github.io/lakekeeper-charts
+  version: 0.11.0
+  published: '2026-05-11'
+  app_version: 0.12.2
+  description: Official Helm chart for deploying Lakekeeper on Kubernetes, with optional bundled Postgres and OpenFGA.
+  note: >-
+    DECAY SIGNAL — the latest published chart (0.11.0, 2026-05-11) pins appVersion 0.12.2, while the server itself
+    is at v0.13.3 (2026-08-17). The chart is roughly three server releases behind its own application.
+- name: github.com/lakekeeper/lakekeeper-operator
+  language: Go
+  registry: pkg.go.dev
+  official: true
+  url: https://github.com/lakekeeper/lakekeeper-operator
+  repository: https://github.com/lakekeeper/lakekeeper-operator
+  version: null
+  published: '2026-06-10'
+  note: >-
+    Kubernetes Operator for Lakekeeper. The Go module proxy returns only a pseudo-version
+    (v0.0.0-20260610123933-27fa1e18d0d6) — no semver tag has been published, so version is null by fact, not by gap.
+  description: First-party Kubernetes Operator for deploying and managing Lakekeeper.
+not_published:
+- registry: crates.io
+  checked: '2026-08-27'
+  result: >-
+    No crate named `lakekeeper` (or `lakekeeper-io`, `iceberg-catalog`) exists on crates.io. The workspace crates
+    named in AGENTS.md (lakekeeper, lakekeeper-bin, lakekeeper-io, iceberg-ext, lakekeeper-authz-openfga) are
+    build-time internal crates, not published libraries.
+- registry: maven-central
+  checked: '2026-08-27'
+  result: 'search.maven.org solrsearch for "lakekeeper" returned numFound: 0.'
+- registry: npm
+  checked: '2026-08-27'
+  result: 'registry.npmjs.org 404 for lakekeeper, @lakekeeper/mcp and lakekeeper-mcp.'

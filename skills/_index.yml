@@ -1,0 +1,54 @@
+generated: '2026-08-27'
+method: generated
+source: >-
+  openapi/lakekeeper-management-api-openapi.yml, openapi/lakekeeper-catalog-api-openapi.yml,
+  openapi/lakekeeper-generic-table-api-openapi.yml, conventions/lakekeeper-conventions.yml,
+  errors/lakekeeper-problem-types.yml, https://docs.lakekeeper.io/
+note: >-
+  Four packaged Agent Skills covering Lakekeeper's marquee flows, plus the provider's own AGENTS.md saved verbatim.
+  Every operationId referenced in these skills was grepped out of the saved OpenAPI documents; none is invented.
+skills:
+- file: lakekeeper-provision-warehouse.md
+  name: lakekeeper-provision-warehouse
+  api: Lakekeeper Management API
+  method: generated
+  summary: >-
+    Bootstrap a deployment, pick or create a Project, create a Warehouse with a validated storage profile, set the
+    soft-delete policy before anyone writes data, and verify with the */actions endpoints.
+  operations: [bootstrap, get_server_info, get_server_actions, create_project, list_projects, create_warehouse, get_warehouse, list_warehouses, update_warehouse_delete_profile, set_warehouse_protection, get_warehouse_actions, getConfig]
+- file: lakekeeper-recover-dropped-table.md
+  name: lakekeeper-recover-dropped-table
+  api: Lakekeeper Management API
+  method: generated
+  summary: >-
+    Establish whether a dropped table is recoverable at all (hard vs soft delete profile), find it in the
+    soft-deleted list, restore it with undrop_tabulars, and beat the expiration/purge task queues.
+  operations: [get_warehouse, list_deleted_tabulars, undrop_tabulars, get_task_queue_config_tabular_expiration, get_task_queue_config_tabular_purge, list_tasks, get_warehouse_actions, tableExists]
+- file: lakekeeper-grant-table-access.md
+  name: lakekeeper-grant-table-access
+  api: Lakekeeper Management API
+  method: generated
+  summary: >-
+    Grant access through Roles rather than Users, handle role-in-role nesting and IdP-sourced roles, and verify
+    the grant with the */actions endpoints instead of assuming — including which deprecated *_access operations to
+    stop calling.
+  operations: [whoami, search_user, list_user, create_role, list_roles, search_role, add_role_members, list_role_members, list_role_transitive_members, list_user_roles, list_user_transitive_roles, get_role_actions, get_table_actions, get_namespace_actions, get_warehouse_actions, remove_role_member]
+- file: lakekeeper-read-table-with-vended-credentials.md
+  name: lakekeeper-read-table-with-vended-credentials
+  api: Lakekeeper Iceberg REST Catalog API
+  method: generated
+  summary: >-
+    The client-side flow — getConfig handshake (and the idempotency-key-lifetime it advertises), namespace/table
+    discovery, loadTable with If-None-Match, short-lived prefix-scoped credential vending, server-side scan
+    planning, and the generic-table equivalent.
+  operations: [getConfig, listNamespaces, listTables, loadTable, tableExists, loadCredentials, planTableScan, fetchPlanningResult, cancelPlanning, fetchScanTasks, listViews, loadView, list_generic_tables, load_generic_table, load_generic_table_credentials]
+provider_published:
+- file: lakekeeper-AGENTS.md
+  method: searched
+  source: https://raw.githubusercontent.com/lakekeeper/lakekeeper/main/AGENTS.md
+  summary: >-
+    Lakekeeper's own AGENTS.md, saved verbatim. Scope is CONTRIBUTOR-facing, not API-consumer-facing: it tells a
+    coding agent how to build, test and lint the Rust workspace (just recipes, clippy feature combinations,
+    thiserror/tracing/typed-builder conventions, the OpenFGA and OPA policy locations, and the workspace crate
+    map). Recorded because a provider that ships an AGENTS.md at all is unusual, and because it is the only
+    first-party agent-directed document Lakekeeper publishes.

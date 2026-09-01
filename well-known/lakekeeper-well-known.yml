@@ -1,0 +1,93 @@
+generated: '2026-08-27'
+method: probed
+source: live HTTP probes of /.well-known/* on every Lakekeeper-controlled host
+note: >-
+  Every /.well-known/ path probed returned a miss. lakekeeper.io and docs.lakekeeper.io (one MkDocs Material site;
+  the apex redirects to the docs host) answer 404 with the site's HTML 404 page on all five paths. vakamo.com — the
+  commercial site of Vakamo, the company that maintains Lakekeeper — answers HTTP 200 with the SAME HTML homepage
+  body (79,956 bytes, identical to https://vakamo.com/) for EVERY /.well-known/ path including agent-card.json and
+  agent.json. That is an SPA catch-all, not a served document, and it is recorded here as a miss. No WellKnown or
+  SecurityTxt pointer is emitted, because none of these hosts serves a real well-known document.
+  Separately: Lakekeeper CONSUMES /.well-known/openid-configuration from the operator's own identity provider
+  (LAKEKEEPER__OPENID_PROVIDER_URI must expose it with jwks_uri and issuer) — that is the deployer's IdP, not a
+  Lakekeeper-published document, and is captured in authentication/ instead.
+hosts:
+- host: lakekeeper.io
+  documents:
+  - path: /.well-known/security.txt
+    status: 404
+    file: null
+  - path: /.well-known/openid-configuration
+    status: 404
+    file: null
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+    file: null
+  - path: /.well-known/api-catalog
+    status: 404
+    file: null
+  - path: /.well-known/ai-plugin.json
+    status: 404
+    file: null
+  - path: /.well-known/agent-card.json
+    status: 404
+    file: null
+  - path: /.well-known/agent.json
+    status: 404
+    file: null
+- host: docs.lakekeeper.io
+  documents:
+  - path: /.well-known/security.txt
+    status: 404
+    file: null
+  - path: /.well-known/openid-configuration
+    status: 404
+    file: null
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+    file: null
+  - path: /.well-known/api-catalog
+    status: 404
+    file: null
+  - path: /.well-known/ai-plugin.json
+    status: 404
+    file: null
+  - path: /.well-known/agent-card.json
+    status: 404
+    file: null
+  - path: /.well-known/agent.json
+    status: 404
+    file: null
+- host: vakamo.com
+  note: >-
+    All seven paths returned HTTP 200 with the site homepage HTML (identical byte length). Treated as a miss —
+    an SPA catch-all serving HTML is not a well-known document.
+  documents:
+  - path: /.well-known/security.txt
+    status: 200
+    file: null
+    body: html-spa-catchall
+  - path: /.well-known/openid-configuration
+    status: 200
+    file: null
+    body: html-spa-catchall
+  - path: /.well-known/oauth-authorization-server
+    status: 200
+    file: null
+    body: html-spa-catchall
+  - path: /.well-known/api-catalog
+    status: 200
+    file: null
+    body: html-spa-catchall
+  - path: /.well-known/ai-plugin.json
+    status: 200
+    file: null
+    body: html-spa-catchall
+  - path: /.well-known/agent-card.json
+    status: 200
+    file: null
+    body: html-spa-catchall
+  - path: /.well-known/agent.json
+    status: 200
+    file: null
+    body: html-spa-catchall

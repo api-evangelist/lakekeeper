@@ -1,0 +1,83 @@
+generated: '2026-08-27'
+method: searched
+note: >-
+  Provenance for the four OpenAPI documents in this directory. Each was fetched verbatim from the Lakekeeper
+  documentation host, where the Redoc reference pages load them by `spec-url`. The one modification made after
+  fetch is by 0-working/sanitize-secrets.py, which replaced six secret-SHAPED example values — GCS service-account
+  `private_key` PEM blocks used as request examples in the management documents — with REDACTED_PRIVATE_KEY_EXAMPLE
+  so GitHub push-protection does not block the repository. No other byte was changed; no operation, schema or
+  security scheme was added, removed or edited.
+ownership_check:
+  performed: '2026-08-27'
+  verdict: pass
+  detail: >-
+    Three of the four documents identify themselves as Lakekeeper's own — info.title "Lakekeeper Management API",
+    "Lakekeeper Generic Table API" and "Lakekeeper＋ Management API" — served from Lakekeeper's own docs host. The
+    fourth, lakekeeper-catalog-api-openapi.yml, identifies itself as the Apache Software Foundation's
+    "Apache Iceberg REST Catalog API" and is NOT Lakekeeper-authored. It is retained deliberately: Lakekeeper's own
+    api-overview states that its /catalog/v1 surface IS "the standard Apache Iceberg REST specification", and
+    Lakekeeper republishes this exact ASF document at /docs/latest/api/rest-catalog-open-api.yaml as the reference
+    for that surface. It is recorded as a domain-standard conformance, not as a Lakekeeper-authored contract — see
+    conformance/lakekeeper-conformance.yml.
+  servers_note: >-
+    Every document declares a TEMPLATED server ({scheme}://{host}{basePath}) with a localhost default. That is
+    correct and complete for self-hosted software: there is no vendor-operated API host to name. It was left
+    untouched.
+documents:
+- file: lakekeeper-management-api-openapi.yml
+  source: https://docs.lakekeeper.io/docs/latest/api/management-open-api.yaml
+  http_status: 200
+  fetched: '2026-08-27'
+  openapi: 3.1.0
+  title: Lakekeeper Management API
+  license: Apache-2.0
+  operations: 120
+  paths: 92
+  schemas: 221
+  tags: [authorization, permissions-openfga, project, role, server, tasks, user, warehouse]
+  reference_page: https://docs.lakekeeper.io/docs/latest/api/management/
+- file: lakekeeper-management-plus-api-openapi.yml
+  source: https://docs.lakekeeper.io/docs/latest/api/management-open-api-plus.yaml
+  http_status: 200
+  fetched: '2026-08-27'
+  openapi: 3.1.0
+  title: Lakekeeper＋ Management API
+  license: Vakamo Enterprise License
+  operations: 131
+  paths: 101
+  schemas: 247
+  tags: [authorization, permissions-cedar, permissions-openfga, project, role, server, tasks, user, warehouse]
+  reference_page: https://docs.lakekeeper.io/docs/latest/api/management-plus/
+  note: Superset of the open-source Management API; the delta is the permissions-cedar tag and related endpoints.
+- file: lakekeeper-generic-table-api-openapi.yml
+  source: https://docs.lakekeeper.io/docs/latest/api/generic-table-open-api.yaml
+  http_status: 200
+  fetched: '2026-08-27'
+  openapi: 3.1.0
+  title: Lakekeeper Generic Table API
+  license: Apache-2.0
+  operations: 6
+  paths: 4
+  schemas: 11
+  tags: [generic-table]
+  reference_page: https://docs.lakekeeper.io/docs/latest/api/generic-table/
+- file: lakekeeper-catalog-api-openapi.yml
+  source: https://docs.lakekeeper.io/docs/latest/api/rest-catalog-open-api.yaml
+  http_status: 200
+  fetched: '2026-08-27'
+  openapi: 3.1.0
+  title: Apache Iceberg REST Catalog API
+  license: Apache 2.0
+  author: Apache Software Foundation (republished by Lakekeeper as its /catalog/v1 contract)
+  upstream: https://github.com/apache/iceberg/blob/main/open-api/rest-catalog-open-api.yaml
+  operations: 30
+  paths: 18
+  schemas: 158
+  tags: ['Catalog API', 'Configuration API', 'OAuth2 API']
+  reference_page: https://docs.lakekeeper.io/docs/latest/api/catalog/
+discovery_note: >-
+  These were NOT at any of the obvious locations. docs.lakekeeper.io/openapi.json, /swagger-ui/ and /api/ all
+  return the MkDocs 404 page, and there is no vendor-operated API host to probe at all. The specs were found by
+  reading the `spec-url` attribute of the Redoc element on each /docs/latest/api/* reference page, which resolves
+  relative to /docs/latest/api/ — one directory level up from where the naive guess would look. Recording this so a
+  future round does not repeat the dead ends.

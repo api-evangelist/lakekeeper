@@ -1,0 +1,121 @@
+generated: '2026-08-27'
+method: searched
+source: >-
+  https://docs.lakekeeper.io/about/release-notes/, https://docs.lakekeeper.io/about/enterprise-release-notes/,
+  https://github.com/lakekeeper/lakekeeper/releases, https://docs.lakekeeper.io/docs/latest/production/,
+  openapi/lakekeeper-management-api-openapi.yml
+versioning:
+  scheme: SemVer-shaped release tags (v0.MAJOR.MINOR), pre-1.0
+  current_version: v0.13.3
+  released: '2026-08-17'
+  api_versioning: path-prefixed — /catalog/v1, /management/v1, /lakekeeper/v1
+  docs_versioning: >-
+    Documentation is versioned per release under /docs/<version>/, with /docs/latest/ for the current release and
+    /docs/nightly/ for unreleased work. The llms.txt deliberately links only /docs/latest.
+  notes: >-
+    Lakekeeper is pre-1.0, and its release notes carry an explicit "BREAKING CHANGES" section per minor release —
+    v0.13.0 alone shipped five, including a changed default storage layout and Rust trait signature changes for
+    downstream authorizer implementations.
+release_cadence:
+  observed_releases:
+  - version: v0.13.3
+    date: '2026-08-17'
+  - version: v0.13.1
+    date: '2026-06-30'
+  - version: v0.13.0
+    date: '2026-06-30'
+  - version: v0.12.4
+    date: '2026-06-17'
+  - version: v0.12.3
+    date: '2026-05-26'
+  - version: v0.12.2
+    date: '2026-05-21'
+  - version: v0.11.6
+    date: '2026-05-10'
+  - version: v0.12.1
+    date: '2026-05-05'
+  - version: v0.12.0
+    date: '2026-04-03'
+  - version: v0.11.5
+    date: '2026-04-02'
+  summary: Roughly monthly minor releases with patch releases in between; ten releases in the five months to 2026-08-17.
+  source: https://github.com/lakekeeper/lakekeeper/releases.atom
+deprecation_policy:
+  published: partial
+  mechanism: >-
+    Deprecations are declared IN THE CONTRACT — 12 Management API operations carry OpenAPI `deprecated: true`, and
+    the Iceberg REST `getToken` operation is deprecated upstream. There is no separate written deprecation-policy
+    page, no Sunset/Deprecation (RFC 8594) response headers, and no stated removal window.
+  rfc8594_headers: false
+  deprecated_operations:
+  - operationId: get_project_by_id_deprecated
+    path: GET /management/v1/project/{project_id}
+    replacement: get_project (GET /management/v1/project with the x-project-id header)
+  - operationId: delete_project_by_id_deprecated
+    path: DELETE /management/v1/project/{project_id}
+    replacement: delete_project
+  - operationId: rename_project_by_id_deprecated
+    path: POST /management/v1/project/{project_id}/rename
+    replacement: rename_project
+  - operationId: get_server_access
+    replacement: get_server_actions
+  - operationId: get_project_access
+    replacement: get_project_actions
+  - operationId: get_project_access_by_id
+    replacement: get_project_actions
+  - operationId: get_project_assignments_by_id
+    replacement: the project permissions surface under permissions-openfga
+  - operationId: get_warehouse_access_by_id
+    replacement: get_warehouse_actions
+  - operationId: get_namespace_access_by_id
+    replacement: get_namespace_actions
+  - operationId: get_table_access_by_id
+    replacement: get_table_actions
+  - operationId: get_view_access_by_id
+    replacement: get_view_actions
+  - operationId: get_role_access_by_id
+    replacement: get_role_actions
+  - operationId: getToken
+    path: POST /v1/oauth/tokens
+    api: Iceberg REST Catalog
+    replacement: >-
+      An external OIDC/OAuth2 authorization server. Deprecated in the upstream Iceberg specification, not by
+      Lakekeeper.
+  note: >-
+    The pattern is consistent — every deprecated `*_access*` operation has a live `*_actions` replacement, so the
+    migration path is mechanical even though it is not written down as a policy.
+migration_requirements:
+  breaking_operational_step: >-
+    `lakekeeper migrate` MUST be run before each upgrade, ahead of `lakekeeper serve`, or the server refuses to
+    start with "Database is not up to date with binary". Migrations are cumulative — intermediate versions can be
+    skipped — and are a no-op when already current.
+  downgrade_protection: >-
+    Since v0.13.0 the server refuses to start against a database migrated by a newer binary. After a rollback,
+    start the older binary with `serve --force-start`, accepting the schema-incompatibility risk.
+  source: https://docs.lakekeeper.io/docs/latest/configuration/
+status_page:
+  published: false
+  probed: https://status.lakekeeper.io/
+  probe_result: DNS resolution failure (curl exit, no HTTP status)
+  note: >-
+    No hosted status page exists, and none would mean much: Lakekeeper is software the customer runs. The
+    equivalent runtime signal is the deployment's own /health endpoint (503 when unhealthy since v0.13.0) and the
+    Prometheus metrics endpoint (LAKEKEEPER__METRICS__PORT, default 9000), documented at
+    https://docs.lakekeeper.io/docs/latest/monitoring/.
+sla:
+  published: false
+  note: >-
+    No SLA is published for the open-source project. Commercial SLAs are part of Lakekeeper+ / Lakekeeper Cloud,
+    sold by Vakamo on a contact-sales basis (see plans/lakekeeper-plans-pricing.yml).
+maintenance_mode:
+  supported: true
+  detail: >-
+    LAKEKEEPER__MAINTENANCE_MODE=read-only puts a deployment into a read-only state. It is captured at startup and
+    is not dynamic.
+support_channels:
+- type: Discord
+  url: https://docs.lakekeeper.io/support/
+- type: GitHub Issues
+  url: https://github.com/lakekeeper/lakekeeper/issues
+- type: Commercial
+  url: https://vakamo.com/
