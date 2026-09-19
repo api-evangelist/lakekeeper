@@ -366,7 +366,7 @@ apis:
   humanURL: https://docs.lakekeeper.io/docs/latest/api/management/
   baseURL: '{scheme}://{host}/management/v1'
   tags:
-  - Server
+  - Servers
   tags_raw:
   - server
   properties:
