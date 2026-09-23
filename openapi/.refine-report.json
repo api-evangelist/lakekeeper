@@ -1,17 +1,16 @@
 {
   "provider": "lakekeeper",
   "sources": [
-    "lakekeeper-catalog-api-openapi.yml",
-    "lakekeeper-generic-table-api-openapi.yml",
-    "lakekeeper-management-api-openapi.yml",
-    "lakekeeper-management-plus-api-openapi.yml"
+    "_original/lakekeeper-catalog-api-openapi.yml",
+    "_original/lakekeeper-management-plus-api-openapi.yml",
+    "lakekeeper-generic-table-api-openapi.yml"
   ],
   "outputs": [
     "lakekeeper-catalog-api-api-openapi.yml",
     "lakekeeper-configuration-api-api-openapi.yml",
     "lakekeeper-oauth2-api-api-openapi.yml",
-    "lakekeeper-generic-table-api-openapi.yml",
     "lakekeeper-authorization-api-openapi.yml",
+    "lakekeeper-permissions-cedar-api-openapi.yml",
     "lakekeeper-permissions-openfga-api-openapi.yml",
     "lakekeeper-project-api-openapi.yml",
     "lakekeeper-role-api-openapi.yml",
@@ -19,34 +18,37 @@
     "lakekeeper-tasks-api-openapi.yml",
     "lakekeeper-user-api-openapi.yml",
     "lakekeeper-warehouse-api-openapi.yml",
-    "lakekeeper-permissions-cedar-api-openapi.yml"
+    "lakekeeper-generic-table-api-openapi.yml"
   ],
-  "archived": [
-    "archived openapi/lakekeeper-catalog-api-openapi.yml",
-    "archived openapi/lakekeeper-management-api-openapi.yml",
-    "archived openapi/lakekeeper-management-plus-api-openapi.yml"
-  ],
+  "archived": [],
   "errors": [],
-  "warnings": [],
+  "warnings": [
+    "lakekeeper-generic-table-api-openapi.yml: previously refined output kept for 6 operation(s) no archived document covers (e.g. /lakekeeper/v1/{prefix}/generic-tables/rename post, /lakekeeper/v1/{prefix}/namespaces/{namespace}/generic-tables get, /lakekeeper/v1/{prefix}/namespaces/{namespace}/generic-tables post); its other 0 operation(s) came from the archive and were dropped from it. The archive is incomplete for this provider \u2014 re-harvest to restore _original/ as the full source of truth."
+  ],
   "notes": [
+    "1 archived document(s) dropped as subsets of other archived documents",
+    "sourced from openapi/_original/ (2 archived document(s)); previously refined output at the top level was skipped rather than re-split",
     "lakekeeper-catalog-api-openapi.yml: upgraded openapi 3.1.1 -> OpenAPI 3.2.0",
     "lakekeeper-catalog-api-openapi.yml: declared missing tag: Catalog API",
     "lakekeeper-catalog-api-openapi.yml: declared missing tag: Configuration API",
     "lakekeeper-catalog-api-openapi.yml: declared missing tag: OAuth2 API",
-    "lakekeeper-generic-table-api-openapi.yml: upgraded openapi 3.1.0 -> OpenAPI 3.2.0",
-    "lakekeeper-management-api-openapi.yml: upgraded openapi 3.1.0 -> OpenAPI 3.2.0",
-    "lakekeeper-management-api-openapi.yml: declared missing tag: authorization",
     "lakekeeper-management-plus-api-openapi.yml: upgraded openapi 3.1.0 -> OpenAPI 3.2.0",
     "lakekeeper-management-plus-api-openapi.yml: declared missing tag: authorization",
-    "tag 'authorization' spans 2 source specs (lakekeeper-management-api-openapi.yml, lakekeeper-management-plus-api-openapi.yml): per-path servers applied",
-    "tag 'permissions-openfga' spans 2 source specs (lakekeeper-management-api-openapi.yml, lakekeeper-management-plus-api-openapi.yml): per-path servers applied",
-    "tag 'project' spans 2 source specs (lakekeeper-management-api-openapi.yml, lakekeeper-management-plus-api-openapi.yml): per-path servers applied",
-    "tag 'role' spans 2 source specs (lakekeeper-management-api-openapi.yml, lakekeeper-management-plus-api-openapi.yml): per-path servers applied",
-    "tag 'server' spans 2 source specs (lakekeeper-management-api-openapi.yml, lakekeeper-management-plus-api-openapi.yml): per-path servers applied",
-    "tag 'tasks' spans 2 source specs (lakekeeper-management-api-openapi.yml, lakekeeper-management-plus-api-openapi.yml): per-path servers applied",
-    "tag 'user' spans 2 source specs (lakekeeper-management-api-openapi.yml, lakekeeper-management-plus-api-openapi.yml): per-path servers applied",
-    "tag 'warehouse' spans 2 source specs (lakekeeper-management-api-openapi.yml, lakekeeper-management-plus-api-openapi.yml): per-path servers applied",
-    "apis.yml register: written (+12 apis, 13 total)"
+    "apis.yml register: already-registered"
   ],
-  "skipped": []
+  "skipped": [
+    "_original/lakekeeper-management-api-openapi.yml: archived document superseded by a larger archived document",
+    "lakekeeper-authorization-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "lakekeeper-catalog-api-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "lakekeeper-configuration-api-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "lakekeeper-oauth2-api-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "lakekeeper-permissions-cedar-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "lakekeeper-permissions-openfga-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "lakekeeper-project-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "lakekeeper-role-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "lakekeeper-server-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "lakekeeper-tasks-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "lakekeeper-user-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "lakekeeper-warehouse-api-openapi.yml: previously refined output, superseded by openapi/_original/"
+  ]
 }

@@ -54,7 +54,7 @@ paths:
 
         Deprecated since Iceberg (Java) 1.6.0. The endpoint and related types will be removed from this spec in Iceberg (Java) 2.0.
 
-        See [Security improvements in the Iceberg REST specification](https://github.com/apache/iceberg/issues/10537)
+        See Security improvements in the Iceberg REST specification
 
 
         Exchange credentials for a token using the OAuth2 client credentials flow or token exchange.
@@ -93,65 +93,51 @@ paths:
           $ref: '#/components/responses/OAuthErrorResponse'
 components:
   schemas:
-    OAuthClientCredentialsRequest:
+    TokenType:
+      type: string
+      enum:
+      - urn:ietf:params:oauth:token-type:access_token
+      - urn:ietf:params:oauth:token-type:refresh_token
+      - urn:ietf:params:oauth:token-type:id_token
+      - urn:ietf:params:oauth:token-type:saml1
+      - urn:ietf:params:oauth:token-type:saml2
+      - urn:ietf:params:oauth:token-type:jwt
+      description: 'Token type identifier, from RFC 8693 Section 3
+
+
+        See https://datatracker.ietf.org/doc/html/rfc8693#section-3'
+    OAuthTokenResponse:
       deprecated: true
-      description: 'The `oauth/tokens` endpoint and related schemas are **DEPRECATED for REMOVAL** from this spec, see description of the endpoint.
-
-
-        OAuth2 client credentials request
-
-
-        See https://datatracker.ietf.org/doc/html/rfc6749#section-4.4'
+      description: The `oauth/tokens` endpoint and related schemas are **DEPRECATED for REMOVAL** from this spec, see description of the endpoint.
       type: object
       required:
-      - grant_type
-      - client_id
-      - client_secret
+      - access_token
+      - token_type
       properties:
-        grant_type:
+        access_token:
+          type: string
+          description: The access token, for client credentials or token exchange
+        token_type:
           type: string
           enum:
-          - client_credentials
+          - bearer
+          - mac
+          - N_A
+          description: 'Access token type for client credentials or token exchange
+
+
+            See https://datatracker.ietf.org/doc/html/rfc6749#section-7.1'
+        expires_in:
+          type: integer
+          description: Lifetime of the access token in seconds for client credentials or token exchange
+        issued_token_type:
+          $ref: '#/components/schemas/TokenType'
+        refresh_token:
+          type: string
+          description: Refresh token for client credentials or token exchange
         scope:
           type: string
-        client_id:
-          type: string
-          description: 'Client ID
-
-
-            This can be sent in the request body, but OAuth2 recommends sending it in a Basic Authorization header.'
-        client_secret:
-          type: string
-          description: 'Client secret
-
-
-            This can be sent in the request body, but OAuth2 recommends sending it in a Basic Authorization header.'
-    OAuthError:
-      deprecated: true
-      description: The `oauth/tokens` endpoint and related schemas are **DEPRECATED for REMOVAL** from this spec, see description of the endpoint.
-      type: object
-      required:
-      - error
-      properties:
-        error:
-          type: string
-          enum:
-          - invalid_request
-          - invalid_client
-          - invalid_grant
-          - unauthorized_client
-          - unsupported_grant_type
-          - invalid_scope
-        error_description:
-          type: string
-        error_uri:
-          type: string
-    OAuthTokenRequest:
-      deprecated: true
-      description: The `oauth/tokens` endpoint and related schemas are **DEPRECATED for REMOVAL** from this spec, see description of the endpoint.
-      anyOf:
-      - $ref: '#/components/schemas/OAuthClientCredentialsRequest'
-      - $ref: '#/components/schemas/OAuthTokenExchangeRequest'
+          description: Authorization scope for client credentials or token exchange
     OAuthTokenExchangeRequest:
       deprecated: true
       description: 'The `oauth/tokens` endpoint and related schemas are **DEPRECATED for REMOVAL** from this spec, see description of the endpoint.
@@ -185,51 +171,65 @@ components:
           description: Actor token for token exchange request
         actor_token_type:
           $ref: '#/components/schemas/TokenType'
-    OAuthTokenResponse:
+    OAuthError:
       deprecated: true
       description: The `oauth/tokens` endpoint and related schemas are **DEPRECATED for REMOVAL** from this spec, see description of the endpoint.
       type: object
       required:
-      - access_token
-      - token_type
+      - error
       properties:
-        access_token:
-          type: string
-          description: The access token, for client credentials or token exchange
-        token_type:
+        error:
           type: string
           enum:
-          - bearer
-          - mac
-          - N_A
-          description: 'Access token type for client credentials or token exchange
-
-
-            See https://datatracker.ietf.org/doc/html/rfc6749#section-7.1'
-        expires_in:
-          type: integer
-          description: Lifetime of the access token in seconds for client credentials or token exchange
-        issued_token_type:
-          $ref: '#/components/schemas/TokenType'
-        refresh_token:
+          - invalid_request
+          - invalid_client
+          - invalid_grant
+          - unauthorized_client
+          - unsupported_grant_type
+          - invalid_scope
+        error_description:
           type: string
-          description: Refresh token for client credentials or token exchange
+        error_uri:
+          type: string
+    OAuthClientCredentialsRequest:
+      deprecated: true
+      description: 'The `oauth/tokens` endpoint and related schemas are **DEPRECATED for REMOVAL** from this spec, see description of the endpoint.
+
+
+        OAuth2 client credentials request
+
+
+        See https://datatracker.ietf.org/doc/html/rfc6749#section-4.4'
+      type: object
+      required:
+      - grant_type
+      - client_id
+      - client_secret
+      properties:
+        grant_type:
+          type: string
+          enum:
+          - client_credentials
         scope:
           type: string
-          description: Authorization scope for client credentials or token exchange
-    TokenType:
-      type: string
-      enum:
-      - urn:ietf:params:oauth:token-type:access_token
-      - urn:ietf:params:oauth:token-type:refresh_token
-      - urn:ietf:params:oauth:token-type:id_token
-      - urn:ietf:params:oauth:token-type:saml1
-      - urn:ietf:params:oauth:token-type:saml2
-      - urn:ietf:params:oauth:token-type:jwt
-      description: 'Token type identifier, from RFC 8693 Section 3
+        client_id:
+          type: string
+          description: 'Client ID
 
 
-        See https://datatracker.ietf.org/doc/html/rfc8693#section-3'
+            This can be sent in the request body, but OAuth2 recommends sending it in a Basic Authorization header.'
+        client_secret:
+          type: string
+          description: 'Client secret
+
+
+            This can be sent in the request body, but OAuth2 recommends sending it in a Basic Authorization header.'
+    OAuthTokenRequest:
+      deprecated: true
+      description: The `oauth/tokens` endpoint and related schemas are **DEPRECATED for REMOVAL** from this spec, see description of the endpoint.
+      anyOf:
+      - $ref: '#/components/schemas/OAuthClientCredentialsRequest'
+      - $ref: '#/components/schemas/OAuthTokenExchangeRequest'
   responses:
     OAuthErrorResponse:
       description: OAuth2 error response

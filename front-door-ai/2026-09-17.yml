@@ -1,0 +1,27 @@
+# Front Door AI Index — lakekeeper — 2026-09-17
+# AI vocabulary counted on the provider's root page. Generated; do not edit.
+# `score` is null unless ownership is `own` — see front_door_ai.py.
+front_door_ai:
+  slug: lakekeeper
+  lexicon_version: '1.0'
+  probed_at: '2026-09-17'
+  host: lakekeeper.io
+  final_host: docs.lakekeeper.io
+  ownership: own
+  owner: lakekeeper
+  shares_host_with: null
+  inherited_from: null
+  verdict: scored
+  score: 2
+  host_score: 2
+  density: 1.86
+  words: 1075
+  tiers:
+    agentic: 1
+    core: 1
+    model: 0
+  ambiguous: 12
+  top_terms:
+    agent: 12
+    AI agent: 1
+    AI: 1

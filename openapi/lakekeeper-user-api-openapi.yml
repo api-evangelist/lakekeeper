@@ -1,8 +1,10 @@
 openapi: 3.2.0
 info:
-  title: Lakekeeper User API
+  title: Lakekeeper＋ Management User API
+  description: Lakekeeper is a rust-native Apache Iceberg REST Catalog implementation. The Management API provides endpoints to manage the server, projects, warehouses, users, and roles. If Authorization is enabled, permissions can also be managed. An interactive Swagger-UI for the specific Lakekeeper Version and configuration running is available at `/swagger-ui/#/` of Lakekeeper (by default http://localhost:8181/swagger-ui/#/).
+  license:
+    name: Vakamo Enterprise License
   version: 0.0.0
-  description: 'Operations tagged user across 2 of this provider''s published API definitions: lakekeeper-management-api-openapi.yml, lakekeeper-management-plus-api-openapi.yml. Each path carries the servers of the definition it was published in.'
 servers:
 - url: '{scheme}://{host}{basePath}'
   description: Lakekeeper Management API
@@ -19,13 +21,13 @@ servers:
 security:
 - bearerAuth: []
 tags:
-- name: user
+- name: User
   description: Manage Users
 paths:
   /management/v1/search/user:
     post:
       tags:
-      - user
+      - User
       summary: Search User
       description: Performs a fuzzy search for users based on the provided criteria.
       operationId: search_user
@@ -48,23 +50,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/IcebergErrorResponse'
-    servers:
-    - url: '{scheme}://{host}{basePath}'
-      description: Lakekeeper Management API
-      variables:
-        basePath:
-          default: ''
-          description: Optional path prefix (starting with '/') to be prepended to all routes
-        host:
-          default: localhost
-          description: The host (and optional port) for the specified server
-        scheme:
-          default: https
-          description: The scheme of the URI, either http or https
   /management/v1/user:
     get:
       tags:
-      - user
+      - User
       summary: List Users
       description: Returns a paginated list of users based on the provided query parameters.
       operationId: list_user
@@ -111,7 +100,7 @@ paths:
                 $ref: '#/components/schemas/IcebergErrorResponse'
     post:
       tags:
-      - user
+      - User
       summary: Provision User
       description: 'Creates a new user or updates an existing user''s metadata from the provided token.
 
@@ -142,23 +131,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/IcebergErrorResponse'
-    servers:
-    - url: '{scheme}://{host}{basePath}'
-      description: Lakekeeper Management API
-      variables:
-        basePath:
-          default: ''
-          description: Optional path prefix (starting with '/') to be prepended to all routes
-        host:
-          default: localhost
-          description: The host (and optional port) for the specified server
-        scheme:
-          default: https
-          description: The scheme of the URI, either http or https
   /management/v1/user/{user_id}:
     get:
       tags:
-      - user
+      - User
       summary: Get User by ID
       description: Retrieves detailed information about a specific user.
       operationId: get_user
@@ -183,7 +159,7 @@ paths:
                 $ref: '#/components/schemas/IcebergErrorResponse'
     put:
       tags:
-      - user
+      - User
       summary: Replace User
       description: 'Replaces the current user details with the new details provided in the request.
 
@@ -212,7 +188,7 @@ paths:
                 $ref: '#/components/schemas/IcebergErrorResponse'
     delete:
       tags:
-      - user
+      - User
       summary: Delete User
       description: 'Permanently removes a user and all their associated permissions.
 
@@ -233,23 +209,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/IcebergErrorResponse'
-    servers:
-    - url: '{scheme}://{host}{basePath}'
-      description: Lakekeeper Management API
-      variables:
-        basePath:
-          default: ''
-          description: Optional path prefix (starting with '/') to be prepended to all routes
-        host:
-          default: localhost
-          description: The host (and optional port) for the specified server
-        scheme:
-          default: https
-          description: The scheme of the URI, either http or https
   /management/v1/user/{user_id}/actions:
     get:
       tags:
-      - user
+      - User
       summary: Get allowed actions on a user
       operationId: get_user_actions
       parameters:
@@ -288,23 +251,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/IcebergErrorResponse'
-    servers:
-    - url: '{scheme}://{host}{basePath}'
-      description: Lakekeeper Management API
-      variables:
-        basePath:
-          default: ''
-          description: Optional path prefix (starting with '/') to be prepended to all routes
-        host:
-          default: localhost
-          description: The host (and optional port) for the specified server
-        scheme:
-          default: https
-          description: The scheme of the URI, either http or https
   /management/v1/user/{user_id}/roles:
     get:
       tags:
-      - user
+      - User
       summary: List User Roles
       description: Lists the roles a user is directly assigned to, keyset-paginated.
       operationId: list_user_roles
@@ -352,23 +302,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/IcebergErrorResponse'
-    servers:
-    - url: '{scheme}://{host}{basePath}'
-      description: Lakekeeper Management API
-      variables:
-        basePath:
-          default: ''
-          description: Optional path prefix (starting with '/') to be prepended to all routes
-        host:
-          default: localhost
-          description: The host (and optional port) for the specified server
-        scheme:
-          default: https
-          description: The scheme of the URI, either http or https
   /management/v1/user/{user_id}/roles/transitive:
     get:
       tags:
-      - user
+      - User
       summary: List Transitive User Roles
       description: 'Lists the full effective (transitive) role set a user holds — direct
 
@@ -428,23 +365,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/IcebergErrorResponse'
-    servers:
-    - url: '{scheme}://{host}{basePath}'
-      description: Lakekeeper Management API
-      variables:
-        basePath:
-          default: ''
-          description: Optional path prefix (starting with '/') to be prepended to all routes
-        host:
-          default: localhost
-          description: The host (and optional port) for the specified server
-        scheme:
-          default: https
-          description: The scheme of the URI, either http or https
   /management/v1/whoami:
     get:
       tags:
-      - user
+      - User
       summary: Whoami
       description: Returns information about the user associated with the current authentication token.
       operationId: whoami
@@ -461,58 +385,228 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/IcebergErrorResponse'
-    servers:
-    - url: '{scheme}://{host}{basePath}'
-      description: Lakekeeper Management API
-      variables:
-        basePath:
-          default: ''
-          description: Optional path prefix (starting with '/') to be prepended to all routes
-        host:
-          default: localhost
-          description: The host (and optional port) for the specified server
-        scheme:
-          default: https
-          description: The scheme of the URI, either http or https
 components:
   schemas:
-    User:
+    UserLastUpdatedWith:
+      type: string
+      description: How the user was last updated
+      enum:
+      - create-endpoint
+      - config-call-creation
+      - update-endpoint
+      - role-provider
+    SearchUserRequest:
       type: object
-      description: User of the catalog
+      required:
+      - search
+      properties:
+        search:
+          type: string
+          description: 'Search string for fuzzy search.
+
+            Length is truncated to 64 characters.'
+    RoleMembership:
+      type: object
+      description: 'A role''s display identity in a membership listing: the role-member variant of
+
+        [`RoleMember`], and the item type of `/member-of` and `/user/{id}/roles`.
+
+        `ident` (`provider/source-id`) is the stable external handle a client references
+
+        the role by; `id` is the internal UUID. All fields are always present — a role
+
+        whose id no longer resolves in the catalog (a dangling authorizer edge) is
+
+        dropped from the listing and logged, never surfaced with a null identity.'
+      required:
+      - id
+      - ident
+      - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        ident:
+          type: string
+        name:
+          type: string
+    UpdateUserRequest:
+      type: object
       required:
       - name
-      - id
       - user-type
-      - last-updated-with
-      - created-at
       properties:
-        created-at:
-          type: string
-          format: date-time
-          description: Timestamp when the user was created
         email:
           type:
           - string
           - 'null'
-          description: Email of the user
-        id:
-          type: string
-          description: The user's ID
-        last-updated-with:
-          $ref: '#/components/schemas/UserLastUpdatedWith'
-          description: The endpoint that last updated the user
         name:
           type: string
-          description: Name of the user
-        updated-at:
+        user-type:
+          $ref: '#/components/schemas/UserType'
+    ErrorModel:
+      type: object
+      description: JSON error payload returned in a response with further details on the error
+      required:
+      - message
+      - type
+      - code
+      properties:
+        code:
+          type: integer
+          format: int32
+          description: HTTP response code
+          minimum: 0
+        message:
+          type: string
+          description: Human-readable error message
+        stack:
+          type: array
+          items:
+            type: string
+        type:
+          type: string
+          description: Internal type definition of the error
+    LakekeeperUserAction:
+      oneOf:
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - read
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - update
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - delete
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - read_role_assignments
+    ListRoleMembershipsResponse:
+      type: object
+      description: 'One page of roles — the `member-of` set or a user''s roles, direct or transitive
+
+        depending on the endpoint.'
+      required:
+      - roles
+      properties:
+        next-page-token:
           type:
           - string
           - 'null'
-          format: date-time
-          description: Timestamp when the user was last updated
+          description: 'Token for the next page; `null`/absent once the listing is exhausted.
+
+            Note for SDK authors: **stop when `next-page-token` is null/absent.** The
+
+            final page of results may itself return a null token, so don''t rely on
+
+            receiving a separate trailing empty page — keep requesting until the token
+
+            is null.'
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleMembership'
+    WhoamiResponse:
+      allOf:
+      - $ref: '#/components/schemas/User'
+      - type: object
+        required:
+        - is-instance-admin
+        properties:
+          is-instance-admin:
+            type: boolean
+            description: 'Whether the authenticated principal is an instance admin (configured via
+
+              `LAKEKEEPER__INSTANCE_ADMINS`). Instance admins may modify the spec of
+
+              warehouses marked `managed-by: instance-admin`. Only ever `true` for a
+
+              principal acting directly; role-assumed requests do not inherit it.'
+      description: 'Response of the `whoami` endpoint: the catalog user for the current token,
+
+        plus request-scoped privilege not stored on the user record.'
+    UserType:
+      type: string
+      description: Type of a User
+      enum:
+      - human
+      - application
+    SearchUserResponse:
+      type: object
+      description: Search result for users
+      required:
+      - users
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchUser'
+          description: List of users matching the search criteria
+    SearchUser:
+      type: object
+      required:
+      - name
+      - id
+      - user-type
+      properties:
+        email:
+          type:
+          - string
+          - 'null'
+          description: 'Email of the user. If id is not specified, the email is extracted
+
+            from the provided token.'
+        id:
+          type: string
+          description: ID of the user
+        name:
+          type: string
+          description: Name of the user
         user-type:
           $ref: '#/components/schemas/UserType'
           description: Type of the user
+    GetLakekeeperUserActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LakekeeperUserAction'
+    ListUsersResponse:
+      type: object
+      required:
+      - users
+      properties:
+        next-page-token:
+          type:
+          - string
+          - 'null'
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
     CreateUserRequest:
       type: object
       properties:
@@ -555,184 +649,40 @@ components:
           - type: 'null'
           - $ref: '#/components/schemas/UserType'
             description: Type of the user. Useful to override wrongly classified users
-    GetLakekeeperUserActionsResponse:
+    User:
       type: object
-      required:
-      - allowed-actions
-      properties:
-        allowed-actions:
-          type: array
-          items:
-            $ref: '#/components/schemas/LakekeeperUserAction'
-    SearchUserRequest:
-      type: object
-      required:
-      - search
-      properties:
-        search:
-          type: string
-          description: 'Search string for fuzzy search.
-
-            Length is truncated to 64 characters.'
-    SearchUserResponse:
-      type: object
-      description: Search result for users
-      required:
-      - users
-      properties:
-        users:
-          type: array
-          items:
-            $ref: '#/components/schemas/SearchUser'
-          description: List of users matching the search criteria
-    LakekeeperUserAction:
-      oneOf:
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - read
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - update
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - delete
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - read_role_assignments
-    ErrorModel:
-      type: object
-      description: JSON error payload returned in a response with further details on the error
-      required:
-      - message
-      - type
-      - code
-      properties:
-        code:
-          type: integer
-          format: int32
-          description: HTTP response code
-          minimum: 0
-        message:
-          type: string
-          description: Human-readable error message
-        stack:
-          type: array
-          items:
-            type: string
-        type:
-          type: string
-          description: Internal type definition of the error
-    ListUsersResponse:
-      type: object
-      required:
-      - users
-      properties:
-        next-page-token:
-          type:
-          - string
-          - 'null'
-        users:
-          type: array
-          items:
-            $ref: '#/components/schemas/User'
-    UserLastUpdatedWith:
-      type: string
-      description: How the user was last updated
-      enum:
-      - create-endpoint
-      - config-call-creation
-      - update-endpoint
-      - role-provider
-    RoleMembership:
-      type: object
-      description: 'A role''s display identity in a membership listing: the role-member variant of
-
-        [`RoleMember`], and the item type of `/member-of` and `/user/{id}/roles`.
-
-        `ident` (`provider/source-id`) is the stable external handle a client references
-
-        the role by; `id` is the internal UUID. All fields are always present — a role
-
-        whose id no longer resolves in the catalog (a dangling authorizer edge) is
-
-        dropped from the listing and logged, never surfaced with a null identity.'
-      required:
-      - id
-      - ident
-      - name
-      properties:
-        id:
-          type: string
-          format: uuid
-        ident:
-          type: string
-        name:
-          type: string
-    ListRoleMembershipsResponse:
-      type: object
-      description: 'One page of roles — the `member-of` set or a user''s roles, direct or transitive
-
-        depending on the endpoint.'
-      required:
-      - roles
-      properties:
-        next-page-token:
-          type:
-          - string
-          - 'null'
-          description: 'Token for the next page; `null`/absent once the listing is exhausted.
-
-            Note for SDK authors: **stop when `next-page-token` is null/absent.** The
-
-            final page of results may itself return a null token, so don''t rely on
-
-            receiving a separate trailing empty page — keep requesting until the token
-
-            is null.'
-        roles:
-          type: array
-          items:
-            $ref: '#/components/schemas/RoleMembership'
-    SearchUser:
-      type: object
+      description: User of the catalog
       required:
       - name
       - id
       - user-type
+      - last-updated-with
+      - created-at
       properties:
+        created-at:
+          type: string
+          format: date-time
+          description: Timestamp when the user was created
         email:
           type:
           - string
           - 'null'
-          description: 'Email of the user. If id is not specified, the email is extracted
-
-            from the provided token.'
+          description: Email of the user
         id:
           type: string
-          description: ID of the user
+          description: The user's ID
+        last-updated-with:
+          $ref: '#/components/schemas/UserLastUpdatedWith'
+          description: The endpoint that last updated the user
         name:
           type: string
           description: Name of the user
+        updated-at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Timestamp when the user was last updated
         user-type:
           $ref: '#/components/schemas/UserType'
           description: Type of the user
@@ -744,50 +694,8 @@ components:
       properties:
         error:
           $ref: '#/components/schemas/ErrorModel'
-    UpdateUserRequest:
-      type: object
-      required:
-      - name
-      - user-type
-      properties:
-        email:
-          type:
-          - string
-          - 'null'
-        name:
-          type: string
-        user-type:
-          $ref: '#/components/schemas/UserType'
-    UserType:
-      type: string
-      description: Type of a User
-      enum:
-      - human
-      - application
-    WhoamiResponse:
-      allOf:
-      - $ref: '#/components/schemas/User'
-      - type: object
-        required:
-        - is-instance-admin
-        properties:
-          is-instance-admin:
-            type: boolean
-            description: 'Whether the authenticated principal is an instance admin (configured via
-
-              `LAKEKEEPER__INSTANCE_ADMINS`). Instance admins may modify the spec of
-
-              warehouses marked `managed-by: instance-admin`. Only ever `true` for a
-
-              principal acting directly; role-assumed requests do not inherit it.'
-      description: 'Response of the `whoami` endpoint: the catalog user for the current token,
-
-        plus request-scoped privilege not stored on the user record.'
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
-x-refined-from:
-- lakekeeper-management-api-openapi.yml
-- lakekeeper-management-plus-api-openapi.yml

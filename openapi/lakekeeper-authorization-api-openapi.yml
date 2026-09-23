@@ -1,8 +1,10 @@
 openapi: 3.2.0
 info:
-  title: Lakekeeper Authorization API
+  title: Lakekeeper＋ Management Authorization API
+  description: Lakekeeper is a rust-native Apache Iceberg REST Catalog implementation. The Management API provides endpoints to manage the server, projects, warehouses, users, and roles. If Authorization is enabled, permissions can also be managed. An interactive Swagger-UI for the specific Lakekeeper Version and configuration running is available at `/swagger-ui/#/` of Lakekeeper (by default http://localhost:8181/swagger-ui/#/).
+  license:
+    name: Vakamo Enterprise License
   version: 0.0.0
-  description: 'Operations tagged authorization across 2 of this provider''s published API definitions: lakekeeper-management-api-openapi.yml, lakekeeper-management-plus-api-openapi.yml. Each path carries the servers of the definition it was published in.'
 servers:
 - url: '{scheme}://{host}{basePath}'
   description: Lakekeeper Management API
@@ -19,12 +21,12 @@ servers:
 security:
 - bearerAuth: []
 tags:
-- name: authorization
+- name: Authorization
 paths:
   /management/v1/action/batch-check:
     post:
       tags:
-      - authorization
+      - Authorization
       summary: Batch Check Catalog Actions
       description: 'Performs authorization checks for multiple catalog actions in a single request.
 
@@ -65,148 +67,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/IcebergErrorResponse'
-    servers:
-    - url: '{scheme}://{host}{basePath}'
-      description: Lakekeeper Management API
-      variables:
-        basePath:
-          default: ''
-          description: Optional path prefix (starting with '/') to be prepended to all routes
-        host:
-          default: localhost
-          description: The host (and optional port) for the specified server
-        scheme:
-          default: https
-          description: The scheme of the URI, either http or https
 components:
   schemas:
-    CatalogActionCheckItem:
-      type: object
-      description: A single check item with optional identity override
-      required:
-      - operation
-      properties:
-        id:
-          type:
-          - string
-          - 'null'
-          description: 'Optional identifier for this check (returned in response).
-
-            If not specified, the index in the request array will be used.'
-        identity:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/UserOrRole'
-            description: 'The user or role to check access for.
-
-              If not specified, the identity of the user making the request is used.'
-        operation:
-          $ref: '#/components/schemas/CatalogActionCheckOperation'
-          description: The operation to check
-    LakekeeperGenericTableAction:
-      oneOf:
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - drop
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - read_data
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - write_data
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - get_metadata
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - rename
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - include_in_list
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - undrop
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - get_tasks
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - control_tasks
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - set_protection
-    UserOrRole:
-      oneOf:
-      - type: object
-        title: UserOrRoleUser
-        description: Id of the user
-        required:
-        - user
-        properties:
-          user:
-            type: string
-            description: Id of the user
-      - type: object
-        title: UserOrRoleRole
-        description: Id of the role
-        required:
-        - role
-        properties:
-          role:
-            type: string
-            format: uuid
-            description: Id of the role
-      description: Identifies a user or a role
     LakekeeperTableAction:
       oneOf:
       - type: object
@@ -317,404 +179,129 @@ components:
             type: string
             enum:
             - set_protection
-    CatalogActionsBatchCheckRequest:
-      type: object
-      required:
-      - checks
-      properties:
-        checks:
-          type: array
-          items:
-            $ref: '#/components/schemas/CatalogActionCheckItem'
-          description: List of checks to perform
-        error-on-not-found:
-          type: boolean
-          description: 'If true, return 404 error when resources are not found.
-
-            If false, treat missing resources as denied (allowed = false).
-
-            Defaults to false.'
-    CatalogActionsBatchCheckResult:
-      type: object
-      required:
-      - allowed
-      properties:
-        allowed:
-          type: boolean
-        id:
-          type:
-          - string
-          - 'null'
-    LakekeeperWarehouseAction:
+    NamespaceIdentOrUuid:
       oneOf:
       - type: object
         required:
-        - action
+        - namespace-id
+        - warehouse-id
         properties:
-          action:
+          namespace-id:
             type: string
-            enum:
-            - create_namespace
-          name:
-            type:
-            - string
-            - 'null'
-            description: Name of the namespace to create.
-          properties:
+            format: uuid
+          warehouse-id:
+            type: string
+            format: uuid
+      - type: object
+        required:
+        - namespace
+        - warehouse-id
+        properties:
+          namespace:
+            type: array
+            items:
+              type: string
+          warehouse-id:
+            type: string
+            format: uuid
+      description: Identifier for a namespace, either a UUID or its name and warehouse ID
+    CatalogActionCheckOperation:
+      oneOf:
+      - type: object
+        required:
+        - server
+        properties:
+          server:
             type: object
-            additionalProperties:
-              type: string
-            propertyNames:
-              type: string
+            required:
+            - action
+            properties:
+              action:
+                $ref: '#/components/schemas/LakekeeperServerAction'
       - type: object
         required:
-        - action
+        - project
         properties:
-          action:
-            type: string
-            enum:
-            - delete
+          project:
+            type: object
+            required:
+            - action
+            properties:
+              action:
+                $ref: '#/components/schemas/LakekeeperProjectAction'
+              project-id:
+                type:
+                - string
+                - 'null'
+                format: uuid
       - type: object
         required:
-        - action
+        - warehouse
         properties:
-          action:
-            type: string
-            enum:
-            - update_storage
+          warehouse:
+            type: object
+            required:
+            - action
+            - warehouse-id
+            properties:
+              action:
+                $ref: '#/components/schemas/LakekeeperWarehouseAction'
+              warehouse-id:
+                type: string
+                format: uuid
       - type: object
         required:
-        - action
+        - namespace
         properties:
-          action:
-            type: string
-            enum:
-            - update_storage_credential
+          namespace:
+            allOf:
+            - $ref: '#/components/schemas/NamespaceIdentOrUuid'
+            - type: object
+              required:
+              - action
+              properties:
+                action:
+                  $ref: '#/components/schemas/LakekeeperNamespaceAction'
       - type: object
         required:
-        - action
+        - table
         properties:
-          action:
-            type: string
-            enum:
-            - get_metadata
+          table:
+            allOf:
+            - $ref: '#/components/schemas/TabularIdentOrUuid'
+            - type: object
+              required:
+              - action
+              properties:
+                action:
+                  $ref: '#/components/schemas/LakekeeperTableAction'
       - type: object
         required:
-        - action
+        - view
         properties:
-          action:
-            type: string
-            enum:
-            - get_config
+          view:
+            allOf:
+            - $ref: '#/components/schemas/TabularIdentOrUuid'
+            - type: object
+              required:
+              - action
+              properties:
+                action:
+                  $ref: '#/components/schemas/LakekeeperViewAction'
       - type: object
         required:
-        - action
+        - generic-table
         properties:
-          action:
-            type: string
-            enum:
-            - list_namespaces
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - list_everything
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - use
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - include_in_list
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - deactivate
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - activate
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - rename
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - list_deleted_tabulars
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - modify_soft_deletion
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - get_task_queue_config
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - modify_task_queue_config
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - get_all_tasks
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - control_all_tasks
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - set_protection
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - set_format_version_policy
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - get_endpoint_statistics
-    LakekeeperProjectAction:
-      oneOf:
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - create_warehouse
-          name:
-            type:
-            - string
-            - 'null'
-            description: Name of the warehouse to create.
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - delete
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - rename
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - get_metadata
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - list_warehouses
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - include_in_list
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - create_role
-          name:
-            type:
-            - string
-            - 'null'
-            description: Name of the role to create.
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - list_roles
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - search_roles
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - get_endpoint_statistics
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - modify_task_queue_config
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - get_task_queue_config
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - get_project_tasks
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - control_project_tasks
-    LakekeeperServerAction:
-      oneOf:
-      - type: object
-        description: Can create items inside the server (can create Warehouses).
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - create_project
-          name:
-            type:
-            - string
-            - 'null'
-            description: Name of the project to create.
-          project_id:
-            type:
-            - string
-            - 'null'
-            description: Project ID, if externally provided.
-      - type: object
-        description: Can update all users on this server.
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - update_users
-      - type: object
-        description: Can delete all users on this server.
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - delete_users
-      - type: object
-        description: Can List all users on this server.
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - list_users
-      - type: object
-        description: Can provision user
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - provision_users
+          generic-table:
+            allOf:
+            - $ref: '#/components/schemas/TabularIdentOrUuid'
+            - type: object
+              required:
+              - action
+              properties:
+                action:
+                  $ref: '#/components/schemas/LakekeeperGenericTableAction'
+      description: Represents an action on an object
     LakekeeperNamespaceAction:
       oneOf:
       - type: object
@@ -924,147 +511,29 @@ components:
             type: string
             enum:
             - list_generic_tables
-    CatalogActionCheckOperation:
-      oneOf:
-      - type: object
-        required:
-        - server
-        properties:
-          server:
-            type: object
-            required:
-            - action
-            properties:
-              action:
-                $ref: '#/components/schemas/LakekeeperServerAction'
-      - type: object
-        required:
-        - project
-        properties:
-          project:
-            type: object
-            required:
-            - action
-            properties:
-              action:
-                $ref: '#/components/schemas/LakekeeperProjectAction'
-              project-id:
-                type:
-                - string
-                - 'null'
-                format: uuid
-      - type: object
-        required:
-        - warehouse
-        properties:
-          warehouse:
-            type: object
-            required:
-            - action
-            - warehouse-id
-            properties:
-              action:
-                $ref: '#/components/schemas/LakekeeperWarehouseAction'
-              warehouse-id:
-                type: string
-                format: uuid
-      - type: object
-        required:
-        - namespace
-        properties:
-          namespace:
-            allOf:
-            - $ref: '#/components/schemas/NamespaceIdentOrUuid'
-            - type: object
-              required:
-              - action
-              properties:
-                action:
-                  $ref: '#/components/schemas/LakekeeperNamespaceAction'
-      - type: object
-        required:
-        - table
-        properties:
-          table:
-            allOf:
-            - $ref: '#/components/schemas/TabularIdentOrUuid'
-            - type: object
-              required:
-              - action
-              properties:
-                action:
-                  $ref: '#/components/schemas/LakekeeperTableAction'
-      - type: object
-        required:
-        - view
-        properties:
-          view:
-            allOf:
-            - $ref: '#/components/schemas/TabularIdentOrUuid'
-            - type: object
-              required:
-              - action
-              properties:
-                action:
-                  $ref: '#/components/schemas/LakekeeperViewAction'
-      - type: object
-        required:
-        - generic-table
-        properties:
-          generic-table:
-            allOf:
-            - $ref: '#/components/schemas/TabularIdentOrUuid'
-            - type: object
-              required:
-              - action
-              properties:
-                action:
-                  $ref: '#/components/schemas/LakekeeperGenericTableAction'
-      description: Represents an action on an object
-    TabularIdentOrUuid:
-      oneOf:
-      - type: object
-        required:
-        - warehouse-id
-        - table-id
-        properties:
-          table-id:
-            type: string
-            format: uuid
-          warehouse-id:
-            type: string
-            format: uuid
-      - type: object
-        required:
-        - namespace
-        - table
-        - warehouse-id
-        properties:
-          namespace:
-            type: array
-            items:
-              type: string
-          table:
-            type: string
-            description: Name of the table, view, or generic table.
-          warehouse-id:
-            type: string
-            format: uuid
-      description: 'Identifier for a tabular (table, view, or generic table) — either a UUID
-
-        or its name and namespace. Wire format primary names are `table-id` and
-
-        `table`; `view_id` / `view` and `generic_table_id` / `generic_table` are
-
-        accepted as input aliases for client ergonomics.'
-    IcebergErrorResponse:
+    ErrorModel:
       type: object
-      description: JSON wrapper for all error responses (non-2xx)
+      description: JSON error payload returned in a response with further details on the error
       required:
-      - error
+      - message
+      - type
+      - code
       properties:
-        error:
-          $ref: '#/components/schemas/ErrorModel'
+        code:
+          type: integer
+          format: int32
+          description: HTTP response code
+          minimum: 0
+        message:
+          type: string
+          description: Human-readable error message
+        stack:
+          type: array
+          items:
+            type: string
+        type:
+          type: string
+          description: Internal type definition of the error
     LakekeeperViewAction:
       oneOf:
       - type: object
@@ -1167,6 +636,231 @@ components:
             type: string
             enum:
             - set_protection
+    TabularIdentOrUuid:
+      oneOf:
+      - type: object
+        required:
+        - warehouse-id
+        - table-id
+        properties:
+          table-id:
+            type: string
+            format: uuid
+          warehouse-id:
+            type: string
+            format: uuid
+      - type: object
+        required:
+        - namespace
+        - table
+        - warehouse-id
+        properties:
+          namespace:
+            type: array
+            items:
+              type: string
+          table:
+            type: string
+            description: Name of the table, view, or generic table.
+          warehouse-id:
+            type: string
+            format: uuid
+      description: 'Identifier for a tabular (table, view, or generic table) — either a UUID
+
+        or its name and namespace. Wire format primary names are `table-id` and
+
+        `table`; `view_id` / `view` and `generic_table_id` / `generic_table` are
+
+        accepted as input aliases for client ergonomics.'
+    LakekeeperWarehouseAction:
+      oneOf:
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - create_namespace
+          name:
+            type:
+            - string
+            - 'null'
+            description: Name of the namespace to create.
+          properties:
+            type: object
+            additionalProperties:
+              type: string
+            propertyNames:
+              type: string
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - delete
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - update_storage
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - update_storage_credential
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - get_metadata
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - get_config
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - list_namespaces
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - list_everything
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - use
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - include_in_list
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - deactivate
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - activate
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - rename
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - list_deleted_tabulars
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - modify_soft_deletion
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - get_task_queue_config
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - modify_task_queue_config
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - get_all_tasks
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - control_all_tasks
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - set_protection
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - set_format_version_policy
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - get_endpoint_statistics
     CatalogActionsBatchCheckResponse:
       type: object
       required:
@@ -1176,60 +870,352 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CatalogActionsBatchCheckResult'
-    NamespaceIdentOrUuid:
+    CatalogActionCheckItem:
+      type: object
+      description: A single check item with optional identity override
+      required:
+      - operation
+      properties:
+        id:
+          type:
+          - string
+          - 'null'
+          description: 'Optional identifier for this check (returned in response).
+
+            If not specified, the index in the request array will be used.'
+        identity:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/UserOrRole'
+            description: 'The user or role to check access for.
+
+              If not specified, the identity of the user making the request is used.'
+        operation:
+          $ref: '#/components/schemas/CatalogActionCheckOperation'
+          description: The operation to check
+    LakekeeperGenericTableAction:
       oneOf:
       - type: object
         required:
-        - namespace-id
-        - warehouse-id
+        - action
         properties:
-          namespace-id:
+          action:
             type: string
-            format: uuid
-          warehouse-id:
-            type: string
-            format: uuid
+            enum:
+            - drop
       - type: object
         required:
-        - namespace
-        - warehouse-id
+        - action
         properties:
-          namespace:
-            type: array
-            items:
-              type: string
-          warehouse-id:
+          action:
+            type: string
+            enum:
+            - read_data
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - write_data
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - get_metadata
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - rename
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - include_in_list
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - undrop
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - get_tasks
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - control_tasks
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - set_protection
+    UserOrRole:
+      oneOf:
+      - type: object
+        title: UserOrRoleUser
+        description: Id of the user
+        required:
+        - user
+        properties:
+          user:
+            type: string
+            description: Id of the user
+      - type: object
+        title: UserOrRoleRole
+        description: Id of the role
+        required:
+        - role
+        properties:
+          role:
             type: string
             format: uuid
-      description: Identifier for a namespace, either a UUID or its name and warehouse ID
-    ErrorModel:
+            description: Id of the role
+      description: Identifies a user or a role
+    CatalogActionsBatchCheckResult:
       type: object
-      description: JSON error payload returned in a response with further details on the error
       required:
-      - message
-      - type
-      - code
+      - allowed
       properties:
-        code:
-          type: integer
-          format: int32
-          description: HTTP response code
-          minimum: 0
-        message:
-          type: string
-          description: Human-readable error message
-        stack:
+        allowed:
+          type: boolean
+        id:
+          type:
+          - string
+          - 'null'
+    LakekeeperProjectAction:
+      oneOf:
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - create_warehouse
+          name:
+            type:
+            - string
+            - 'null'
+            description: Name of the warehouse to create.
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - delete
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - rename
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - get_metadata
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - list_warehouses
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - include_in_list
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - create_role
+          name:
+            type:
+            - string
+            - 'null'
+            description: Name of the role to create.
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - list_roles
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - search_roles
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - get_endpoint_statistics
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - modify_task_queue_config
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - get_task_queue_config
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - get_project_tasks
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - control_project_tasks
+    LakekeeperServerAction:
+      oneOf:
+      - type: object
+        description: Can create items inside the server (can create Warehouses).
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - create_project
+          name:
+            type:
+            - string
+            - 'null'
+            description: Name of the project to create.
+          project_id:
+            type:
+            - string
+            - 'null'
+            description: Project ID, if externally provided.
+      - type: object
+        description: Can update all users on this server.
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - update_users
+      - type: object
+        description: Can delete all users on this server.
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - delete_users
+      - type: object
+        description: Can List all users on this server.
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - list_users
+      - type: object
+        description: Can provision user
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - provision_users
+    IcebergErrorResponse:
+      type: object
+      description: JSON wrapper for all error responses (non-2xx)
+      required:
+      - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorModel'
+    CatalogActionsBatchCheckRequest:
+      type: object
+      required:
+      - checks
+      properties:
+        checks:
           type: array
           items:
-            type: string
-        type:
-          type: string
-          description: Internal type definition of the error
+            $ref: '#/components/schemas/CatalogActionCheckItem'
+          description: List of checks to perform
+        error-on-not-found:
+          type: boolean
+          description: 'If true, return 404 error when resources are not found.
+
+            If false, treat missing resources as denied (allowed = false).
+
+            Defaults to false.'
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
-x-refined-from:
-- lakekeeper-management-api-openapi.yml
-- lakekeeper-management-plus-api-openapi.yml
