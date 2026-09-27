@@ -119,6 +119,52 @@ paths:
                 $ref: '#/components/schemas/IcebergErrorResponse'
 components:
   schemas:
+    IcebergErrorResponse:
+      type: object
+      description: JSON wrapper for all error responses (non-2xx)
+      required:
+      - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorModel'
+    GetLakekeeperServerActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LakekeeperServerActionKind'
+    UserType:
+      type: string
+      description: Type of a User
+      enum:
+      - human
+      - application
+    ErrorModel:
+      type: object
+      description: JSON error payload returned in a response with further details on the error
+      required:
+      - message
+      - type
+      - code
+      properties:
+        code:
+          type: integer
+          format: int32
+          description: HTTP response code
+          minimum: 0
+        message:
+          type: string
+          description: Human-readable error message
+        stack:
+          type: array
+          items:
+            type: string
+        type:
+          type: string
+          description: Internal type definition of the error
     LakekeeperServerActionKind:
       oneOf:
       - type: object
@@ -161,15 +207,42 @@ components:
             type: string
             enum:
             - provision_users
-    GetLakekeeperServerActionsResponse:
+    BootstrapRequest:
       type: object
       required:
-      - allowed-actions
+      - accept-terms-of-use
       properties:
-        allowed-actions:
-          type: array
-          items:
-            $ref: '#/components/schemas/LakekeeperServerActionKind'
+        accept-terms-of-use:
+          type: boolean
+          description: Set to true if you accept LAKEKEEPER terms of use.
+        is-operator:
+          type: boolean
+          description: 'If set to true, the calling user is treated as an operator and obtain
+
+            a corresponding role. If not specified, the user is treated as a human.'
+        user-email:
+          type:
+          - string
+          - 'null'
+          description: 'Email of the user performing bootstrap. Optional. If not provided
+
+            the server will try to parse the email from the provided token.'
+        user-name:
+          type:
+          - string
+          - 'null'
+          description: 'Name of the user performing bootstrap. Optional. If not provided
+
+            the server will try to parse the name from the provided token.
+
+            The initial user will become the global admin.'
+        user-type:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/UserType'
+            description: 'Type of the user performing bootstrap. Optional. If not provided
+
+              the server will try to parse the type from the provided token.'
     LicenseStatus:
       type: object
       description: Status of license validation
@@ -214,65 +287,28 @@ components:
         valid:
           type: boolean
           description: If the license is valid and active
-    ErrorModel:
+    ConsoleInfo:
       type: object
-      description: JSON error payload returned in a response with further details on the error
+      description: Information about the UI (console) shipped with this binary.
       required:
-      - message
-      - type
-      - code
+      - edition
+      - version
       properties:
-        code:
-          type: integer
-          format: int32
-          description: HTTP response code
-          minimum: 0
-        message:
-          type: string
-          description: Human-readable error message
-        stack:
-          type: array
-          items:
-            type: string
-        type:
-          type: string
-          description: Internal type definition of the error
-    BootstrapRequest:
-      type: object
-      required:
-      - accept-terms-of-use
-      properties:
-        accept-terms-of-use:
-          type: boolean
-          description: Set to true if you accept LAKEKEEPER terms of use.
-        is-operator:
-          type: boolean
-          description: 'If set to true, the calling user is treated as an operator and obtain
-
-            a corresponding role. If not specified, the user is treated as a human.'
-        user-email:
+        commit-sha:
           type:
           - string
           - 'null'
-          description: 'Email of the user performing bootstrap. Optional. If not provided
+          description: Git commit SHA of the console source, if known.
+        edition:
+          type: string
+          description: 'Edition / crate name of the bundled console.
 
-            the server will try to parse the email from the provided token.'
-        user-name:
-          type:
-          - string
-          - 'null'
-          description: 'Name of the user performing bootstrap. Optional. If not provided
+            e.g. `lakekeeper-console` for the OSS console or
 
-            the server will try to parse the name from the provided token.
-
-            The initial user will become the global admin.'
-        user-type:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/UserType'
-            description: 'Type of the user performing bootstrap. Optional. If not provided
-
-              the server will try to parse the type from the provided token.'
+            `lakekeeper-console-plus` for the enterprise console.'
+        version:
+          type: string
+          description: SemVer of the console crate.
     ServerInfo:
       type: object
       required:
@@ -358,42 +394,6 @@ components:
 
             read `lakekeeper-version` and/or `lakekeeper-enterprise-version`.'
           deprecated: true
-    UserType:
-      type: string
-      description: Type of a User
-      enum:
-      - human
-      - application
-    ConsoleInfo:
-      type: object
-      description: Information about the UI (console) shipped with this binary.
-      required:
-      - edition
-      - version
-      properties:
-        commit-sha:
-          type:
-          - string
-          - 'null'
-          description: Git commit SHA of the console source, if known.
-        edition:
-          type: string
-          description: 'Edition / crate name of the bundled console.
-
-            e.g. `lakekeeper-console` for the OSS console or
-
-            `lakekeeper-console-plus` for the enterprise console.'
-        version:
-          type: string
-          description: SemVer of the console crate.
-    IcebergErrorResponse:
-      type: object
-      description: JSON wrapper for all error responses (non-2xx)
-      required:
-      - error
-      properties:
-        error:
-          $ref: '#/components/schemas/ErrorModel'
   securitySchemes:
     bearerAuth:
       type: http

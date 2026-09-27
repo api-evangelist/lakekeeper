@@ -387,86 +387,6 @@ paths:
                 $ref: '#/components/schemas/IcebergErrorResponse'
 components:
   schemas:
-    UserLastUpdatedWith:
-      type: string
-      description: How the user was last updated
-      enum:
-      - create-endpoint
-      - config-call-creation
-      - update-endpoint
-      - role-provider
-    SearchUserRequest:
-      type: object
-      required:
-      - search
-      properties:
-        search:
-          type: string
-          description: 'Search string for fuzzy search.
-
-            Length is truncated to 64 characters.'
-    RoleMembership:
-      type: object
-      description: 'A role''s display identity in a membership listing: the role-member variant of
-
-        [`RoleMember`], and the item type of `/member-of` and `/user/{id}/roles`.
-
-        `ident` (`provider/source-id`) is the stable external handle a client references
-
-        the role by; `id` is the internal UUID. All fields are always present — a role
-
-        whose id no longer resolves in the catalog (a dangling authorizer edge) is
-
-        dropped from the listing and logged, never surfaced with a null identity.'
-      required:
-      - id
-      - ident
-      - name
-      properties:
-        id:
-          type: string
-          format: uuid
-        ident:
-          type: string
-        name:
-          type: string
-    UpdateUserRequest:
-      type: object
-      required:
-      - name
-      - user-type
-      properties:
-        email:
-          type:
-          - string
-          - 'null'
-        name:
-          type: string
-        user-type:
-          $ref: '#/components/schemas/UserType'
-    ErrorModel:
-      type: object
-      description: JSON error payload returned in a response with further details on the error
-      required:
-      - message
-      - type
-      - code
-      properties:
-        code:
-          type: integer
-          format: int32
-          description: HTTP response code
-          minimum: 0
-        message:
-          type: string
-          description: Human-readable error message
-        stack:
-          type: array
-          items:
-            type: string
-        type:
-          type: string
-          description: Internal type definition of the error
     LakekeeperUserAction:
       oneOf:
       - type: object
@@ -501,6 +421,29 @@ components:
             type: string
             enum:
             - read_role_assignments
+    SearchUser:
+      type: object
+      required:
+      - name
+      - id
+      - user-type
+      properties:
+        email:
+          type:
+          - string
+          - 'null'
+          description: 'Email of the user. If id is not specified, the email is extracted
+
+            from the provided token.'
+        id:
+          type: string
+          description: ID of the user
+        name:
+          type: string
+          description: Name of the user
+        user-type:
+          $ref: '#/components/schemas/UserType'
+          description: Type of the user
     ListRoleMembershipsResponse:
       type: object
       description: 'One page of roles — the `member-of` set or a user''s roles, direct or transitive
@@ -545,12 +488,6 @@ components:
       description: 'Response of the `whoami` endpoint: the catalog user for the current token,
 
         plus request-scoped privilege not stored on the user record.'
-    UserType:
-      type: string
-      description: Type of a User
-      enum:
-      - human
-      - application
     SearchUserResponse:
       type: object
       description: Search result for users
@@ -562,38 +499,28 @@ components:
           items:
             $ref: '#/components/schemas/SearchUser'
           description: List of users matching the search criteria
-    SearchUser:
+    IcebergErrorResponse:
+      type: object
+      description: JSON wrapper for all error responses (non-2xx)
+      required:
+      - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorModel'
+    UpdateUserRequest:
       type: object
       required:
       - name
-      - id
       - user-type
       properties:
         email:
           type:
           - string
           - 'null'
-          description: 'Email of the user. If id is not specified, the email is extracted
-
-            from the provided token.'
-        id:
-          type: string
-          description: ID of the user
         name:
           type: string
-          description: Name of the user
         user-type:
           $ref: '#/components/schemas/UserType'
-          description: Type of the user
-    GetLakekeeperUserActionsResponse:
-      type: object
-      required:
-      - allowed-actions
-      properties:
-        allowed-actions:
-          type: array
-          items:
-            $ref: '#/components/schemas/LakekeeperUserAction'
     ListUsersResponse:
       type: object
       required:
@@ -607,6 +534,114 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/User'
+    UserType:
+      type: string
+      description: Type of a User
+      enum:
+      - human
+      - application
+    RoleMembership:
+      type: object
+      description: 'A role''s display identity in a membership listing: the role-member variant of
+
+        [`RoleMember`], and the item type of `/member-of` and `/user/{id}/roles`.
+
+        `ident` (`provider/source-id`) is the stable external handle a client references
+
+        the role by; `id` is the internal UUID. All fields are always present — a role
+
+        whose id no longer resolves in the catalog (a dangling authorizer edge) is
+
+        dropped from the listing and logged, never surfaced with a null identity.'
+      required:
+      - id
+      - ident
+      - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        ident:
+          type: string
+        name:
+          type: string
+    ErrorModel:
+      type: object
+      description: JSON error payload returned in a response with further details on the error
+      required:
+      - message
+      - type
+      - code
+      properties:
+        code:
+          type: integer
+          format: int32
+          description: HTTP response code
+          minimum: 0
+        message:
+          type: string
+          description: Human-readable error message
+        stack:
+          type: array
+          items:
+            type: string
+        type:
+          type: string
+          description: Internal type definition of the error
+    GetLakekeeperUserActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LakekeeperUserAction'
+    User:
+      type: object
+      description: User of the catalog
+      required:
+      - name
+      - id
+      - user-type
+      - last-updated-with
+      - created-at
+      properties:
+        created-at:
+          type: string
+          format: date-time
+          description: Timestamp when the user was created
+        email:
+          type:
+          - string
+          - 'null'
+          description: Email of the user
+        id:
+          type: string
+          description: The user's ID
+        last-updated-with:
+          $ref: '#/components/schemas/UserLastUpdatedWith'
+          description: The endpoint that last updated the user
+        name:
+          type: string
+          description: Name of the user
+        updated-at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Timestamp when the user was last updated
+        user-type:
+          $ref: '#/components/schemas/UserType'
+          description: Type of the user
+    UserLastUpdatedWith:
+      type: string
+      description: How the user was last updated
+      enum:
+      - create-endpoint
+      - config-call-creation
+      - update-endpoint
+      - role-provider
     CreateUserRequest:
       type: object
       properties:
@@ -649,51 +684,16 @@ components:
           - type: 'null'
           - $ref: '#/components/schemas/UserType'
             description: Type of the user. Useful to override wrongly classified users
-    User:
+    SearchUserRequest:
       type: object
-      description: User of the catalog
       required:
-      - name
-      - id
-      - user-type
-      - last-updated-with
-      - created-at
+      - search
       properties:
-        created-at:
+        search:
           type: string
-          format: date-time
-          description: Timestamp when the user was created
-        email:
-          type:
-          - string
-          - 'null'
-          description: Email of the user
-        id:
-          type: string
-          description: The user's ID
-        last-updated-with:
-          $ref: '#/components/schemas/UserLastUpdatedWith'
-          description: The endpoint that last updated the user
-        name:
-          type: string
-          description: Name of the user
-        updated-at:
-          type:
-          - string
-          - 'null'
-          format: date-time
-          description: Timestamp when the user was last updated
-        user-type:
-          $ref: '#/components/schemas/UserType'
-          description: Type of the user
-    IcebergErrorResponse:
-      type: object
-      description: JSON wrapper for all error responses (non-2xx)
-      required:
-      - error
-      properties:
-        error:
-          $ref: '#/components/schemas/ErrorModel'
+          description: 'Search string for fuzzy search.
+
+            Length is truncated to 64 characters.'
   securitySchemes:
     bearerAuth:
       type: http

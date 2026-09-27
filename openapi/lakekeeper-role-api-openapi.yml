@@ -772,156 +772,6 @@ paths:
                 $ref: '#/components/schemas/IcebergErrorResponse'
 components:
   schemas:
-    RoleMemberType:
-      type: string
-      description: Kind of a role member. Serializes as `"user"` / `"role"`.
-      enum:
-      - user
-      - role
-    RoleMetadata:
-      type: object
-      description: 'Metadata of a role with reduced information.
-
-        Returned for cross-project role references.'
-      required:
-      - id
-      - ident
-      - provider-id
-      - source-id
-      - name
-      - project-id
-      properties:
-        id:
-          type: string
-          format: uuid
-          description: Globally unique UUID identifier
-        ident:
-          type: string
-          description: Composite project-scoped identifier (`provider~source_id`).
-        name:
-          type: string
-          description: Name of the role
-        project-id:
-          type: string
-          description: Project ID in which the role is created.
-        provider-id:
-          type: string
-          description: Provider that owns this role (e.g. `"lakekeeper"`, `"oidc"`).
-        source-id:
-          type: string
-          description: Identifier of the role in the provider.
-    ErrorModel:
-      type: object
-      description: JSON error payload returned in a response with further details on the error
-      required:
-      - message
-      - type
-      - code
-      properties:
-        code:
-          type: integer
-          format: int32
-          description: HTTP response code
-          minimum: 0
-        message:
-          type: string
-          description: Human-readable error message
-        stack:
-          type: array
-          items:
-            type: string
-        type:
-          type: string
-          description: Internal type definition of the error
-    UpdateRoleSourceSystemRequest:
-      type: object
-      required:
-      - source-id
-      - provider-id
-      properties:
-        provider-id:
-          type: string
-          description: New Provider ID of the role.
-        source-id:
-          type: string
-          description: New Source ID / External ID of the role.
-    UserType:
-      type: string
-      description: Type of a User
-      enum:
-      - human
-      - application
-    ListRolesResponse:
-      type: object
-      required:
-      - roles
-      properties:
-        next-page-token:
-          type:
-          - string
-          - 'null'
-        roles:
-          type: array
-          items:
-            $ref: '#/components/schemas/Role'
-    LakekeeperRoleActionKind:
-      oneOf:
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - read
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - read_metadata
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - delete
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - update
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - manage_role_assignments
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - read_role_assignments
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - update_source_system
     IcebergErrorResponse:
       type: object
       description: JSON wrapper for all error responses (non-2xx)
@@ -930,6 +780,44 @@ components:
       properties:
         error:
           $ref: '#/components/schemas/ErrorModel'
+    RoleMembership:
+      type: object
+      description: 'A role''s display identity in a membership listing: the role-member variant of
+
+        [`RoleMember`], and the item type of `/member-of` and `/user/{id}/roles`.
+
+        `ident` (`provider/source-id`) is the stable external handle a client references
+
+        the role by; `id` is the internal UUID. All fields are always present — a role
+
+        whose id no longer resolves in the catalog (a dangling authorizer edge) is
+
+        dropped from the listing and logged, never surfaced with a null identity.'
+      required:
+      - id
+      - ident
+      - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        ident:
+          type: string
+        name:
+          type: string
+    UpdateRoleRequest:
+      type: object
+      required:
+      - name
+      properties:
+        description:
+          type:
+          - string
+          - 'null'
+          description: Description of the role. If not set, the description will be removed.
+        name:
+          type: string
+          description: Name of the role to create
     Role:
       type: object
       required:
@@ -977,31 +865,38 @@ components:
           - 'null'
           format: date-time
           description: Timestamp when the role was last updated
-    RoleMembership:
+    SearchRoleResponse:
       type: object
-      description: 'A role''s display identity in a membership listing: the role-member variant of
-
-        [`RoleMember`], and the item type of `/member-of` and `/user/{id}/roles`.
-
-        `ident` (`provider/source-id`) is the stable external handle a client references
-
-        the role by; `id` is the internal UUID. All fields are always present — a role
-
-        whose id no longer resolves in the catalog (a dangling authorizer edge) is
-
-        dropped from the listing and logged, never surfaced with a null identity.'
       required:
-      - id
-      - ident
-      - name
+      - roles
       properties:
-        id:
-          type: string
-          format: uuid
-        ident:
-          type: string
-        name:
-          type: string
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+          description: List of roles matching the search criteria
+    ListRolesResponse:
+      type: object
+      required:
+      - roles
+      properties:
+        next-page-token:
+          type:
+          - string
+          - 'null'
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+    GetLakekeeperRoleActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LakekeeperRoleActionKind'
     SearchRoleRequest:
       type: object
       required:
@@ -1019,15 +914,43 @@ components:
           description: 'Search string for fuzzy search.
 
             Length is truncated to 64 characters.'
-    GetLakekeeperRoleActionsResponse:
+    UpdateRoleSourceSystemRequest:
       type: object
       required:
-      - allowed-actions
+      - source-id
+      - provider-id
       properties:
-        allowed-actions:
+        provider-id:
+          type: string
+          description: New Provider ID of the role.
+        source-id:
+          type: string
+          description: New Source ID / External ID of the role.
+    ListRoleMembersResponse:
+      type: object
+      description: 'One page of a role''s members (users ∪ member roles) — direct for `/members`,
+
+        transitive for `/members/transitive`.'
+      required:
+      - members
+      properties:
+        members:
           type: array
           items:
-            $ref: '#/components/schemas/LakekeeperRoleActionKind'
+            $ref: '#/components/schemas/RoleMember'
+        next-page-token:
+          type:
+          - string
+          - 'null'
+          description: 'Token for the next page; `null`/absent once the listing is exhausted.
+
+            Note for SDK authors: **stop when `next-page-token` is null/absent.** The
+
+            final page of results may itself return a null token, so don''t rely on
+
+            receiving a separate trailing empty page — keep requesting until the token
+
+            is null.'
     UserMembership:
       type: object
       description: 'A user''s identity in a membership listing (the `user` variant of
@@ -1062,35 +985,6 @@ components:
             description: 'Whether the principal is a human or an application; `null` when the user
 
               is assigned but not provisioned in the catalog (the id is all that''s known).'
-    AddRoleMembersResponse:
-      type: object
-      description: 'Response for `POST /role/{id}/members`: the requested members confirmed present
-
-        (idempotent — already-present members are included). Echoes identity
-
-        [`RoleMemberRef`]s, not hydrated [`RoleMember`]s — use `GET /role/{id}/members`
-
-        for display names.'
-      required:
-      - members
-      properties:
-        members:
-          type: array
-          items:
-            $ref: '#/components/schemas/RoleMemberRef'
-    UpdateRoleRequest:
-      type: object
-      required:
-      - name
-      properties:
-        description:
-          type:
-          - string
-          - 'null'
-          description: Description of the role. If not set, the description will be removed.
-        name:
-          type: string
-          description: Name of the role to create
     RoleMember:
       oneOf:
       - allOf:
@@ -1124,40 +1018,35 @@ components:
         Identity is hydrated; for requests and add confirmations use the
 
         un-hydrated [`RoleMemberRef`] instead.'
-    RoleMemberRef:
-      oneOf:
-      - type: object
-        description: A user, by `IdP` subject id.
-        required:
-        - id
-        - type
-        properties:
-          id:
+    UserType:
+      type: string
+      description: Type of a User
+      enum:
+      - human
+      - application
+    ErrorModel:
+      type: object
+      description: JSON error payload returned in a response with further details on the error
+      required:
+      - message
+      - type
+      - code
+      properties:
+        code:
+          type: integer
+          format: int32
+          description: HTTP response code
+          minimum: 0
+        message:
+          type: string
+          description: Human-readable error message
+        stack:
+          type: array
+          items:
             type: string
-          type:
-            type: string
-            enum:
-            - user
-      - type: object
-        description: A role, by id.
-        required:
-        - id
-        - type
-        properties:
-          id:
-            type: string
-            format: uuid
-          type:
-            type: string
-            enum:
-            - role
-      description: 'An identity reference to a role member — a `user` or a `role`, by typed id.
-
-        Sent in `POST /role/{id}/members` requests and echoed by the add confirmation
-
-        (remove returns `204` with no body). Unlike [`RoleMember`] it is never hydrated
-
-        (no display name): it names *which* principal, not its display identity.'
+        type:
+          type: string
+          description: Internal type definition of the error
     AddRoleMembersRequest:
       type: object
       description: 'Request body for `POST /role/{id}/members`. Batch: adds every listed member to
@@ -1170,41 +1059,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RoleMemberRef'
-    ListRoleMembersResponse:
-      type: object
-      description: 'One page of a role''s members (users ∪ member roles) — direct for `/members`,
-
-        transitive for `/members/transitive`.'
-      required:
-      - members
-      properties:
-        members:
-          type: array
-          items:
-            $ref: '#/components/schemas/RoleMember'
-        next-page-token:
-          type:
-          - string
-          - 'null'
-          description: 'Token for the next page; `null`/absent once the listing is exhausted.
-
-            Note for SDK authors: **stop when `next-page-token` is null/absent.** The
-
-            final page of results may itself return a null token, so don''t rely on
-
-            receiving a separate trailing empty page — keep requesting until the token
-
-            is null.'
-    SearchRoleResponse:
-      type: object
-      required:
-      - roles
-      properties:
-        roles:
-          type: array
-          items:
-            $ref: '#/components/schemas/Role'
-          description: List of roles matching the search criteria
     CreateRoleRequest:
       type: object
       required:
@@ -1266,6 +1120,152 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RoleMembership'
+    RoleMemberType:
+      type: string
+      description: Kind of a role member. Serializes as `"user"` / `"role"`.
+      enum:
+      - user
+      - role
+    RoleMemberRef:
+      oneOf:
+      - type: object
+        description: A user, by `IdP` subject id.
+        required:
+        - id
+        - type
+        properties:
+          id:
+            type: string
+          type:
+            type: string
+            enum:
+            - user
+      - type: object
+        description: A role, by id.
+        required:
+        - id
+        - type
+        properties:
+          id:
+            type: string
+            format: uuid
+          type:
+            type: string
+            enum:
+            - role
+      description: 'An identity reference to a role member — a `user` or a `role`, by typed id.
+
+        Sent in `POST /role/{id}/members` requests and echoed by the add confirmation
+
+        (remove returns `204` with no body). Unlike [`RoleMember`] it is never hydrated
+
+        (no display name): it names *which* principal, not its display identity.'
+    RoleMetadata:
+      type: object
+      description: 'Metadata of a role with reduced information.
+
+        Returned for cross-project role references.'
+      required:
+      - id
+      - ident
+      - provider-id
+      - source-id
+      - name
+      - project-id
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Globally unique UUID identifier
+        ident:
+          type: string
+          description: Composite project-scoped identifier (`provider~source_id`).
+        name:
+          type: string
+          description: Name of the role
+        project-id:
+          type: string
+          description: Project ID in which the role is created.
+        provider-id:
+          type: string
+          description: Provider that owns this role (e.g. `"lakekeeper"`, `"oidc"`).
+        source-id:
+          type: string
+          description: Identifier of the role in the provider.
+    LakekeeperRoleActionKind:
+      oneOf:
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - read
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - read_metadata
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - delete
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - update
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - manage_role_assignments
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - read_role_assignments
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - update_source_system
+    AddRoleMembersResponse:
+      type: object
+      description: 'Response for `POST /role/{id}/members`: the requested members confirmed present
+
+        (idempotent — already-present members are included). Echoes identity
+
+        [`RoleMemberRef`]s, not hydrated [`RoleMember`]s — use `GET /role/{id}/members`
+
+        for display names.'
+      required:
+      - members
+      properties:
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleMemberRef'
   securitySchemes:
     bearerAuth:
       type: http

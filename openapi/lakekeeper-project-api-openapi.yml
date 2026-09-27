@@ -364,21 +364,64 @@ paths:
       deprecated: true
 components:
   schemas:
-    CreateProjectRequest:
-      type: object
-      required:
-      - project-name
-      properties:
-        project-id:
-          type:
-          - string
-          - 'null'
-          description: 'Request a specific project ID - optional.
+    TimeWindowSelector:
+      oneOf:
+      - type: object
+        required:
+        - end
+        - interval
+        - type
+        properties:
+          end:
+            type: string
+            format: date-time
+            description: 'End timestamp of the time window
 
-            If not provided, a new project ID will be generated (recommended).'
-        project-name:
-          type: string
-          description: Name of the project to create.
+              Specify'
+            example: 2023-12-31 23:59:59+00:00
+          interval:
+            type: string
+            description: 'Duration/span of the time window
+
+
+              The returned statistics will be for the time window from `end` - `interval` to `end`.
+
+              Specify a ISO8601 duration string, e.g. `PT1H` for 1 hour, `P1D` for 1 day.'
+            example: P1D
+          type:
+            type: string
+            enum:
+            - window
+        example:
+          type: window
+          end: 2023-12-31 23:59:59+00:00
+          interval: P1D
+      - type: object
+        required:
+        - token
+        - type
+        properties:
+          token:
+            type: string
+            description: 'Opaque Token from previous response for paginating through time windows
+
+
+              Use the `next_page_token` or `previous_page_token` from a previous response'
+          type:
+            type: string
+            enum:
+            - page-token
+        example:
+          type: page-token
+          token: xyz
+    IcebergErrorResponse:
+      type: object
+      description: JSON wrapper for all error responses (non-2xx)
+      required:
+      - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorModel'
     LakekeeperProjectActionKind:
       oneOf:
       - type: object
@@ -493,15 +536,6 @@ components:
             type: string
             enum:
             - control_project_tasks
-    GetLakekeeperProjectActionsResponse:
-      type: object
-      required:
-      - allowed-actions
-      properties:
-        allowed-actions:
-          type: array
-          items:
-            $ref: '#/components/schemas/LakekeeperProjectActionKind'
     GetProjectResponse:
       type: object
       required:
@@ -514,64 +548,23 @@ components:
         project-name:
           type: string
           description: Name of the project
-    GetEndpointStatisticsRequest:
+    RenameProjectRequest:
       type: object
       required:
-      - warehouse
+      - new-name
       properties:
-        range-specifier:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/TimeWindowSelector'
-            description: 'Range specifier
-
-
-              Either for an explicit range or a page token to paginate through the results. See the docs of
-
-              `TimeWindowSelector` for more details.'
-        status-codes:
-          type:
-          - array
-          - 'null'
-          items:
-            type: integer
-            format: int32
-            minimum: 0
-          description: 'Status code filter
-
-
-            Optional filter to only return statistics for requests with specific status codes.'
-        warehouse:
-          $ref: '#/components/schemas/WarehouseFilter'
-          description: 'Warehouse filter
-
-
-            Can return statistics for a specific warehouse, all warehouses or requests that could not be
-
-            associated to any warehouse.'
-    ErrorModel:
-      type: object
-      description: JSON error payload returned in a response with further details on the error
-      required:
-      - message
-      - type
-      - code
-      properties:
-        code:
-          type: integer
-          format: int32
-          description: HTTP response code
-          minimum: 0
-        message:
+        new-name:
           type: string
-          description: Human-readable error message
-        stack:
+          description: New name for the project.
+    GetLakekeeperProjectActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
           type: array
           items:
-            type: string
-        type:
-          type: string
-          description: Internal type definition of the error
+            $ref: '#/components/schemas/LakekeeperProjectActionKind'
     WarehouseFilter:
       oneOf:
       - type: object
@@ -605,74 +598,6 @@ components:
             type: string
             enum:
             - all
-    TimeWindowSelector:
-      oneOf:
-      - type: object
-        required:
-        - end
-        - interval
-        - type
-        properties:
-          end:
-            type: string
-            format: date-time
-            description: 'End timestamp of the time window
-
-              Specify'
-            example: 2023-12-31 23:59:59+00:00
-          interval:
-            type: string
-            description: 'Duration/span of the time window
-
-
-              The returned statistics will be for the time window from `end` - `interval` to `end`.
-
-              Specify a ISO8601 duration string, e.g. `PT1H` for 1 hour, `P1D` for 1 day.'
-            example: P1D
-          type:
-            type: string
-            enum:
-            - window
-        example:
-          type: window
-          end: 2023-12-31 23:59:59+00:00
-          interval: P1D
-      - type: object
-        required:
-        - token
-        - type
-        properties:
-          token:
-            type: string
-            description: 'Opaque Token from previous response for paginating through time windows
-
-
-              Use the `next_page_token` or `previous_page_token` from a previous response'
-          type:
-            type: string
-            enum:
-            - page-token
-        example:
-          type: page-token
-          token: xyz
-    ListProjectsResponse:
-      type: object
-      required:
-      - projects
-      properties:
-        projects:
-          type: array
-          items:
-            $ref: '#/components/schemas/GetProjectResponse'
-          description: List of projects
-    RenameProjectRequest:
-      type: object
-      required:
-      - new-name
-      properties:
-        new-name:
-          type: string
-          description: New name for the project.
     EndpointStatisticsResponse:
       type: object
       required:
@@ -726,14 +651,6 @@ components:
             is being updated. If any endpoint is called in the following hour, there''ll be an entry in
 
             `timestamps` for the following hour. If not, then there''ll be no entry.'
-    CreateProjectResponse:
-      type: object
-      required:
-      - project-id
-      properties:
-        project-id:
-          type: string
-          description: ID of the created project.
     EndpointStatistic:
       type: object
       required:
@@ -800,14 +717,97 @@ components:
             endpoints cannot be associated with a warehouse, e.g. warehouse creation or user management
 
             will not have a `warehouse-id`'
-    IcebergErrorResponse:
+    ErrorModel:
       type: object
-      description: JSON wrapper for all error responses (non-2xx)
+      description: JSON error payload returned in a response with further details on the error
       required:
-      - error
+      - message
+      - type
+      - code
       properties:
-        error:
-          $ref: '#/components/schemas/ErrorModel'
+        code:
+          type: integer
+          format: int32
+          description: HTTP response code
+          minimum: 0
+        message:
+          type: string
+          description: Human-readable error message
+        stack:
+          type: array
+          items:
+            type: string
+        type:
+          type: string
+          description: Internal type definition of the error
+    ListProjectsResponse:
+      type: object
+      required:
+      - projects
+      properties:
+        projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/GetProjectResponse'
+          description: List of projects
+    CreateProjectRequest:
+      type: object
+      required:
+      - project-name
+      properties:
+        project-id:
+          type:
+          - string
+          - 'null'
+          description: 'Request a specific project ID - optional.
+
+            If not provided, a new project ID will be generated (recommended).'
+        project-name:
+          type: string
+          description: Name of the project to create.
+    CreateProjectResponse:
+      type: object
+      required:
+      - project-id
+      properties:
+        project-id:
+          type: string
+          description: ID of the created project.
+    GetEndpointStatisticsRequest:
+      type: object
+      required:
+      - warehouse
+      properties:
+        range-specifier:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/TimeWindowSelector'
+            description: 'Range specifier
+
+
+              Either for an explicit range or a page token to paginate through the results. See the docs of
+
+              `TimeWindowSelector` for more details.'
+        status-codes:
+          type:
+          - array
+          - 'null'
+          items:
+            type: integer
+            format: int32
+            minimum: 0
+          description: 'Status code filter
+
+
+            Optional filter to only return statistics for requests with specific status codes.'
+        warehouse:
+          $ref: '#/components/schemas/WarehouseFilter'
+          description: 'Warehouse filter
+
+
+            Can return statistics for a specific warehouse, all warehouses or requests that could not be
+
+            associated to any warehouse.'
   securitySchemes:
     bearerAuth:
       type: http

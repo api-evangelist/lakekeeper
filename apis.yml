@@ -49,7 +49,7 @@ tags:
 - Apache Iceberg
 - Data Catalog
 - Lakehouse
-- Open-Source
+- Open Source
 - Rust
 - Data Governance
 - Access Control
@@ -71,6 +71,7 @@ tags_raw:
 - self-hosted
 - openfga
 - data-engineering
+- Open-Source
 apis:
 - name: Lakekeeper Generic Table (Data) API
   description: >-
