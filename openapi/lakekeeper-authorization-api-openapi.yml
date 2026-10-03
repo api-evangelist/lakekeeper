@@ -69,75 +69,39 @@ paths:
                 $ref: '#/components/schemas/IcebergErrorResponse'
 components:
   schemas:
-    CatalogActionsBatchCheckResult:
+    CatalogActionsBatchCheckResponse:
       type: object
       required:
-      - allowed
+      - results
       properties:
-        allowed:
-          type: boolean
-        id:
-          type:
-          - string
-          - 'null'
-    NamespaceIdentOrUuid:
-      oneOf:
-      - type: object
-        required:
-        - namespace-id
-        - warehouse-id
-        properties:
-          namespace-id:
-            type: string
-            format: uuid
-          warehouse-id:
-            type: string
-            format: uuid
-      - type: object
-        required:
-        - namespace
-        - warehouse-id
-        properties:
-          namespace:
-            type: array
-            items:
-              type: string
-          warehouse-id:
-            type: string
-            format: uuid
-      description: Identifier for a namespace, either a UUID or its name and warehouse ID
-    IcebergErrorResponse:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CatalogActionsBatchCheckResult'
+    ErrorModel:
       type: object
-      description: JSON wrapper for all error responses (non-2xx)
+      description: JSON error payload returned in a response with further details on the error
       required:
-      - error
+      - message
+      - type
+      - code
       properties:
-        error:
-          $ref: '#/components/schemas/ErrorModel'
-    CatalogActionCheckItem:
-      type: object
-      description: A single check item with optional identity override
-      required:
-      - operation
-      properties:
-        id:
-          type:
-          - string
-          - 'null'
-          description: 'Optional identifier for this check (returned in response).
-
-            If not specified, the index in the request array will be used.'
-        identity:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/UserOrRole'
-            description: 'The user or role to check access for.
-
-              If not specified, the identity of the user making the request is used.'
-        operation:
-          $ref: '#/components/schemas/CatalogActionCheckOperation'
-          description: The operation to check
-    LakekeeperProjectAction:
+        code:
+          type: integer
+          format: int32
+          description: HTTP response code
+          minimum: 0
+        message:
+          type: string
+          description: Human-readable error message
+        stack:
+          type: array
+          items:
+            type: string
+        type:
+          type: string
+          description: Internal type definition of the error
+    LakekeeperViewAction:
       oneOf:
       - type: object
         required:
@@ -146,28 +110,17 @@ components:
           action:
             type: string
             enum:
-            - create_warehouse
-          name:
-            type:
-            - string
-            - 'null'
-            description: Name of the warehouse to create.
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - delete
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - rename
+            - drop
+          force:
+            type: boolean
+            description: 'Whether the warehouse-configured soft-deletion is bypassed, i.e. the
+
+              view is hard-deleted immediately instead of being recoverable for the
+
+              configured grace period. Extra destructive — irreversible right away.'
+          purge:
+            type: boolean
+            description: Whether the underlying metadata files are physically purged from storage.
       - type: object
         required:
         - action
@@ -183,7 +136,25 @@ components:
           action:
             type: string
             enum:
-            - list_warehouses
+            - select
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - commit
+          removed_properties:
+            type: array
+            items:
+              type: string
+          updated_properties:
+            type: object
+            additionalProperties:
+              type: string
+            propertyNames:
+              type: string
       - type: object
         required:
         - action
@@ -199,12 +170,7 @@ components:
           action:
             type: string
             enum:
-            - create_role
-          name:
-            type:
-            - string
-            - 'null'
-            description: Name of the role to create.
+            - rename
       - type: object
         required:
         - action
@@ -212,7 +178,7 @@ components:
           action:
             type: string
             enum:
-            - list_roles
+            - undrop
       - type: object
         required:
         - action
@@ -220,7 +186,7 @@ components:
           action:
             type: string
             enum:
-            - search_roles
+            - get_tasks
       - type: object
         required:
         - action
@@ -228,7 +194,7 @@ components:
           action:
             type: string
             enum:
-            - get_endpoint_statistics
+            - control_tasks
       - type: object
         required:
         - action
@@ -236,7 +202,9 @@ components:
           action:
             type: string
             enum:
-            - modify_task_queue_config
+            - set_protection
+    LakekeeperTableAction:
+      oneOf:
       - type: object
         required:
         - action
@@ -244,7 +212,17 @@ components:
           action:
             type: string
             enum:
-            - get_task_queue_config
+            - drop
+          force:
+            type: boolean
+            description: 'Whether the warehouse-configured soft-deletion is bypassed, i.e. the
+
+              table is hard-deleted immediately instead of being recoverable for the
+
+              configured grace period. Extra destructive — irreversible right away.'
+          purge:
+            type: boolean
+            description: Whether the underlying data files are physically purged from storage.
       - type: object
         required:
         - action
@@ -252,7 +230,7 @@ components:
           action:
             type: string
             enum:
-            - get_project_tasks
+            - write_data
       - type: object
         required:
         - action
@@ -260,7 +238,81 @@ components:
           action:
             type: string
             enum:
-            - control_project_tasks
+            - read_data
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - get_metadata
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - commit
+          removed_properties:
+            type: array
+            items:
+              type: string
+          updated_properties:
+            type: object
+            additionalProperties:
+              type: string
+            propertyNames:
+              type: string
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - rename
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - include_in_list
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - undrop
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - get_tasks
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - control_tasks
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - set_protection
     LakekeeperServerAction:
       oneOf:
       - type: object
@@ -318,6 +370,359 @@ components:
             type: string
             enum:
             - provision_users
+    LakekeeperGenericTableAction:
+      oneOf:
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - drop
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - read_data
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - write_data
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - get_metadata
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - rename
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - include_in_list
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - undrop
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - get_tasks
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - control_tasks
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - set_protection
+    LakekeeperNamespaceAction:
+      oneOf:
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - create_table
+          name:
+            type:
+            - string
+            - 'null'
+            description: Name of the table to create.
+          properties:
+            type: object
+            additionalProperties:
+              type: string
+            propertyNames:
+              type: string
+          table_id:
+            type:
+            - string
+            - 'null'
+            format: uuid
+            description: Table ID, if externally provided (e.g. via register).
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - create_view
+          name:
+            type:
+            - string
+            - 'null'
+            description: Name of the view to create.
+          properties:
+            type: object
+            additionalProperties:
+              type: string
+            propertyNames:
+              type: string
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - create_namespace
+          name:
+            type:
+            - string
+            - 'null'
+            description: Name of the namespace to create.
+          properties:
+            type: object
+            additionalProperties:
+              type: string
+            propertyNames:
+              type: string
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - delete
+          force:
+            type: boolean
+            description: 'Whether the warehouse-configured soft-deletion is bypassed, i.e.
+
+              contained tabulars are hard-deleted immediately instead of being
+
+              recoverable for the configured grace period.'
+          purge:
+            type: boolean
+            description: Whether the underlying data/metadata files are physically purged.
+          recursive:
+            type: boolean
+            description: 'Whether the drop recurses into child namespaces, tables and views,
+
+              deleting the entire subtree rooted at this namespace.'
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - update_properties
+          removed_properties:
+            type: array
+            items:
+              type: string
+          updated_properties:
+            type: object
+            additionalProperties:
+              type: string
+            propertyNames:
+              type: string
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - get_metadata
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - list_tables
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - list_views
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - list_namespaces
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - list_everything
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - set_protection
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - include_in_list
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - create_generic_table
+          base_location:
+            type:
+            - string
+            - 'null'
+            description: 'User-supplied base location override — primary lever for
+
+              path-based authorization policy.'
+          format:
+            type:
+            - string
+            - 'null'
+            description: 'Generic table format (e.g. "lance", "delta") — primary lever for
+
+              format-based authorization policy.'
+          generic_table_id:
+            type:
+            - string
+            - 'null'
+            format: uuid
+            description: Generic table ID, if externally provided.
+          name:
+            type:
+            - string
+            - 'null'
+            description: Name of the generic table to create.
+          properties:
+            type: object
+            additionalProperties:
+              type: string
+            propertyNames:
+              type: string
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - list_generic_tables
+    TabularIdentOrUuid:
+      oneOf:
+      - type: object
+        required:
+        - warehouse-id
+        - table-id
+        properties:
+          table-id:
+            type: string
+            format: uuid
+          warehouse-id:
+            type: string
+            format: uuid
+      - type: object
+        required:
+        - namespace
+        - table
+        - warehouse-id
+        properties:
+          namespace:
+            type: array
+            items:
+              type: string
+          table:
+            type: string
+            description: Name of the table, view, or generic table.
+          warehouse-id:
+            type: string
+            format: uuid
+      description: 'Identifier for a tabular (table, view, or generic table) — either a UUID
+
+        or its name and namespace. Wire format primary names are `table-id` and
+
+        `table`; `view_id` / `view` and `generic_table_id` / `generic_table` are
+
+        accepted as input aliases for client ergonomics.'
+    NamespaceIdentOrUuid:
+      oneOf:
+      - type: object
+        required:
+        - namespace-id
+        - warehouse-id
+        properties:
+          namespace-id:
+            type: string
+            format: uuid
+          warehouse-id:
+            type: string
+            format: uuid
+      - type: object
+        required:
+        - namespace
+        - warehouse-id
+        properties:
+          namespace:
+            type: array
+            items:
+              type: string
+          warehouse-id:
+            type: string
+            format: uuid
+      description: Identifier for a namespace, either a UUID or its name and warehouse ID
     LakekeeperWarehouseAction:
       oneOf:
       - type: object
@@ -604,6 +1009,130 @@ components:
                 action:
                   $ref: '#/components/schemas/LakekeeperGenericTableAction'
       description: Represents an action on an object
+    LakekeeperProjectAction:
+      oneOf:
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - create_warehouse
+          name:
+            type:
+            - string
+            - 'null'
+            description: Name of the warehouse to create.
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - delete
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - rename
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - get_metadata
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - list_warehouses
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - include_in_list
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - create_role
+          name:
+            type:
+            - string
+            - 'null'
+            description: Name of the role to create.
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - list_roles
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - search_roles
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - get_endpoint_statistics
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - modify_task_queue_config
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - get_task_queue_config
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - get_project_tasks
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - control_project_tasks
     UserOrRole:
       oneOf:
       - type: object
@@ -626,348 +1155,40 @@ components:
             format: uuid
             description: Id of the role
       description: Identifies a user or a role
-    ErrorModel:
+    CatalogActionsBatchCheckResult:
       type: object
-      description: JSON error payload returned in a response with further details on the error
       required:
-      - message
-      - type
-      - code
+      - allowed
       properties:
-        code:
-          type: integer
-          format: int32
-          description: HTTP response code
-          minimum: 0
-        message:
-          type: string
-          description: Human-readable error message
-        stack:
-          type: array
-          items:
-            type: string
-        type:
-          type: string
-          description: Internal type definition of the error
-    LakekeeperTableAction:
-      oneOf:
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - drop
-          force:
-            type: boolean
-            description: 'Whether the warehouse-configured soft-deletion is bypassed, i.e. the
+        allowed:
+          type: boolean
+        id:
+          type:
+          - string
+          - 'null'
+    CatalogActionCheckItem:
+      type: object
+      description: A single check item with optional identity override
+      required:
+      - operation
+      properties:
+        id:
+          type:
+          - string
+          - 'null'
+          description: 'Optional identifier for this check (returned in response).
 
-              table is hard-deleted immediately instead of being recoverable for the
+            If not specified, the index in the request array will be used.'
+        identity:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/UserOrRole'
+            description: 'The user or role to check access for.
 
-              configured grace period. Extra destructive — irreversible right away.'
-          purge:
-            type: boolean
-            description: Whether the underlying data files are physically purged from storage.
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - write_data
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - read_data
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - get_metadata
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - commit
-          removed_properties:
-            type: array
-            items:
-              type: string
-          updated_properties:
-            type: object
-            additionalProperties:
-              type: string
-            propertyNames:
-              type: string
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - rename
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - include_in_list
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - undrop
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - get_tasks
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - control_tasks
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - set_protection
-    LakekeeperNamespaceAction:
-      oneOf:
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - create_table
-          name:
-            type:
-            - string
-            - 'null'
-            description: Name of the table to create.
-          properties:
-            type: object
-            additionalProperties:
-              type: string
-            propertyNames:
-              type: string
-          table_id:
-            type:
-            - string
-            - 'null'
-            format: uuid
-            description: Table ID, if externally provided (e.g. via register).
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - create_view
-          name:
-            type:
-            - string
-            - 'null'
-            description: Name of the view to create.
-          properties:
-            type: object
-            additionalProperties:
-              type: string
-            propertyNames:
-              type: string
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - create_namespace
-          name:
-            type:
-            - string
-            - 'null'
-            description: Name of the namespace to create.
-          properties:
-            type: object
-            additionalProperties:
-              type: string
-            propertyNames:
-              type: string
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - delete
-          force:
-            type: boolean
-            description: 'Whether the warehouse-configured soft-deletion is bypassed, i.e.
-
-              contained tabulars are hard-deleted immediately instead of being
-
-              recoverable for the configured grace period.'
-          purge:
-            type: boolean
-            description: Whether the underlying data/metadata files are physically purged.
-          recursive:
-            type: boolean
-            description: 'Whether the drop recurses into child namespaces, tables and views,
-
-              deleting the entire subtree rooted at this namespace.'
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - update_properties
-          removed_properties:
-            type: array
-            items:
-              type: string
-          updated_properties:
-            type: object
-            additionalProperties:
-              type: string
-            propertyNames:
-              type: string
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - get_metadata
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - list_tables
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - list_views
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - list_namespaces
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - list_everything
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - set_protection
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - include_in_list
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - create_generic_table
-          base_location:
-            type:
-            - string
-            - 'null'
-            description: 'User-supplied base location override — primary lever for
-
-              path-based authorization policy.'
-          format:
-            type:
-            - string
-            - 'null'
-            description: 'Generic table format (e.g. "lance", "delta") — primary lever for
-
-              format-based authorization policy.'
-          generic_table_id:
-            type:
-            - string
-            - 'null'
-            format: uuid
-            description: Generic table ID, if externally provided.
-          name:
-            type:
-            - string
-            - 'null'
-            description: Name of the generic table to create.
-          properties:
-            type: object
-            additionalProperties:
-              type: string
-            propertyNames:
-              type: string
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - list_generic_tables
+              If not specified, the identity of the user making the request is used.'
+        operation:
+          $ref: '#/components/schemas/CatalogActionCheckOperation'
+          description: The operation to check
     CatalogActionsBatchCheckRequest:
       type: object
       required:
@@ -985,235 +1206,14 @@ components:
             If false, treat missing resources as denied (allowed = false).
 
             Defaults to false.'
-    LakekeeperGenericTableAction:
-      oneOf:
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - drop
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - read_data
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - write_data
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - get_metadata
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - rename
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - include_in_list
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - undrop
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - get_tasks
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - control_tasks
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - set_protection
-    CatalogActionsBatchCheckResponse:
+    IcebergErrorResponse:
       type: object
+      description: JSON wrapper for all error responses (non-2xx)
       required:
-      - results
+      - error
       properties:
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/CatalogActionsBatchCheckResult'
-    TabularIdentOrUuid:
-      oneOf:
-      - type: object
-        required:
-        - warehouse-id
-        - table-id
-        properties:
-          table-id:
-            type: string
-            format: uuid
-          warehouse-id:
-            type: string
-            format: uuid
-      - type: object
-        required:
-        - namespace
-        - table
-        - warehouse-id
-        properties:
-          namespace:
-            type: array
-            items:
-              type: string
-          table:
-            type: string
-            description: Name of the table, view, or generic table.
-          warehouse-id:
-            type: string
-            format: uuid
-      description: 'Identifier for a tabular (table, view, or generic table) — either a UUID
-
-        or its name and namespace. Wire format primary names are `table-id` and
-
-        `table`; `view_id` / `view` and `generic_table_id` / `generic_table` are
-
-        accepted as input aliases for client ergonomics.'
-    LakekeeperViewAction:
-      oneOf:
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - drop
-          force:
-            type: boolean
-            description: 'Whether the warehouse-configured soft-deletion is bypassed, i.e. the
-
-              view is hard-deleted immediately instead of being recoverable for the
-
-              configured grace period. Extra destructive — irreversible right away.'
-          purge:
-            type: boolean
-            description: Whether the underlying metadata files are physically purged from storage.
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - get_metadata
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - select
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - commit
-          removed_properties:
-            type: array
-            items:
-              type: string
-          updated_properties:
-            type: object
-            additionalProperties:
-              type: string
-            propertyNames:
-              type: string
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - include_in_list
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - rename
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - undrop
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - get_tasks
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - control_tasks
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - set_protection
+        error:
+          $ref: '#/components/schemas/ErrorModel'
   securitySchemes:
     bearerAuth:
       type: http

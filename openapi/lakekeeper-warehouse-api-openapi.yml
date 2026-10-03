@@ -1157,285 +1157,296 @@ paths:
                 $ref: '#/components/schemas/IcebergErrorResponse'
 components:
   schemas:
-    SearchTabular:
-      type: object
-      required:
-      - namespace-name
-      - tabular-name
-      - tabular-id
-      properties:
-        distance:
-          type:
-          - number
-          - 'null'
-          format: float
-          description: Better matches have a lower distance
-        namespace-name:
-          type: array
-          items:
-            type: string
-          description: Namespace name
-        tabular-id:
-          $ref: '#/components/schemas/TabularIdentUuid'
-          description: ID of the tabular
-        tabular-name:
-          type: string
-          description: Tabular name
-    GcsProfile:
-      type: object
-      required:
-      - bucket
-      properties:
-        bucket:
-          type: string
-          description: Name of the GCS bucket
-        key-prefix:
-          type:
-          - string
-          - 'null'
-          description: Subpath in the bucket to use.
-        storage-layout:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/StorageLayout'
-            description: Storage layout for namespace and tabular paths.
-        sts-enabled:
-          type: boolean
-          description: 'Enable STS (Security Token Service) downscoped token generation for GCS.
-
-            When disabled, clients cannot use vended credentials for this storage profile.
-
-            Defaults to true.'
-    IcebergErrorResponse:
-      type: object
-      description: JSON wrapper for all error responses (non-2xx)
-      required:
-      - error
-      properties:
-        error:
-          $ref: '#/components/schemas/ErrorModel'
-    SearchTabularRequest:
-      type: object
-      required:
-      - search
-      properties:
-        search:
-          type: string
-          description: 'Search string for fuzzy search.
-
-            Length is truncated to 64 characters.'
-          maxLength: 64
-    StorageLayoutNamespaceTemplate:
-      type: string
-      description: 'Template string for namespace path segments. Placeholders {uuid} and {name} (with curly braces) will be replaced with the actual namespace UUID and name respectively. The {name} value is percent-encoded (URL percent-encoding) so spaces and special characters are escaped (e.g. "my name" becomes "my%20name"). The {uuid} value is inserted as-is without encoding. Example: "{name}-{uuid}" for a namespace named "my ns" renders to "my%20ns-550e8400-e29b-41d4-a716-446655440001".'
-      example: '{uuid}'
-    UpdateWarehouseDeleteProfileRequest:
-      type: object
-      required:
-      - delete-profile
-      properties:
-        delete-profile:
-          $ref: '#/components/schemas/TabularDeleteProfile'
-    GetLakekeeperWarehouseActionsResponse:
-      type: object
-      required:
-      - allowed-actions
-      properties:
-        allowed-actions:
-          type: array
-          items:
-            $ref: '#/components/schemas/LakekeeperWarehouseActionKind'
-    TabularIdentUuid:
-      oneOf:
-      - type: object
-        required:
-        - id
-        - type
-        properties:
-          id:
-            type: string
-            format: uuid
-          type:
-            type: string
-            enum:
-            - table
-      - type: object
-        required:
-        - id
-        - type
-        properties:
-          id:
-            type: string
-            format: uuid
-          type:
-            type: string
-            enum:
-            - view
-      - type: object
-        required:
-        - id
-        - type
-        properties:
-          id:
-            type: string
-            format: uuid
-          type:
-            type: string
-            enum:
-            - generic-table
-    ListWarehousesResponse:
-      type: object
-      required:
-      - warehouses
-      properties:
-        warehouses:
-          type: array
-          items:
-            $ref: '#/components/schemas/GetWarehouseResponse'
-          description: List of warehouses in the project.
-    StorageLayoutTabularTemplate:
-      type: string
-      description: 'Template string for tabular names. Placeholders {uuid} and {name} (with curly braces) will be replaced with the actual tabular UUID and name respectively. The {name} value is percent-encoded (URL percent-encoding) so spaces and special characters are escaped (e.g. "my tabular" becomes "my%20tabular"). The {uuid} value is inserted as-is without encoding. Example: "{name}-{uuid}" for a tabular named "my tabular" renders to "my%20tabular-550e8400-e29b-41d4-a716-446655440002".'
-      example: '{uuid}'
-    UndropTabularsRequest:
-      type: object
-      required:
-      - targets
-      properties:
-        targets:
-          type: array
-          items:
-            $ref: '#/components/schemas/TabularIdentUuid'
-          description: Tabulars to undrop
-    ProtectionResponse:
+    SetProtectionRequest:
       type: object
       required:
       - protected
       properties:
         protected:
           type: boolean
-          description: Indicates whether the entity is protected
-        updated_at:
+          description: Setting this to `true` will prevent the entity from being deleted unless `force` is used.
+    WarehouseStatus:
+      type: string
+      description: Status of a warehouse
+      enum:
+      - active
+      - inactive
+    UpdateWarehouseFormatVersionPolicyRequest:
+      type: object
+      required:
+      - allowed-format-versions
+      properties:
+        allowed-format-versions:
+          type: array
+          items:
+            type: integer
+            format: int32
+          description: 'Iceberg table format versions that may be created in, or upgraded to,
+
+            within this warehouse. Must be a non-empty subset of `[1, 2, 3]`.'
+        default-format-version:
+          type:
+          - integer
+          - 'null'
+          format: int32
+          description: 'Default Iceberg table format version applied when a create-table request
+
+            does not specify one. Must be a member of `allowed-format-versions`. When
+
+            omitted, resolves to v2 if allowed, otherwise the highest allowed version.'
+    S3AccessKeyCredential:
+      type: object
+      title: S3CredentialAccessKey
+      required:
+      - access-key-id
+      - secret-access-key
+      properties:
+        access-key-id:
+          type: string
+        external-id:
           type:
           - string
           - 'null'
-          format: date-time
-          description: Updated at
-    EndpointMode:
+        secret-access-key:
+          type: string
+    LakekeeperGenericTableAction:
       oneOf:
       - type: object
-        description: 'Use the global `OneLake` endpoint `onelake.dfs.fabric.microsoft.com`. Default.
-
-
-          Also the correct choice for tenant-level private link — tenant PE
-
-          only changes DNS resolution, not the URL Lakekeeper constructs.'
         required:
-        - type
+        - action
         properties:
-          type:
+          action:
             type: string
             enum:
-            - default
+            - drop
       - type: object
-        description: 'Use a region-pinned endpoint `<region>-onelake.dfs.fabric.microsoft.com`.
-
-          Use this when data residency requires the request to stay within a
-
-          specific Azure region.'
         required:
-        - region
-        - type
+        - action
         properties:
-          region:
-            type: string
-            description: 'Azure region slug, e.g. `westus`, `centralus`, `northeurope`.
-
-              Trimmed and lowercased at validation time, then pattern-checked to
-
-              match the Azure region-slug shape (lowercase ASCII letter followed
-
-              by lowercase letters or digits) so a stray `.` or `-` can''t smuggle
-
-              an extra host segment into the resolved DFS host. An unknown but
-
-              well-shaped slug still surfaces as a DNS-resolution failure at
-
-              access time. See `normalize_endpoint_mode` for the exact rule.'
-          type:
+          action:
             type: string
             enum:
-            - regional
+            - read_data
       - type: object
-        description: 'Use a workspace-scoped private-link endpoint
-
-          `<workspaceId>.z<xy>.dfs.fabric.microsoft.com`. The host is computed
-
-          from the workspace ID at runtime; users only opt in via this variant.
-
-
-          For *tenant*-level private link, stay on [`Default`] — the global
-
-          onelake FQDN is what gets routed through a tenant PE.'
         required:
-        - type
+        - action
         properties:
-          type:
+          action:
             type: string
             enum:
-            - workspace-private-link
-      description: "How Lakekeeper connects to the `OneLake` DFS endpoint.\n\nFabric supports two kinds of Azure Private Link configurations, and only\none of them maps to a dedicated variant here:\n\n- **Tenant-level private link**: traffic to the global host\n  `onelake.dfs.fabric.microsoft.com` is routed privately via DNS that\n  points the global FQDN at a tenant-PE NIC. From Lakekeeper's\n  perspective this is indistinguishable from public traffic — use\n  `Default`. (Same shape as a private endpoint in front of a regular\n  ADLS Gen2 storage account.)\n- **Workspace-level private link**: each workspace gets its own\n  `<wsId>.z<xy>.dfs.fabric.microsoft.com` FQDN routed via a\n  workspace-scoped PE. Lakekeeper needs to build that FQDN — use\n  [`WorkspacePrivateLink`]."
-    GetLakekeeperGenericTableActionsResponse:
+            - write_data
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - get_metadata
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - rename
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - include_in_list
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - undrop
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - get_tasks
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - control_tasks
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - set_protection
+    AdlsProfile:
+      type: object
+      description: 'Storage profile for a generic Azure Data Lake Storage Gen2 account.
+
+
+        This profile speaks ADLS Gen2 against any storage account (including
+
+        Microsoft Fabric / `OneLake`, if you configure `account_name = "onelake"`,
+
+        `host = "dfs.fabric.microsoft.com"`, and a `key_prefix` like
+
+        `<lakehouse>/Files/<sub>`). Lakekeeper offers `OneLakeProfile` as a
+
+        convenience layer that knows how to compute those values from
+
+        workspace + lakehouse IDs and that supports `OneLake`''s private-link endpoint
+
+        pattern.'
+      required:
+      - filesystem
+      - account-name
+      properties:
+        account-name:
+          type: string
+          description: Name of the azure storage account.
+        allow-alternative-protocols:
+          type: boolean
+          description: 'Allow alternative protocols such as `wasbs://` in locations.
+
+            This is disabled by default. We do not recommend to use this setting
+
+            except for migration of old tables via the register endpoint.'
+        authority-host:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: 'The authority host to use for authentication. Default: `https://login.microsoftonline.com`.'
+        filesystem:
+          type: string
+          description: Name of the adls filesystem, in blobstorage also known as container.
+        host:
+          type:
+          - string
+          - 'null'
+          description: 'The host to use for the storage account. Default: `dfs.core.windows.net`.'
+        key-prefix:
+          type:
+          - string
+          - 'null'
+          description: Subpath in the filesystem to use.
+        sas-enabled:
+          type: boolean
+          description: 'Enable SAS (Shared Access Signature) token generation for Azure Data Lake Storage.
+
+            When disabled, clients cannot use vended credentials for this storage profile.
+
+            Defaults to true.'
+        sas-token-validity-seconds:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          description: 'The validity of the sas token in seconds. Default: 3600. Max: 7 days.'
+          minimum: 0
+        storage-layout:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/StorageLayout'
+            description: Storage layout for namespace and tabular paths.
+    S3CloudflareR2Credential:
+      type: object
+      title: CloudflareR2Credential
+      required:
+      - access-key-id
+      - secret-access-key
+      - token
+      - account-id
+      properties:
+        access-key-id:
+          type: string
+          description: Access key ID used for IO operations of Lakekeeper
+        account-id:
+          type: string
+          description: Cloudflare account ID, used to determine the temporary credentials endpoint.
+        secret-access-key:
+          type: string
+          description: Secret key associated with the access key ID.
+        token:
+          type: string
+          description: 'Token associated with the access key ID.
+
+            This is used to fetch downscoped temporary credentials for vended credentials.'
+    AzCredential:
+      oneOf:
+      - type: object
+        title: AzCredentialClientCredentials
+        required:
+        - client-id
+        - tenant-id
+        - client-secret
+        - credential-type
+        properties:
+          client-id:
+            type: string
+          client-secret:
+            type: string
+          credential-type:
+            type: string
+            enum:
+            - client-credentials
+          tenant-id:
+            type: string
+      - type: object
+        title: AzCredentialSharedAccessKey
+        required:
+        - key
+        - credential-type
+        properties:
+          credential-type:
+            type: string
+            enum:
+            - shared-access-key
+          key:
+            type: string
+      - type: object
+        title: AzCredentialManagedIdentity
+        required:
+        - credential-type
+        properties:
+          credential-type:
+            type: string
+            enum:
+            - azure-system-identity
+    ListDeletedTabularsResponse:
       type: object
       required:
-      - allowed-actions
+      - tabulars
       properties:
-        allowed-actions:
+        next-page-token:
+          type:
+          - string
+          - 'null'
+          description: Token to fetch the next page
+        tabulars:
           type: array
           items:
-            $ref: '#/components/schemas/LakekeeperGenericTableAction'
-    StorageCredential:
-      oneOf:
-      - allOf:
-        - $ref: '#/components/schemas/S3Credential'
-          description: "Credentials for S3 storage\n\nExample payload in the code-snippet below:\n\n```\nuse lakekeeper::service::storage::StorageCredential;\nlet cred: StorageCredential = serde_json::from_str(r#\"{\n    \"type\": \"s3\",\n    \"credential-type\": \"access-key\",\n    \"access-key-id\": \"minio-root-user\",\n    \"secret-access-key\": \"minio-root-password\"\n  }\"#).unwrap();\n```"
-        - type: object
-          required:
-          - type
-          properties:
-            type:
-              type: string
-              enum:
-              - s3
-        title: StorageCredentialS3
-        description: "Credentials for S3 storage\n\nExample payload in the code-snippet below:\n\n```\nuse lakekeeper::service::storage::StorageCredential;\nlet cred: StorageCredential = serde_json::from_str(r#\"{\n    \"type\": \"s3\",\n    \"credential-type\": \"access-key\",\n    \"access-key-id\": \"minio-root-user\",\n    \"secret-access-key\": \"minio-root-password\"\n  }\"#).unwrap();\n```"
-      - allOf:
-        - $ref: '#/components/schemas/AzCredential'
-          description: "Credentials for Az storage\n\nExample payload:\n\n```\nuse lakekeeper::service::storage::StorageCredential;\nlet cred: StorageCredential = serde_json::from_str(r#\"{\n    \"type\": \"az\",\n    \"credential-type\": \"client-credentials\",\n    \"client-id\": \"...\",\n    \"client-secret\": \"...\",\n    \"tenant-id\": \"...\"\n  }\"#).unwrap();\n```"
-        - type: object
-          required:
-          - type
-          properties:
-            type:
-              type: string
-              enum:
-              - az
-        title: StorageCredentialAz
-        description: "Credentials for Az storage\n\nExample payload:\n\n```\nuse lakekeeper::service::storage::StorageCredential;\nlet cred: StorageCredential = serde_json::from_str(r#\"{\n    \"type\": \"az\",\n    \"credential-type\": \"client-credentials\",\n    \"client-id\": \"...\",\n    \"client-secret\": \"...\",\n    \"tenant-id\": \"...\"\n  }\"#).unwrap();\n```"
-      - allOf:
-        - $ref: '#/components/schemas/GcsCredential'
-          description: "Credentials for GCS storage\n\nExample payload in the code-snippet below:\n\n```\nuse lakekeeper::service::storage::StorageCredential;\nlet cred: StorageCredential = serde_json::from_str(r#\"{\n    \"type\": \"gcs\",\n    \"credential-type\": \"service-account-key\",\n    \"key\": {\n      \"type\": \"service_account\",\n      \"project_id\": \"example-project-1234\",\n      \"private_key_id\": \"....\",\n      \"private_key\": \"REDACTED_PRIVATE_KEY_EXAMPLE\\n\",\n      \"client_email\": \"abc@example-project-1234.iam.gserviceaccount.com\",\n      \"client_id\": \"123456789012345678901\",\n      \"auth_uri\": \"https://accounts.google.com/o/oauth2/auth\",\n      \"token_uri\": \"https://oauth2.googleapis.com/token\",\n      \"auth_provider_x509_cert_url\": \"https://www.googleapis.com/oauth2/v1/certs\",\n      \"client_x509_cert_url\": \"https://www.googleapis.com/robot/v1/metadata/x509/abc%example-project-1234.iam.gserviceaccount.com\",\n      \"universe_domain\": \"googleapis.com\"\n    }\n}\"#).unwrap();\n```\n"
-        - type: object
-          required:
-          - type
-          properties:
-            type:
-              type: string
-              enum:
-              - gcs
-        title: StorageCredentialGcs
-        description: "Credentials for GCS storage\n\nExample payload in the code-snippet below:\n\n```\nuse lakekeeper::service::storage::StorageCredential;\nlet cred: StorageCredential = serde_json::from_str(r#\"{\n    \"type\": \"gcs\",\n    \"credential-type\": \"service-account-key\",\n    \"key\": {\n      \"type\": \"service_account\",\n      \"project_id\": \"example-project-1234\",\n      \"private_key_id\": \"....\",\n      \"private_key\": \"REDACTED_PRIVATE_KEY_EXAMPLE\\n\",\n      \"client_email\": \"abc@example-project-1234.iam.gserviceaccount.com\",\n      \"client_id\": \"123456789012345678901\",\n      \"auth_uri\": \"https://accounts.google.com/o/oauth2/auth\",\n      \"token_uri\": \"https://oauth2.googleapis.com/token\",\n      \"auth_provider_x509_cert_url\": \"https://www.googleapis.com/oauth2/v1/certs\",\n      \"client_x509_cert_url\": \"https://www.googleapis.com/robot/v1/metadata/x509/abc%example-project-1234.iam.gserviceaccount.com\",\n      \"universe_domain\": \"googleapis.com\"\n    }\n}\"#).unwrap();\n```\n"
-      description: Storage secret for a warehouse.
+            $ref: '#/components/schemas/DeletedTabularResponse'
+          description: List of tabulars
+    TabularType:
+      type: string
+      description: Type of tabular
+      enum:
+      - table
+      - view
+      - generic-table
     LakekeeperViewActionKind:
       oneOf:
       - type: object
@@ -1518,75 +1529,153 @@ components:
             type: string
             enum:
             - set_protection
-    UpdateWarehouseCredentialRequest:
+    CreateWarehouseRequest:
       type: object
+      required:
+      - warehouse-name
+      - storage-profile
       properties:
-        new-storage-credential:
+        allowed-format-versions:
+          type:
+          - array
+          - 'null'
+          items:
+            type: integer
+            format: int32
+          description: 'Iceberg table format versions that may be created in, or upgraded to,
+
+            within this warehouse. Must be a non-empty subset of `[1, 2, 3]`.
+
+            Defaults to all supported versions when omitted.'
+        default-format-version:
+          type:
+          - integer
+          - 'null'
+          format: int32
+          description: 'Default Iceberg table format version applied when a create-table request
+
+            does not specify one. Must be a member of `allowed-format-versions`. When
+
+            omitted, resolves to v2 if allowed, otherwise the highest allowed version.'
+        delete-profile:
+          $ref: '#/components/schemas/TabularDeleteProfile'
+          description: 'Profile to determine behavior upon dropping of tabulars. Default: hard deletion.'
+        managed-by:
+          $ref: '#/components/schemas/ManagedBy'
+          description: 'Which control plane, if any, exclusively manages this warehouse''s spec.
+
+            Defaults to `self-managed`. Creating a managed warehouse (e.g. `instance-admin`)
+
+            requires instance-admin privilege.'
+        project-id:
+          type:
+          - string
+          - 'null'
+          description: 'Project ID in which to create the warehouse.
+
+            Deprecated: Please use the `x-project-id` header instead.'
+        storage-credential:
           oneOf:
           - type: 'null'
           - $ref: '#/components/schemas/StorageCredential'
-            description: 'New storage credential to use for the warehouse.
+            description: Optional storage credential to use for the warehouse.
+        storage-profile:
+          $ref: '#/components/schemas/StorageProfile'
+          description: Storage profile to use for the warehouse.
+        warehouse-name:
+          type: string
+          description: 'Name of the warehouse to create. Must be unique
 
-              If not specified, the existing credential is removed.'
-    SearchTabularResponse:
+            within a project and may not contain "/"'
+    S3Flavor:
+      type: string
+      enum:
+      - aws
+      - s3-compat
+    OneLakeProfile:
       type: object
-      description: Search result for tabulars
+      description: 'Storage profile for a Microsoft Fabric / `OneLake` lakehouse.
+
+
+        Convenience wrapper around the ADLS Gen2 surface that derives the
+
+        account name (`onelake`), container (workspace ID), key prefix
+
+        (`<lakehouse>/Files/<sub>`), and endpoint host from the supplied workspace
+
+        and lakehouse UUIDs and endpoint mode.'
       required:
-      - tabulars
+      - workspace-id
+      - lakehouse-id
       properties:
-        tabulars:
+        authority-host:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: 'The authority host to use for authentication.
+
+            Default: `https://login.microsoftonline.com`.'
+        directory-rel-path:
+          type:
+          - string
+          - 'null'
+          description: 'Subpath beneath `<top-level-folder>/` inside the lakehouse — the root
+
+            directory under which Lakekeeper writes all warehouse data.'
+        endpoint-mode:
+          $ref: '#/components/schemas/EndpointMode'
+          description: Endpoint connection mode. Defaults to the global endpoint.
+        lakehouse-id:
+          type: string
+          format: uuid
+          description: UUID of the lakehouse within the workspace.
+        sas-enabled:
+          type: boolean
+          description: Enable SAS-token generation. Defaults to true.
+        sas-token-validity-seconds:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          description: 'SAS-token validity in seconds. Default: 3600. Max: 3600 (`OneLake` cap).'
+          minimum: 0
+        storage-layout:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/StorageLayout'
+            description: Storage layout for namespace and tabular paths.
+        top-level-folder:
+          $ref: '#/components/schemas/TopLevelFolder'
+          description: Top-level managed folder. Defaults to `Files`.
+        workspace-id:
+          type: string
+          format: uuid
+          description: UUID of the Fabric workspace this warehouse lives in.
+    SearchTabular:
+      type: object
+      required:
+      - namespace-name
+      - tabular-name
+      - tabular-id
+      properties:
+        distance:
+          type:
+          - number
+          - 'null'
+          format: float
+          description: Better matches have a lower distance
+        namespace-name:
           type: array
           items:
-            $ref: '#/components/schemas/SearchTabular'
-          description: List of tabulars matching the search criteria
-    WarehouseStatistics:
-      type: object
-      required:
-      - timestamp
-      - number-of-tables
-      - number-of-views
-      - updated-at
-      properties:
-        number-of-tables:
-          type: integer
-          format: int64
-          description: Number of tables in the warehouse.
-        number-of-views:
-          type: integer
-          format: int64
-          description: Number of views in the warehouse.
-        timestamp:
+            type: string
+          description: Namespace name
+        tabular-id:
+          $ref: '#/components/schemas/TabularIdentUuid'
+          description: ID of the tabular
+        tabular-name:
           type: string
-          format: date-time
-          description: 'Timestamp of when these statistics are valid until
-
-
-            We lazily create a new statistics entry every hour, in between hours, the existing entry
-
-            is being updated. If there''s a change at `created_at` + 1 hour, a new entry is created. If
-
-            there''s no change, no new entry is created.'
-        updated-at:
-          type: string
-          format: date-time
-          description: Timestamp of when these statistics were last updated
-    RenameWarehouseRequest:
-      type: object
-      required:
-      - new-name
-      properties:
-        new-name:
-          type: string
-          description: New name for the warehouse.
-    GetLakekeeperViewActionsResponse:
-      type: object
-      required:
-      - allowed-actions
-      properties:
-        allowed-actions:
-          type: array
-          items:
-            $ref: '#/components/schemas/LakekeeperViewActionKind'
+          description: Tabular name
     TabularDeleteProfile:
       oneOf:
       - type: object
@@ -1611,228 +1700,15 @@ components:
             type: string
             enum:
             - soft
-    DeletedTabularResponse:
+    GetLakekeeperGenericTableActionsResponse:
       type: object
       required:
-      - id
-      - name
-      - namespace
-      - typ
-      - warehouse-id
-      - created-at
-      - deleted-at
-      - expiration-date
+      - allowed-actions
       properties:
-        created-at:
-          type: string
-          format: date-time
-          description: Date when the tabular was created
-        deleted-at:
-          type: string
-          format: date-time
-          description: Date when the tabular was deleted
-        expiration-date:
-          type: string
-          format: date-time
-          description: Date when the tabular will not be recoverable anymore
-        id:
-          type: string
-          format: uuid
-          description: Unique identifier of the tabular
-        name:
-          type: string
-          description: Name of the tabular
-        namespace:
+        allowed-actions:
           type: array
           items:
-            type: string
-          description: List of namespace parts the tabular belongs to
-        typ:
-          $ref: '#/components/schemas/TabularType'
-          description: Type of the tabular
-        warehouse-id:
-          type: string
-          format: uuid
-          description: Warehouse ID where the tabular is stored
-    TabularType:
-      type: string
-      description: Type of tabular
-      enum:
-      - table
-      - view
-      - generic-table
-    StorageLayout:
-      oneOf:
-      - type: object
-        required:
-        - type
-        properties:
-          type:
-            type: string
-            enum:
-            - default
-      - allOf:
-        - $ref: '#/components/schemas/StorageLayoutFlat'
-        - type: object
-          required:
-          - type
-          properties:
-            type:
-              type: string
-              enum:
-              - tabular-only
-      - allOf:
-        - $ref: '#/components/schemas/StorageLayoutFullHierarchy'
-        - type: object
-          required:
-          - type
-          properties:
-            type:
-              type: string
-              enum:
-              - full-hierarchy
-      description: "Controls how namespace and tabular paths are constructed under the warehouse base location.\n\n- `default` / omitted: flat — no namespace directories; all tabulars are placed directly under\n  the base location with a fixed `\"{uuid}\"` segment. (Changed in 0.13; before 0.13 the default\n  emitted a `\"{uuid}\"` directory for the direct-parent namespace. Existing namespaces created\n  before 0.13 keep their persisted location, so only namespaces created on/after 0.13 use the\n  flat default.)\n- `full-hierarchy`: one directory per namespace level, one per tabular.\n- `tabular-only`: no namespace directories; all tabulars are placed directly under the base\n  location, with a configurable tabular template (which must contain `{uuid}`).\n\nSegment templates may use `{uuid}` and `{name}` as placeholders."
-      example:
-        type: full-hierarchy
-        namespace: '{name}-{uuid}'
-        tabular: '{name}-{uuid}'
-    LakekeeperNamespaceActionKind:
-      oneOf:
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - create_table
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - create_view
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - create_namespace
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - delete
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - update_properties
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - get_metadata
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - list_tables
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - list_views
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - list_namespaces
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - list_everything
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - set_protection
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - include_in_list
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - create_generic_table
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - list_generic_tables
-    S3AccessKeyCredential:
-      type: object
-      title: S3CredentialAccessKey
-      required:
-      - access-key-id
-      - secret-access-key
-      properties:
-        access-key-id:
-          type: string
-        external-id:
-          type:
-          - string
-          - 'null'
-        secret-access-key:
-          type: string
-    S3AwsSystemIdentityCredential:
-      type: object
-      title: S3CredentialSystemIdentity
-      properties:
-        external-id:
-          type:
-          - string
-          - 'null'
+            $ref: '#/components/schemas/LakekeeperGenericTableAction'
     StorageProfile:
       oneOf:
       - allOf:
@@ -1898,216 +1774,6 @@ components:
               - gcs
         title: StorageProfileGcs
       description: Storage profile for a warehouse.
-    S3Profile:
-      type: object
-      required:
-      - bucket
-      - region
-      - sts-enabled
-      properties:
-        allow-alternative-protocols:
-          type:
-          - boolean
-          - 'null'
-          description: 'Allow `s3a://` and `s3n://` in locations.
-
-            This is disabled by default. We do not recommend to use this setting
-
-            except for migration of old hadoop-based tables via the register endpoint.
-
-            Tables with `s3a` paths are not accessible outside the Java ecosystem.'
-        assume-role-arn:
-          type:
-          - string
-          - 'null'
-          description: Optional ARN to assume when accessing the bucket from Lakekeeper.
-        aws-kms-key-arn:
-          type:
-          - string
-          - 'null'
-          description: ARN of the KMS key used to encrypt the S3 bucket, if any.
-        bucket:
-          type: string
-          description: Name of the S3 bucket
-        endpoint:
-          type:
-          - string
-          - 'null'
-          format: uri
-          description: 'Optional endpoint to use for S3 requests, if not provided
-
-            the region will be used to determine the endpoint.
-
-            If both region and endpoint are provided, the endpoint will be used.
-
-            Example: `http://s3-de.my-domain.com:9000`'
-        flavor:
-          $ref: '#/components/schemas/S3Flavor'
-          description: 'S3 flavor to use.
-
-            Defaults to AWS'
-        key-prefix:
-          type:
-          - string
-          - 'null'
-          description: Subpath in the bucket to use.
-        legacy-md5-behavior:
-          type:
-          - boolean
-          - 'null'
-          description: 'Legacy MD5 behavior for S3 operations requiring checksums.
-
-            When enabled, Lakekeeper will use the legacy MD5 checksum for operations like `DeleteObjects`.'
-        path-style-access:
-          type:
-          - boolean
-          - 'null'
-          description: 'Path style access for S3 requests.
-
-            If the underlying S3 supports both, we recommend to not set `path_style_access`.'
-        push-s3-delete-disabled:
-          type: boolean
-          description: 'Controls whether the `s3.delete-enabled=false` flag is sent to clients.
-
-
-            In all Iceberg 1.x versions, when Spark executes `DROP TABLE xxx PURGE`, it directly
-
-            deletes files from S3, bypassing the catalog''s soft-deletion mechanism.
-
-            Other query engines properly delegate this operation to the catalog.
-
-            This Spark behavior is expected to change in Iceberg 2.0.
-
-
-            Setting this to `true` pushes the `s3.delete-enabled=false` flag to clients,
-
-            which discourages Spark from directly deleting files during `DROP TABLE xxx PURGE` operations.
-
-            Note that clients may override this setting, and it affects other Spark operations
-
-            that require file deletion, such as removing snapshots.
-
-
-            For more details, refer to Lakekeeper''s
-
-            [Soft-Deletion documentation](https://docs.lakekeeper.io/docs/nightly/concepts/#soft-deletion).
-
-            This flag has no effect if Soft-Deletion is disabled for the warehouse.'
-        region:
-          type: string
-          description: Region to use for S3 requests.
-        remote-signing-enabled:
-          type: boolean
-          description: 'Enable remote signing for S3 requests.
-
-            When disabled, clients cannot use remote signing even if STS is disabled.
-
-            Defaults to true.'
-        remote-signing-url-style:
-          $ref: '#/components/schemas/S3UrlStyleDetectionMode'
-          description: "S3 URL style detection mode for remote signing.\nOne of `auto`, `path-style`, `virtual-host`.\nDefault: `auto`. When set to `auto`, Lakekeeper will first try to parse the URL as\n`virtual-host` and then attempt `path-style`.\n`path` assumes the bucket name is the first path segment in the URL. `virtual-host`\nassumes the bucket name is the first subdomain if it is preceding `.s3` or `.s3-`.\n\nExamples\n\nVirtual host:\n  - <https://bucket.s3.endpoint.com/bar/a/key>\n  - <https://bucket.s3-eu-central-1.amazonaws.com/file>\n\nPath style:\n  - <https://s3.endpoint.com/bucket/bar/a/key>\n  - <https://s3.us-east-1.amazonaws.com/bucket/file>"
-        storage-layout:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/StorageLayout'
-            description: Storage layout for namespace and tabular paths.
-        sts-enabled:
-          type: boolean
-        sts-endpoint:
-          type:
-          - string
-          - 'null'
-          format: uri
-          description: 'Optional endpoint to use for STS requests.
-
-            Use this when the STS endpoint differs from the S3 endpoint,
-
-            which is common with S3-compatible storage systems.
-
-            If not provided, the S3 `endpoint` is used for STS requests as well.'
-        sts-role-arn:
-          type:
-          - string
-          - 'null'
-          description: 'Optional role ARN to assume for sts vended-credentials.
-
-            If not provided, `assume_role_arn` is used.
-
-            Either `assume_role_arn` or `sts_role_arn` must be provided if `sts_enabled` is true.'
-        sts-session-tags:
-          type: object
-          description: Optional session tags for STS assume role operations.
-          additionalProperties:
-            type: string
-          propertyNames:
-            type: string
-        sts-token-validity-seconds:
-          type: integer
-          format: int64
-          description: The validity of the sts tokens in seconds. Default is 3600
-          minimum: 0
-    S3UrlStyleDetectionMode:
-      type: string
-      enum:
-      - path
-      - virtual_host
-      - auto
-    WarehouseStatus:
-      type: string
-      description: Status of a warehouse
-      enum:
-      - active
-      - inactive
-    AzCredentialType:
-      type: string
-      description: The type of Azure credential.
-      enum:
-      - client-credentials
-      - shared-access-key
-      - azure-system-identity
-    S3CloudflareR2Credential:
-      type: object
-      title: CloudflareR2Credential
-      required:
-      - access-key-id
-      - secret-access-key
-      - token
-      - account-id
-      properties:
-        access-key-id:
-          type: string
-          description: Access key ID used for IO operations of Lakekeeper
-        account-id:
-          type: string
-          description: Cloudflare account ID, used to determine the temporary credentials endpoint.
-        secret-access-key:
-          type: string
-          description: Secret key associated with the access key ID.
-        token:
-          type: string
-          description: 'Token associated with the access key ID.
-
-            This is used to fetch downscoped temporary credentials for vended credentials.'
-    WarehouseStatisticsResponse:
-      type: object
-      required:
-      - warehouse-ident
-      - stats
-      properties:
-        next-page-token:
-          type:
-          - string
-          - 'null'
-          description: Next page token
-        stats:
-          type: array
-          items:
-            $ref: '#/components/schemas/WarehouseStatistics'
-          description: Ordered list of warehouse statistics.
-        warehouse-ident:
-          type: string
-          format: uuid
-          description: ID of the warehouse for which the stats were collected.
     GcsServiceKey:
       type: object
       required:
@@ -2145,24 +1811,57 @@ components:
           type: string
         universe_domain:
           type: string
-    CreateWarehouseRequest:
+    CreateWarehouseResponse:
+      $ref: '#/components/schemas/GetWarehouseResponse'
+    SearchTabularResponse:
+      type: object
+      description: Search result for tabulars
+      required:
+      - tabulars
+      properties:
+        tabulars:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchTabular'
+          description: List of tabulars matching the search criteria
+    GetLakekeeperNamespaceActionsResponse:
       type: object
       required:
-      - warehouse-name
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LakekeeperNamespaceActionKind'
+    S3AwsSystemIdentityCredential:
+      type: object
+      title: S3CredentialSystemIdentity
+      properties:
+        external-id:
+          type:
+          - string
+          - 'null'
+    GetWarehouseResponse:
+      type: object
+      required:
+      - id
+      - warehouse-id
+      - name
+      - project-id
       - storage-profile
+      - delete-profile
+      - status
+      - protected
+      - allowed-format-versions
       properties:
         allowed-format-versions:
-          type:
-          - array
-          - 'null'
+          type: array
           items:
             type: integer
             format: int32
           description: 'Iceberg table format versions that may be created in, or upgraded to,
 
-            within this warehouse. Must be a non-empty subset of `[1, 2, 3]`.
-
-            Defaults to all supported versions when omitted.'
+            within this warehouse.'
         default-format-version:
           type:
           - integer
@@ -2170,39 +1869,58 @@ components:
           format: int32
           description: 'Default Iceberg table format version applied when a create-table request
 
-            does not specify one. Must be a member of `allowed-format-versions`. When
+            does not specify one. When absent, resolves to v2 if allowed, otherwise
 
-            omitted, resolves to v2 if allowed, otherwise the highest allowed version.'
+            the highest allowed version.'
         delete-profile:
           $ref: '#/components/schemas/TabularDeleteProfile'
-          description: 'Profile to determine behavior upon dropping of tabulars. Default: hard deletion.'
+          description: Delete profile used for the warehouse.
+        id:
+          type: string
+          format: uuid
+          description: ID of the warehouse.
+          deprecated: true
         managed-by:
           $ref: '#/components/schemas/ManagedBy'
           description: 'Which control plane, if any, exclusively manages this warehouse''s spec.
 
-            Defaults to `self-managed`. Creating a managed warehouse (e.g. `instance-admin`)
-
-            requires instance-admin privilege.'
+            When not `self-managed`, spec mutations are restricted to that control plane.'
+        name:
+          type: string
+          description: Name of the warehouse.
         project-id:
+          type: string
+          description: Project ID in which the warehouse was created.
+        protected:
+          type: boolean
+          description: Whether the warehouse is protected from being deleted.
+        status:
+          $ref: '#/components/schemas/WarehouseStatus'
+          description: Whether the warehouse is active.
+        storage-credential-type:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/StorageCredentialType'
+            description: 'Best-effort indicator of the storage credential type. When present it
+
+              reflects the detected credential kind; when absent the warehouse may
+
+              either have no credential configured or the secret lookup may have
+
+              failed. Does not contain secret values.'
+        storage-profile:
+          $ref: '#/components/schemas/StorageProfile'
+          description: Storage profile used for the warehouse.
+        updated-at:
           type:
           - string
           - 'null'
-          description: 'Project ID in which to create the warehouse.
-
-            Deprecated: Please use the `x-project-id` header instead.'
-        storage-credential:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/StorageCredential'
-            description: Optional storage credential to use for the warehouse.
-        storage-profile:
-          $ref: '#/components/schemas/StorageProfile'
-          description: Storage profile to use for the warehouse.
-        warehouse-name:
+          format: date-time
+          description: Last updated timestamp.
+        warehouse-id:
           type: string
-          description: 'Name of the warehouse to create. Must be unique
-
-            within a project and may not contain "/"'
+          format: uuid
+          description: ID of the warehouse.
     ManagedBy:
       type: string
       description: 'Which control plane, if any, exclusively manages a warehouse''s spec.
@@ -2224,272 +1942,108 @@ components:
       enum:
       - self-managed
       - instance-admin
-    AzCredential:
+    EndpointMode:
       oneOf:
       - type: object
-        title: AzCredentialClientCredentials
+        description: 'Use the global `OneLake` endpoint `onelake.dfs.fabric.microsoft.com`. Default.
+
+
+          Also the correct choice for tenant-level private link — tenant PE
+
+          only changes DNS resolution, not the URL Lakekeeper constructs.'
         required:
-        - client-id
-        - tenant-id
-        - client-secret
-        - credential-type
-        properties:
-          client-id:
-            type: string
-          client-secret:
-            type: string
-          credential-type:
-            type: string
-            enum:
-            - client-credentials
-          tenant-id:
-            type: string
-      - type: object
-        title: AzCredentialSharedAccessKey
-        required:
-        - key
-        - credential-type
-        properties:
-          credential-type:
-            type: string
-            enum:
-            - shared-access-key
-          key:
-            type: string
-      - type: object
-        title: AzCredentialManagedIdentity
-        required:
-        - credential-type
-        properties:
-          credential-type:
-            type: string
-            enum:
-            - azure-system-identity
-    UpdateWarehouseStorageRequest:
-      type: object
-      required:
-      - storage-profile
-      properties:
-        storage-credential:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/StorageCredential'
-            description: 'Optional storage credential to use for the warehouse.
-
-              The existing credential is not re-used. If no credential is
-
-              provided, we assume that this storage does not require credentials.'
-        storage-profile:
-          $ref: '#/components/schemas/StorageProfile'
-          description: 'Storage profile to use for the warehouse.
-
-            The new profile must point to the same location as the existing profile
-
-            to avoid data loss. For S3 this means that you may not change the
-
-            bucket or key prefix. The region may only be changed if an `endpoint`
-
-            is set on the new profile (so the endpoint, not the region, determines
-
-            where S3 requests are routed).'
-    S3CredentialType:
-      type: string
-      description: The type of S3 credential.
-      enum:
-      - access-key
-      - aws-system-identity
-      - cloudflare-r2
-    StorageCredentialType:
-      oneOf:
-      - type: object
-        description: S3 credential type
-        required:
-        - credential-type
         - type
         properties:
-          credential-type:
-            $ref: '#/components/schemas/S3CredentialType'
-            description: S3 credential type
           type:
             type: string
             enum:
-            - s3
+            - default
       - type: object
-        description: Azure credential type
+        description: 'Use a region-pinned endpoint `<region>-onelake.dfs.fabric.microsoft.com`.
+
+          Use this when data residency requires the request to stay within a
+
+          specific Azure region.'
         required:
-        - credential-type
+        - region
         - type
         properties:
-          credential-type:
-            $ref: '#/components/schemas/AzCredentialType'
-            description: Azure credential type
+          region:
+            type: string
+            description: 'Azure region slug, e.g. `westus`, `centralus`, `northeurope`.
+
+              Trimmed and lowercased at validation time, then pattern-checked to
+
+              match the Azure region-slug shape (lowercase ASCII letter followed
+
+              by lowercase letters or digits) so a stray `.` or `-` can''t smuggle
+
+              an extra host segment into the resolved DFS host. An unknown but
+
+              well-shaped slug still surfaces as a DNS-resolution failure at
+
+              access time. See `normalize_endpoint_mode` for the exact rule.'
           type:
             type: string
             enum:
-            - az
+            - regional
       - type: object
-        description: GCS credential type
+        description: 'Use a workspace-scoped private-link endpoint
+
+          `<workspaceId>.z<xy>.dfs.fabric.microsoft.com`. The host is computed
+
+          from the workspace ID at runtime; users only opt in via this variant.
+
+
+          For *tenant*-level private link, stay on [`Default`] — the global
+
+          onelake FQDN is what gets routed through a tenant PE.'
         required:
-        - credential-type
         - type
         properties:
-          credential-type:
-            $ref: '#/components/schemas/GcsCredentialType'
-            description: GCS credential type
           type:
             type: string
             enum:
-            - gcs
-      description: 'The type of storage credential configured for a warehouse, without secret values.
-
-
-        This is returned in API responses so clients know which credential type
-
-        was selected (e.g. to restore radio button state in the UI).'
-    UpdateWarehouseFormatVersionPolicyRequest:
-      type: object
-      required:
-      - allowed-format-versions
-      properties:
-        allowed-format-versions:
-          type: array
-          items:
-            type: integer
-            format: int32
-          description: 'Iceberg table format versions that may be created in, or upgraded to,
-
-            within this warehouse. Must be a non-empty subset of `[1, 2, 3]`.'
-        default-format-version:
-          type:
-          - integer
-          - 'null'
-          format: int32
-          description: 'Default Iceberg table format version applied when a create-table request
-
-            does not specify one. Must be a member of `allowed-format-versions`. When
-
-            omitted, resolves to v2 if allowed, otherwise the highest allowed version.'
-    ErrorModel:
-      type: object
-      description: JSON error payload returned in a response with further details on the error
-      required:
-      - message
-      - type
-      - code
-      properties:
-        code:
-          type: integer
-          format: int32
-          description: HTTP response code
-          minimum: 0
-        message:
-          type: string
-          description: Human-readable error message
-        stack:
-          type: array
-          items:
-            type: string
-        type:
-          type: string
-          description: Internal type definition of the error
-    LakekeeperTableActionKind:
+            - workspace-private-link
+      description: "How Lakekeeper connects to the `OneLake` DFS endpoint.\n\nFabric supports two kinds of Azure Private Link configurations, and only\none of them maps to a dedicated variant here:\n\n- **Tenant-level private link**: traffic to the global host\n  `onelake.dfs.fabric.microsoft.com` is routed privately via DNS that\n  points the global FQDN at a tenant-PE NIC. From Lakekeeper's\n  perspective this is indistinguishable from public traffic — use\n  `Default`. (Same shape as a private endpoint in front of a regular\n  ADLS Gen2 storage account.)\n- **Workspace-level private link**: each workspace gets its own\n  `<wsId>.z<xy>.dfs.fabric.microsoft.com` FQDN routed via a\n  workspace-scoped PE. Lakekeeper needs to build that FQDN — use\n  [`WorkspacePrivateLink`]."
+    TabularIdentUuid:
       oneOf:
       - type: object
         required:
-        - action
+        - id
+        - type
         properties:
-          action:
+          id:
+            type: string
+            format: uuid
+          type:
             type: string
             enum:
-            - drop
+            - table
       - type: object
         required:
-        - action
+        - id
+        - type
         properties:
-          action:
+          id:
+            type: string
+            format: uuid
+          type:
             type: string
             enum:
-            - write_data
+            - view
       - type: object
         required:
-        - action
+        - id
+        - type
         properties:
-          action:
+          id:
+            type: string
+            format: uuid
+          type:
             type: string
             enum:
-            - read_data
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - get_metadata
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - commit
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - rename
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - include_in_list
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - undrop
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - get_tasks
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - control_tasks
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - set_protection
-    SetProtectionRequest:
-      type: object
-      required:
-      - protected
-      properties:
-        protected:
-          type: boolean
-          description: Setting this to `true` will prevent the entity from being deleted unless `force` is used.
+            - generic-table
     LakekeeperWarehouseActionKind:
       oneOf:
       - type: object
@@ -2668,168 +2222,248 @@ components:
             type: string
             enum:
             - get_endpoint_statistics
-    CreateWarehouseResponse:
-      $ref: '#/components/schemas/GetWarehouseResponse'
-    StorageLayoutFlat:
-      type: object
-      description: 'No namespace directories; all tabulars are placed directly under the base location.
-
-
-        For a tabular `my_tabular` (uuid `…002`) the path is: `<base>/<tabular-segment>`.
-
-        The tabular template must contain `{uuid}` to avoid collisions between tabulars with the same name.'
-      required:
-      - tabular
-      properties:
-        tabular:
-          $ref: '#/components/schemas/StorageLayoutTabularTemplate'
-      example:
-        tabular: '{name}-{uuid}'
-    SetWarehouseManagedByRequest:
+    UndropTabularsRequest:
       type: object
       required:
-      - managed-by
+      - targets
       properties:
-        managed-by:
-          $ref: '#/components/schemas/ManagedBy'
-          description: 'New managed-by marker. Use `self-managed` to clear. Setting or clearing the
-
-            marker requires instance-admin privilege.'
-    TopLevelFolder:
-      type: string
-      description: 'Top-level managed folder within a Fabric lakehouse.
-
-
-        Fabric reserves `Files/` and `Tables/` as managed folders directly under
-
-        each lakehouse item. `Files/` is the default for Lakekeeper-managed Iceberg
-
-        tables; `Tables/` is supported for completeness but writing Iceberg metadata
-
-        there conflicts with Fabric''s automatic Delta/Iceberg virtualization.'
-      enum:
-      - Files
-      - Tables
-    StorageLayoutFullHierarchy:
+        targets:
+          type: array
+          items:
+            $ref: '#/components/schemas/TabularIdentUuid'
+          description: Tabulars to undrop
+    StorageCredential:
+      oneOf:
+      - allOf:
+        - $ref: '#/components/schemas/S3Credential'
+          description: "Credentials for S3 storage\n\nExample payload in the code-snippet below:\n\n```\nuse lakekeeper::service::storage::StorageCredential;\nlet cred: StorageCredential = serde_json::from_str(r#\"{\n    \"type\": \"s3\",\n    \"credential-type\": \"access-key\",\n    \"access-key-id\": \"minio-root-user\",\n    \"secret-access-key\": \"minio-root-password\"\n  }\"#).unwrap();\n```"
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - s3
+        title: StorageCredentialS3
+        description: "Credentials for S3 storage\n\nExample payload in the code-snippet below:\n\n```\nuse lakekeeper::service::storage::StorageCredential;\nlet cred: StorageCredential = serde_json::from_str(r#\"{\n    \"type\": \"s3\",\n    \"credential-type\": \"access-key\",\n    \"access-key-id\": \"minio-root-user\",\n    \"secret-access-key\": \"minio-root-password\"\n  }\"#).unwrap();\n```"
+      - allOf:
+        - $ref: '#/components/schemas/AzCredential'
+          description: "Credentials for Az storage\n\nExample payload:\n\n```\nuse lakekeeper::service::storage::StorageCredential;\nlet cred: StorageCredential = serde_json::from_str(r#\"{\n    \"type\": \"az\",\n    \"credential-type\": \"client-credentials\",\n    \"client-id\": \"...\",\n    \"client-secret\": \"...\",\n    \"tenant-id\": \"...\"\n  }\"#).unwrap();\n```"
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - az
+        title: StorageCredentialAz
+        description: "Credentials for Az storage\n\nExample payload:\n\n```\nuse lakekeeper::service::storage::StorageCredential;\nlet cred: StorageCredential = serde_json::from_str(r#\"{\n    \"type\": \"az\",\n    \"credential-type\": \"client-credentials\",\n    \"client-id\": \"...\",\n    \"client-secret\": \"...\",\n    \"tenant-id\": \"...\"\n  }\"#).unwrap();\n```"
+      - allOf:
+        - $ref: '#/components/schemas/GcsCredential'
+          description: "Credentials for GCS storage\n\nExample payload in the code-snippet below:\n\n```\nuse lakekeeper::service::storage::StorageCredential;\nlet cred: StorageCredential = serde_json::from_str(r#\"{\n    \"type\": \"gcs\",\n    \"credential-type\": \"service-account-key\",\n    \"key\": {\n      \"type\": \"service_account\",\n      \"project_id\": \"example-project-1234\",\n      \"private_key_id\": \"....\",\n      \"private_key\": \"REDACTED_PRIVATE_KEY_EXAMPLE\\n\",\n      \"client_email\": \"abc@example-project-1234.iam.gserviceaccount.com\",\n      \"client_id\": \"123456789012345678901\",\n      \"auth_uri\": \"https://accounts.google.com/o/oauth2/auth\",\n      \"token_uri\": \"https://oauth2.googleapis.com/token\",\n      \"auth_provider_x509_cert_url\": \"https://www.googleapis.com/oauth2/v1/certs\",\n      \"client_x509_cert_url\": \"https://www.googleapis.com/robot/v1/metadata/x509/abc%example-project-1234.iam.gserviceaccount.com\",\n      \"universe_domain\": \"googleapis.com\"\n    }\n}\"#).unwrap();\n```\n"
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - gcs
+        title: StorageCredentialGcs
+        description: "Credentials for GCS storage\n\nExample payload in the code-snippet below:\n\n```\nuse lakekeeper::service::storage::StorageCredential;\nlet cred: StorageCredential = serde_json::from_str(r#\"{\n    \"type\": \"gcs\",\n    \"credential-type\": \"service-account-key\",\n    \"key\": {\n      \"type\": \"service_account\",\n      \"project_id\": \"example-project-1234\",\n      \"private_key_id\": \"....\",\n      \"private_key\": \"REDACTED_PRIVATE_KEY_EXAMPLE\\n\",\n      \"client_email\": \"abc@example-project-1234.iam.gserviceaccount.com\",\n      \"client_id\": \"123456789012345678901\",\n      \"auth_uri\": \"https://accounts.google.com/o/oauth2/auth\",\n      \"token_uri\": \"https://oauth2.googleapis.com/token\",\n      \"auth_provider_x509_cert_url\": \"https://www.googleapis.com/oauth2/v1/certs\",\n      \"client_x509_cert_url\": \"https://www.googleapis.com/robot/v1/metadata/x509/abc%example-project-1234.iam.gserviceaccount.com\",\n      \"universe_domain\": \"googleapis.com\"\n    }\n}\"#).unwrap();\n```\n"
+      description: Storage secret for a warehouse.
+    S3Profile:
       type: object
-      description: 'One directory per namespace level, one per tabular.
-
-
-        For a tabular `my_tabular` (uuid `…003`) in `grandparent_ns` / `parent_ns` the path is:
-
-        `<base>/<grandparent-segment>/<parent-segment>/<tabular-segment>`.'
       required:
-      - namespace
-      - tabular
+      - bucket
+      - region
+      - sts-enabled
       properties:
-        namespace:
-          $ref: '#/components/schemas/StorageLayoutNamespaceTemplate'
-        tabular:
-          $ref: '#/components/schemas/StorageLayoutTabularTemplate'
-      example:
-        namespace: '{name}-{uuid}'
-        tabular: '{name}-{uuid}'
-    ListDeletedTabularsResponse:
-      type: object
-      required:
-      - tabulars
-      properties:
-        next-page-token:
+        allow-alternative-protocols:
+          type:
+          - boolean
+          - 'null'
+          description: 'Allow `s3a://` and `s3n://` in locations.
+
+            This is disabled by default. We do not recommend to use this setting
+
+            except for migration of old hadoop-based tables via the register endpoint.
+
+            Tables with `s3a` paths are not accessible outside the Java ecosystem.'
+        assume-role-arn:
           type:
           - string
           - 'null'
-          description: Token to fetch the next page
-        tabulars:
-          type: array
-          items:
-            $ref: '#/components/schemas/DeletedTabularResponse'
-          description: List of tabulars
-    GcsCredentialType:
-      type: string
-      description: The type of GCS credential.
-      enum:
-      - service-account-key
-      - gcp-system-identity
-    GetWarehouseResponse:
-      type: object
-      required:
-      - id
-      - warehouse-id
-      - name
-      - project-id
-      - storage-profile
-      - delete-profile
-      - status
-      - protected
-      - allowed-format-versions
-      properties:
-        allowed-format-versions:
-          type: array
-          items:
-            type: integer
-            format: int32
-          description: 'Iceberg table format versions that may be created in, or upgraded to,
-
-            within this warehouse.'
-        default-format-version:
+          description: Optional ARN to assume when accessing the bucket from Lakekeeper.
+        aws-kms-key-arn:
           type:
-          - integer
+          - string
           - 'null'
-          format: int32
-          description: 'Default Iceberg table format version applied when a create-table request
-
-            does not specify one. When absent, resolves to v2 if allowed, otherwise
-
-            the highest allowed version.'
-        delete-profile:
-          $ref: '#/components/schemas/TabularDeleteProfile'
-          description: Delete profile used for the warehouse.
-        id:
+          description: ARN of the KMS key used to encrypt the S3 bucket, if any.
+        bucket:
           type: string
-          format: uuid
-          description: ID of the warehouse.
-          deprecated: true
-        managed-by:
-          $ref: '#/components/schemas/ManagedBy'
-          description: 'Which control plane, if any, exclusively manages this warehouse''s spec.
+          description: Name of the S3 bucket
+        endpoint:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: 'Optional endpoint to use for S3 requests, if not provided
 
-            When not `self-managed`, spec mutations are restricted to that control plane.'
-        name:
-          type: string
-          description: Name of the warehouse.
-        project-id:
-          type: string
-          description: Project ID in which the warehouse was created.
-        protected:
+            the region will be used to determine the endpoint.
+
+            If both region and endpoint are provided, the endpoint will be used.
+
+            Example: `http://s3-de.my-domain.com:9000`'
+        flavor:
+          $ref: '#/components/schemas/S3Flavor'
+          description: 'S3 flavor to use.
+
+            Defaults to AWS'
+        key-prefix:
+          type:
+          - string
+          - 'null'
+          description: Subpath in the bucket to use.
+        legacy-md5-behavior:
+          type:
+          - boolean
+          - 'null'
+          description: 'Legacy MD5 behavior for S3 operations requiring checksums.
+
+            When enabled, Lakekeeper will use the legacy MD5 checksum for operations like `DeleteObjects`.'
+        path-style-access:
+          type:
+          - boolean
+          - 'null'
+          description: 'Path style access for S3 requests.
+
+            If the underlying S3 supports both, we recommend to not set `path_style_access`.'
+        push-s3-delete-disabled:
           type: boolean
-          description: Whether the warehouse is protected from being deleted.
-        status:
-          $ref: '#/components/schemas/WarehouseStatus'
-          description: Whether the warehouse is active.
-        storage-credential-type:
+          description: 'Controls whether the `s3.delete-enabled=false` flag is sent to clients.
+
+
+            In all Iceberg 1.x versions, when Spark executes `DROP TABLE xxx PURGE`, it directly
+
+            deletes files from S3, bypassing the catalog''s soft-deletion mechanism.
+
+            Other query engines properly delegate this operation to the catalog.
+
+            This Spark behavior is expected to change in Iceberg 2.0.
+
+
+            Setting this to `true` pushes the `s3.delete-enabled=false` flag to clients,
+
+            which discourages Spark from directly deleting files during `DROP TABLE xxx PURGE` operations.
+
+            Note that clients may override this setting, and it affects other Spark operations
+
+            that require file deletion, such as removing snapshots.
+
+
+            For more details, refer to Lakekeeper''s
+
+            [Soft-Deletion documentation](https://docs.lakekeeper.io/docs/nightly/concepts/#soft-deletion).
+
+            This flag has no effect if Soft-Deletion is disabled for the warehouse.'
+        region:
+          type: string
+          description: Region to use for S3 requests.
+        remote-signing-enabled:
+          type: boolean
+          description: 'Enable remote signing for S3 requests.
+
+            When disabled, clients cannot use remote signing even if STS is disabled.
+
+            Defaults to true.'
+        remote-signing-url-style:
+          $ref: '#/components/schemas/S3UrlStyleDetectionMode'
+          description: "S3 URL style detection mode for remote signing.\nOne of `auto`, `path-style`, `virtual-host`.\nDefault: `auto`. When set to `auto`, Lakekeeper will first try to parse the URL as\n`virtual-host` and then attempt `path-style`.\n`path` assumes the bucket name is the first path segment in the URL. `virtual-host`\nassumes the bucket name is the first subdomain if it is preceding `.s3` or `.s3-`.\n\nExamples\n\nVirtual host:\n  - <https://bucket.s3.endpoint.com/bar/a/key>\n  - <https://bucket.s3-eu-central-1.amazonaws.com/file>\n\nPath style:\n  - <https://s3.endpoint.com/bucket/bar/a/key>\n  - <https://s3.us-east-1.amazonaws.com/bucket/file>"
+        storage-layout:
           oneOf:
           - type: 'null'
-          - $ref: '#/components/schemas/StorageCredentialType'
-            description: 'Best-effort indicator of the storage credential type. When present it
-
-              reflects the detected credential kind; when absent the warehouse may
-
-              either have no credential configured or the secret lookup may have
-
-              failed. Does not contain secret values.'
-        storage-profile:
-          $ref: '#/components/schemas/StorageProfile'
-          description: Storage profile used for the warehouse.
-        updated-at:
+          - $ref: '#/components/schemas/StorageLayout'
+            description: Storage layout for namespace and tabular paths.
+        sts-enabled:
+          type: boolean
+        sts-endpoint:
           type:
           - string
           - 'null'
-          format: date-time
-          description: Last updated timestamp.
-        warehouse-id:
-          type: string
-          format: uuid
-          description: ID of the warehouse.
+          format: uri
+          description: 'Optional endpoint to use for STS requests.
+
+            Use this when the STS endpoint differs from the S3 endpoint,
+
+            which is common with S3-compatible storage systems.
+
+            If not provided, the S3 `endpoint` is used for STS requests as well.'
+        sts-role-arn:
+          type:
+          - string
+          - 'null'
+          description: 'Optional role ARN to assume for sts vended-credentials.
+
+            If not provided, `assume_role_arn` is used.
+
+            Either `assume_role_arn` or `sts_role_arn` must be provided if `sts_enabled` is true.'
+        sts-session-tags:
+          type: object
+          description: Optional session tags for STS assume role operations.
+          additionalProperties:
+            type: string
+          propertyNames:
+            type: string
+        sts-token-validity-seconds:
+          type: integer
+          format: int64
+          description: The validity of the sts tokens in seconds. Default is 3600
+          minimum: 0
+    S3CredentialType:
+      type: string
+      description: The type of S3 credential.
+      enum:
+      - access-key
+      - aws-system-identity
+      - cloudflare-r2
+    StorageLayout:
+      oneOf:
+      - type: object
+        required:
+        - type
+        properties:
+          type:
+            type: string
+            enum:
+            - default
+      - allOf:
+        - $ref: '#/components/schemas/StorageLayoutFlat'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - tabular-only
+      - allOf:
+        - $ref: '#/components/schemas/StorageLayoutFullHierarchy'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - full-hierarchy
+      description: "Controls how namespace and tabular paths are constructed under the warehouse base location.\n\n- `default` / omitted: flat — no namespace directories; all tabulars are placed directly under\n  the base location with a fixed `\"{uuid}\"` segment. (Changed in 0.13; before 0.13 the default\n  emitted a `\"{uuid}\"` directory for the direct-parent namespace. Existing namespaces created\n  before 0.13 keep their persisted location, so only namespaces created on/after 0.13 use the\n  flat default.)\n- `full-hierarchy`: one directory per namespace level, one per tabular.\n- `tabular-only`: no namespace directories; all tabulars are placed directly under the base\n  location, with a configurable tabular template (which must contain `{uuid}`).\n\nSegment templates may use `{uuid}` and `{name}` as placeholders."
+      example:
+        type: full-hierarchy
+        namespace: '{name}-{uuid}'
+        tabular: '{name}-{uuid}'
     GcsCredential:
       oneOf:
       - type: object
@@ -2864,142 +2498,451 @@ components:
             enum:
             - gcp-system-identity
       description: "GCS Credentials\n\nCurrently only supports Service Account Key\nExample of a key:\n```json\n    {\n      \"type\": \"service_account\",\n      \"project_id\": \"example-project-1234\",\n      \"private_key_id\": \"....\",\n      \"private_key\": \"REDACTED_PRIVATE_KEY_EXAMPLE\\n\",\n      \"client_email\": \"abc@example-project-1234.iam.gserviceaccount.com\",\n      \"client_id\": \"123456789012345678901\",\n      \"auth_uri\": \"https://accounts.google.com/o/oauth2/auth\",\n      \"token_uri\": \"https://oauth2.googleapis.com/token\",\n      \"auth_provider_x509_cert_url\": \"https://www.googleapis.com/oauth2/v1/certs\",\n      \"client_x509_cert_url\": \"https://www.googleapis.com/robot/v1/metadata/x509/abc%example-project-1234.iam.gserviceaccount.com\",\n      \"universe_domain\": \"googleapis.com\"\n    }\n```"
-    AdlsProfile:
+    StorageLayoutFlat:
       type: object
-      description: 'Storage profile for a generic Azure Data Lake Storage Gen2 account.
+      description: 'No namespace directories; all tabulars are placed directly under the base location.
 
 
-        This profile speaks ADLS Gen2 against any storage account (including
+        For a tabular `my_tabular` (uuid `…002`) the path is: `<base>/<tabular-segment>`.
 
-        Microsoft Fabric / `OneLake`, if you configure `account_name = "onelake"`,
-
-        `host = "dfs.fabric.microsoft.com"`, and a `key_prefix` like
-
-        `<lakehouse>/Files/<sub>`). Lakekeeper offers `OneLakeProfile` as a
-
-        convenience layer that knows how to compute those values from
-
-        workspace + lakehouse IDs and that supports `OneLake`''s private-link endpoint
-
-        pattern.'
+        The tabular template must contain `{uuid}` to avoid collisions between tabulars with the same name.'
       required:
-      - filesystem
-      - account-name
+      - tabular
       properties:
-        account-name:
-          type: string
-          description: Name of the azure storage account.
-        allow-alternative-protocols:
-          type: boolean
-          description: 'Allow alternative protocols such as `wasbs://` in locations.
-
-            This is disabled by default. We do not recommend to use this setting
-
-            except for migration of old tables via the register endpoint.'
-        authority-host:
+        tabular:
+          $ref: '#/components/schemas/StorageLayoutTabularTemplate'
+      example:
+        tabular: '{name}-{uuid}'
+    GcsCredentialType:
+      type: string
+      description: The type of GCS credential.
+      enum:
+      - service-account-key
+      - gcp-system-identity
+    WarehouseStatisticsResponse:
+      type: object
+      required:
+      - warehouse-ident
+      - stats
+      properties:
+        next-page-token:
           type:
           - string
           - 'null'
-          format: uri
-          description: 'The authority host to use for authentication. Default: `https://login.microsoftonline.com`.'
-        filesystem:
+          description: Next page token
+        stats:
+          type: array
+          items:
+            $ref: '#/components/schemas/WarehouseStatistics'
+          description: Ordered list of warehouse statistics.
+        warehouse-ident:
           type: string
-          description: Name of the adls filesystem, in blobstorage also known as container.
-        host:
-          type:
-          - string
-          - 'null'
-          description: 'The host to use for the storage account. Default: `dfs.core.windows.net`.'
+          format: uuid
+          description: ID of the warehouse for which the stats were collected.
+    WarehouseStatistics:
+      type: object
+      required:
+      - timestamp
+      - number-of-tables
+      - number-of-views
+      - updated-at
+      properties:
+        number-of-tables:
+          type: integer
+          format: int64
+          description: Number of tables in the warehouse.
+        number-of-views:
+          type: integer
+          format: int64
+          description: Number of views in the warehouse.
+        timestamp:
+          type: string
+          format: date-time
+          description: 'Timestamp of when these statistics are valid until
+
+
+            We lazily create a new statistics entry every hour, in between hours, the existing entry
+
+            is being updated. If there''s a change at `created_at` + 1 hour, a new entry is created. If
+
+            there''s no change, no new entry is created.'
+        updated-at:
+          type: string
+          format: date-time
+          description: Timestamp of when these statistics were last updated
+    RenameWarehouseRequest:
+      type: object
+      required:
+      - new-name
+      properties:
+        new-name:
+          type: string
+          description: New name for the warehouse.
+    DeletedTabularResponse:
+      type: object
+      required:
+      - id
+      - name
+      - namespace
+      - typ
+      - warehouse-id
+      - created-at
+      - deleted-at
+      - expiration-date
+      properties:
+        created-at:
+          type: string
+          format: date-time
+          description: Date when the tabular was created
+        deleted-at:
+          type: string
+          format: date-time
+          description: Date when the tabular was deleted
+        expiration-date:
+          type: string
+          format: date-time
+          description: Date when the tabular will not be recoverable anymore
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier of the tabular
+        name:
+          type: string
+          description: Name of the tabular
+        namespace:
+          type: array
+          items:
+            type: string
+          description: List of namespace parts the tabular belongs to
+        typ:
+          $ref: '#/components/schemas/TabularType'
+          description: Type of the tabular
+        warehouse-id:
+          type: string
+          format: uuid
+          description: Warehouse ID where the tabular is stored
+    LakekeeperNamespaceActionKind:
+      oneOf:
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - create_table
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - create_view
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - create_namespace
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - delete
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - update_properties
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - get_metadata
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - list_tables
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - list_views
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - list_namespaces
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - list_everything
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - set_protection
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - include_in_list
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - create_generic_table
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - list_generic_tables
+    GetLakekeeperViewActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LakekeeperViewActionKind'
+    StorageLayoutNamespaceTemplate:
+      type: string
+      description: 'Template string for namespace path segments. Placeholders {uuid} and {name} (with curly braces) will be replaced with the actual namespace UUID and name respectively. The {name} value is percent-encoded (URL percent-encoding) so spaces and special characters are escaped (e.g. "my name" becomes "my%20name"). The {uuid} value is inserted as-is without encoding. Example: "{name}-{uuid}" for a namespace named "my ns" renders to "my%20ns-550e8400-e29b-41d4-a716-446655440001".'
+      example: '{uuid}'
+    GetLakekeeperWarehouseActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LakekeeperWarehouseActionKind'
+    StorageLayoutTabularTemplate:
+      type: string
+      description: 'Template string for tabular names. Placeholders {uuid} and {name} (with curly braces) will be replaced with the actual tabular UUID and name respectively. The {name} value is percent-encoded (URL percent-encoding) so spaces and special characters are escaped (e.g. "my tabular" becomes "my%20tabular"). The {uuid} value is inserted as-is without encoding. Example: "{name}-{uuid}" for a tabular named "my tabular" renders to "my%20tabular-550e8400-e29b-41d4-a716-446655440002".'
+      example: '{uuid}'
+    SetWarehouseManagedByRequest:
+      type: object
+      required:
+      - managed-by
+      properties:
+        managed-by:
+          $ref: '#/components/schemas/ManagedBy'
+          description: 'New managed-by marker. Use `self-managed` to clear. Setting or clearing the
+
+            marker requires instance-admin privilege.'
+    S3Credential:
+      oneOf:
+      - allOf:
+        - $ref: '#/components/schemas/S3AccessKeyCredential'
+          description: Authenticate to AWS using access-key and secret-key.
+        - type: object
+          required:
+          - credential-type
+          properties:
+            credential-type:
+              type: string
+              enum:
+              - access-key
+        description: Authenticate to AWS using access-key and secret-key.
+      - allOf:
+        - $ref: '#/components/schemas/S3AwsSystemIdentityCredential'
+          description: "Authenticate to AWS using the identity configured on the system\n that runs lakekeeper. The AWS SDK is used to load the credentials."
+        - type: object
+          required:
+          - credential-type
+          properties:
+            credential-type:
+              type: string
+              enum:
+              - aws-system-identity
+        description: "Authenticate to AWS using the identity configured on the system\n that runs lakekeeper. The AWS SDK is used to load the credentials."
+      - allOf:
+        - $ref: '#/components/schemas/S3CloudflareR2Credential'
+        - type: object
+          required:
+          - credential-type
+          properties:
+            credential-type:
+              type: string
+              enum:
+              - cloudflare-r2
+    UpdateWarehouseCredentialRequest:
+      type: object
+      properties:
+        new-storage-credential:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/StorageCredential'
+            description: 'New storage credential to use for the warehouse.
+
+              If not specified, the existing credential is removed.'
+    GetLakekeeperTableActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LakekeeperTableActionKind'
+    TopLevelFolder:
+      type: string
+      description: 'Top-level managed folder within a Fabric lakehouse.
+
+
+        Fabric reserves `Files/` and `Tables/` as managed folders directly under
+
+        each lakehouse item. `Files/` is the default for Lakekeeper-managed Iceberg
+
+        tables; `Tables/` is supported for completeness but writing Iceberg metadata
+
+        there conflicts with Fabric''s automatic Delta/Iceberg virtualization.'
+      enum:
+      - Files
+      - Tables
+    S3UrlStyleDetectionMode:
+      type: string
+      enum:
+      - path
+      - virtual_host
+      - auto
+    StorageLayoutFullHierarchy:
+      type: object
+      description: 'One directory per namespace level, one per tabular.
+
+
+        For a tabular `my_tabular` (uuid `…003`) in `grandparent_ns` / `parent_ns` the path is:
+
+        `<base>/<grandparent-segment>/<parent-segment>/<tabular-segment>`.'
+      required:
+      - namespace
+      - tabular
+      properties:
+        namespace:
+          $ref: '#/components/schemas/StorageLayoutNamespaceTemplate'
+        tabular:
+          $ref: '#/components/schemas/StorageLayoutTabularTemplate'
+      example:
+        namespace: '{name}-{uuid}'
+        tabular: '{name}-{uuid}'
+    UpdateWarehouseDeleteProfileRequest:
+      type: object
+      required:
+      - delete-profile
+      properties:
+        delete-profile:
+          $ref: '#/components/schemas/TabularDeleteProfile'
+    ErrorModel:
+      type: object
+      description: JSON error payload returned in a response with further details on the error
+      required:
+      - message
+      - type
+      - code
+      properties:
+        code:
+          type: integer
+          format: int32
+          description: HTTP response code
+          minimum: 0
+        message:
+          type: string
+          description: Human-readable error message
+        stack:
+          type: array
+          items:
+            type: string
+        type:
+          type: string
+          description: Internal type definition of the error
+    GcsProfile:
+      type: object
+      required:
+      - bucket
+      properties:
+        bucket:
+          type: string
+          description: Name of the GCS bucket
         key-prefix:
           type:
           - string
           - 'null'
-          description: Subpath in the filesystem to use.
-        sas-enabled:
+          description: Subpath in the bucket to use.
+        storage-layout:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/StorageLayout'
+            description: Storage layout for namespace and tabular paths.
+        sts-enabled:
           type: boolean
-          description: 'Enable SAS (Shared Access Signature) token generation for Azure Data Lake Storage.
+          description: 'Enable STS (Security Token Service) downscoped token generation for GCS.
 
             When disabled, clients cannot use vended credentials for this storage profile.
 
             Defaults to true.'
-        sas-token-validity-seconds:
-          type:
-          - integer
-          - 'null'
-          format: int64
-          description: 'The validity of the sas token in seconds. Default: 3600. Max: 7 days.'
-          minimum: 0
-        storage-layout:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/StorageLayout'
-            description: Storage layout for namespace and tabular paths.
-    S3Flavor:
-      type: string
-      enum:
-      - aws
-      - s3-compat
-    OneLakeProfile:
+    ListWarehousesResponse:
       type: object
-      description: 'Storage profile for a Microsoft Fabric / `OneLake` lakehouse.
-
-
-        Convenience wrapper around the ADLS Gen2 surface that derives the
-
-        account name (`onelake`), container (workspace ID), key prefix
-
-        (`<lakehouse>/Files/<sub>`), and endpoint host from the supplied workspace
-
-        and lakehouse UUIDs and endpoint mode.'
       required:
-      - workspace-id
-      - lakehouse-id
+      - warehouses
       properties:
-        authority-host:
-          type:
-          - string
-          - 'null'
-          format: uri
-          description: 'The authority host to use for authentication.
-
-            Default: `https://login.microsoftonline.com`.'
-        directory-rel-path:
-          type:
-          - string
-          - 'null'
-          description: 'Subpath beneath `<top-level-folder>/` inside the lakehouse — the root
-
-            directory under which Lakekeeper writes all warehouse data.'
-        endpoint-mode:
-          $ref: '#/components/schemas/EndpointMode'
-          description: Endpoint connection mode. Defaults to the global endpoint.
-        lakehouse-id:
+        warehouses:
+          type: array
+          items:
+            $ref: '#/components/schemas/GetWarehouseResponse'
+          description: List of warehouses in the project.
+    SearchTabularRequest:
+      type: object
+      required:
+      - search
+      properties:
+        search:
           type: string
-          format: uuid
-          description: UUID of the lakehouse within the workspace.
-        sas-enabled:
-          type: boolean
-          description: Enable SAS-token generation. Defaults to true.
-        sas-token-validity-seconds:
-          type:
-          - integer
-          - 'null'
-          format: int64
-          description: 'SAS-token validity in seconds. Default: 3600. Max: 3600 (`OneLake` cap).'
-          minimum: 0
-        storage-layout:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/StorageLayout'
-            description: Storage layout for namespace and tabular paths.
-        top-level-folder:
-          $ref: '#/components/schemas/TopLevelFolder'
-          description: Top-level managed folder. Defaults to `Files`.
-        workspace-id:
-          type: string
-          format: uuid
-          description: UUID of the Fabric workspace this warehouse lives in.
-    LakekeeperGenericTableAction:
+          description: 'Search string for fuzzy search.
+
+            Length is truncated to 64 characters.'
+          maxLength: 64
+    LakekeeperTableActionKind:
       oneOf:
       - type: object
         required:
@@ -3016,14 +2959,6 @@ components:
           action:
             type: string
             enum:
-            - read_data
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
             - write_data
       - type: object
         required:
@@ -3032,7 +2967,23 @@ components:
           action:
             type: string
             enum:
+            - read_data
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
             - get_metadata
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - commit
       - type: object
         required:
         - action
@@ -3081,60 +3032,109 @@ components:
             type: string
             enum:
             - set_protection
-    S3Credential:
+    UpdateWarehouseStorageRequest:
+      type: object
+      required:
+      - storage-profile
+      properties:
+        storage-credential:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/StorageCredential'
+            description: 'Optional storage credential to use for the warehouse.
+
+              The existing credential is not re-used. If no credential is
+
+              provided, we assume that this storage does not require credentials.'
+        storage-profile:
+          $ref: '#/components/schemas/StorageProfile'
+          description: 'Storage profile to use for the warehouse.
+
+            The new profile must point to the same location as the existing profile
+
+            to avoid data loss. For S3 this means that you may not change the
+
+            bucket or key prefix. The region may only be changed if an `endpoint`
+
+            is set on the new profile (so the endpoint, not the region, determines
+
+            where S3 requests are routed).'
+    ProtectionResponse:
+      type: object
+      required:
+      - protected
+      properties:
+        protected:
+          type: boolean
+          description: Indicates whether the entity is protected
+        updated_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Updated at
+    StorageCredentialType:
       oneOf:
-      - allOf:
-        - $ref: '#/components/schemas/S3AccessKeyCredential'
-          description: Authenticate to AWS using access-key and secret-key.
-        - type: object
-          required:
-          - credential-type
-          properties:
-            credential-type:
-              type: string
-              enum:
-              - access-key
-        description: Authenticate to AWS using access-key and secret-key.
-      - allOf:
-        - $ref: '#/components/schemas/S3AwsSystemIdentityCredential'
-          description: "Authenticate to AWS using the identity configured on the system\n that runs lakekeeper. The AWS SDK is used to load the credentials."
-        - type: object
-          required:
-          - credential-type
-          properties:
-            credential-type:
-              type: string
-              enum:
-              - aws-system-identity
-        description: "Authenticate to AWS using the identity configured on the system\n that runs lakekeeper. The AWS SDK is used to load the credentials."
-      - allOf:
-        - $ref: '#/components/schemas/S3CloudflareR2Credential'
-        - type: object
-          required:
-          - credential-type
-          properties:
-            credential-type:
-              type: string
-              enum:
-              - cloudflare-r2
-    GetLakekeeperNamespaceActionsResponse:
+      - type: object
+        description: S3 credential type
+        required:
+        - credential-type
+        - type
+        properties:
+          credential-type:
+            $ref: '#/components/schemas/S3CredentialType'
+            description: S3 credential type
+          type:
+            type: string
+            enum:
+            - s3
+      - type: object
+        description: Azure credential type
+        required:
+        - credential-type
+        - type
+        properties:
+          credential-type:
+            $ref: '#/components/schemas/AzCredentialType'
+            description: Azure credential type
+          type:
+            type: string
+            enum:
+            - az
+      - type: object
+        description: GCS credential type
+        required:
+        - credential-type
+        - type
+        properties:
+          credential-type:
+            $ref: '#/components/schemas/GcsCredentialType'
+            description: GCS credential type
+          type:
+            type: string
+            enum:
+            - gcs
+      description: 'The type of storage credential configured for a warehouse, without secret values.
+
+
+        This is returned in API responses so clients know which credential type
+
+        was selected (e.g. to restore radio button state in the UI).'
+    IcebergErrorResponse:
       type: object
+      description: JSON wrapper for all error responses (non-2xx)
       required:
-      - allowed-actions
+      - error
       properties:
-        allowed-actions:
-          type: array
-          items:
-            $ref: '#/components/schemas/LakekeeperNamespaceActionKind'
-    GetLakekeeperTableActionsResponse:
-      type: object
-      required:
-      - allowed-actions
-      properties:
-        allowed-actions:
-          type: array
-          items:
-            $ref: '#/components/schemas/LakekeeperTableActionKind'
+        error:
+          $ref: '#/components/schemas/ErrorModel'
+    AzCredentialType:
+      type: string
+      description: The type of Azure credential.
+      enum:
+      - client-credentials
+      - shared-access-key
+      - azure-system-identity
   securitySchemes:
     bearerAuth:
       type: http

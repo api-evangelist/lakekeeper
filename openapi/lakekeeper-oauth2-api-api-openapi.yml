@@ -93,38 +93,39 @@ paths:
           $ref: '#/components/responses/OAuthErrorResponse'
 components:
   schemas:
-    OAuthTokenResponse:
+    OAuthClientCredentialsRequest:
       deprecated: true
-      description: The `oauth/tokens` endpoint and related schemas are **DEPRECATED for REMOVAL** from this spec, see description of the endpoint.
+      description: 'The `oauth/tokens` endpoint and related schemas are **DEPRECATED for REMOVAL** from this spec, see description of the endpoint.
+
+
+        OAuth2 client credentials request
+
+
+        See https://datatracker.ietf.org/doc/html/rfc6749#section-4.4'
       type: object
       required:
-      - access_token
-      - token_type
+      - grant_type
+      - client_id
+      - client_secret
       properties:
-        access_token:
-          type: string
-          description: The access token, for client credentials or token exchange
-        token_type:
+        grant_type:
           type: string
           enum:
-          - bearer
-          - mac
-          - N_A
-          description: 'Access token type for client credentials or token exchange
-
-
-            See https://datatracker.ietf.org/doc/html/rfc6749#section-7.1'
-        expires_in:
-          type: integer
-          description: Lifetime of the access token in seconds for client credentials or token exchange
-        issued_token_type:
-          $ref: '#/components/schemas/TokenType'
-        refresh_token:
-          type: string
-          description: Refresh token for client credentials or token exchange
+          - client_credentials
         scope:
           type: string
-          description: Authorization scope for client credentials or token exchange
+        client_id:
+          type: string
+          description: 'Client ID
+
+
+            This can be sent in the request body, but OAuth2 recommends sending it in a Basic Authorization header.'
+        client_secret:
+          type: string
+          description: 'Client secret
+
+
+            This can be sent in the request body, but OAuth2 recommends sending it in a Basic Authorization header.'
     OAuthError:
       deprecated: true
       description: The `oauth/tokens` endpoint and related schemas are **DEPRECATED for REMOVAL** from this spec, see description of the endpoint.
@@ -197,39 +198,38 @@ components:
       anyOf:
       - $ref: '#/components/schemas/OAuthClientCredentialsRequest'
       - $ref: '#/components/schemas/OAuthTokenExchangeRequest'
-    OAuthClientCredentialsRequest:
+    OAuthTokenResponse:
       deprecated: true
-      description: 'The `oauth/tokens` endpoint and related schemas are **DEPRECATED for REMOVAL** from this spec, see description of the endpoint.
-
-
-        OAuth2 client credentials request
-
-
-        See https://datatracker.ietf.org/doc/html/rfc6749#section-4.4'
+      description: The `oauth/tokens` endpoint and related schemas are **DEPRECATED for REMOVAL** from this spec, see description of the endpoint.
       type: object
       required:
-      - grant_type
-      - client_id
-      - client_secret
+      - access_token
+      - token_type
       properties:
-        grant_type:
+        access_token:
+          type: string
+          description: The access token, for client credentials or token exchange
+        token_type:
           type: string
           enum:
-          - client_credentials
+          - bearer
+          - mac
+          - N_A
+          description: 'Access token type for client credentials or token exchange
+
+
+            See https://datatracker.ietf.org/doc/html/rfc6749#section-7.1'
+        expires_in:
+          type: integer
+          description: Lifetime of the access token in seconds for client credentials or token exchange
+        issued_token_type:
+          $ref: '#/components/schemas/TokenType'
+        refresh_token:
+          type: string
+          description: Refresh token for client credentials or token exchange
         scope:
           type: string
-        client_id:
-          type: string
-          description: 'Client ID
-
-
-            This can be sent in the request body, but OAuth2 recommends sending it in a Basic Authorization header.'
-        client_secret:
-          type: string
-          description: 'Client secret
-
-
-            This can be sent in the request body, but OAuth2 recommends sending it in a Basic Authorization header.'
+          description: Authorization scope for client credentials or token exchange
   responses:
     OAuthTokenResponse:
       description: OAuth2 token response for client credentials or token exchange
