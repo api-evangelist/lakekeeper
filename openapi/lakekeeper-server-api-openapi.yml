@@ -119,6 +119,15 @@ paths:
                 $ref: '#/components/schemas/IcebergErrorResponse'
 components:
   schemas:
+    GetLakekeeperServerActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LakekeeperServerActionKind'
     ErrorModel:
       type: object
       description: JSON error payload returned in a response with further details on the error
@@ -142,70 +151,14 @@ components:
         type:
           type: string
           description: Internal type definition of the error
-    ConsoleInfo:
+    IcebergErrorResponse:
       type: object
-      description: Information about the UI (console) shipped with this binary.
+      description: JSON wrapper for all error responses (non-2xx)
       required:
-      - edition
-      - version
+      - error
       properties:
-        commit-sha:
-          type:
-          - string
-          - 'null'
-          description: Git commit SHA of the console source, if known.
-        edition:
-          type: string
-          description: 'Edition / crate name of the bundled console.
-
-            e.g. `lakekeeper-console` for the OSS console or
-
-            `lakekeeper-console-plus` for the enterprise console.'
-        version:
-          type: string
-          description: SemVer of the console crate.
-    LakekeeperServerActionKind:
-      oneOf:
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - create_project
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - update_users
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - delete_users
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - list_users
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - provision_users
+        error:
+          $ref: '#/components/schemas/ErrorModel'
     BootstrapRequest:
       type: object
       required:
@@ -242,15 +195,6 @@ components:
             description: 'Type of the user performing bootstrap. Optional. If not provided
 
               the server will try to parse the type from the provided token.'
-    GetLakekeeperServerActionsResponse:
-      type: object
-      required:
-      - allowed-actions
-      properties:
-        allowed-actions:
-          type: array
-          items:
-            $ref: '#/components/schemas/LakekeeperServerActionKind'
     ServerInfo:
       type: object
       required:
@@ -380,14 +324,70 @@ components:
         valid:
           type: boolean
           description: If the license is valid and active
-    IcebergErrorResponse:
+    ConsoleInfo:
       type: object
-      description: JSON wrapper for all error responses (non-2xx)
+      description: Information about the UI (console) shipped with this binary.
       required:
-      - error
+      - edition
+      - version
       properties:
-        error:
-          $ref: '#/components/schemas/ErrorModel'
+        commit-sha:
+          type:
+          - string
+          - 'null'
+          description: Git commit SHA of the console source, if known.
+        edition:
+          type: string
+          description: 'Edition / crate name of the bundled console.
+
+            e.g. `lakekeeper-console` for the OSS console or
+
+            `lakekeeper-console-plus` for the enterprise console.'
+        version:
+          type: string
+          description: SemVer of the console crate.
+    LakekeeperServerActionKind:
+      oneOf:
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - create_project
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - update_users
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - delete_users
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - list_users
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - provision_users
     UserType:
       type: string
       description: Type of a User

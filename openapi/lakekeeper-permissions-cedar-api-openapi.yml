@@ -123,94 +123,65 @@ paths:
                 $ref: '#/components/schemas/GetCedarSchemaResponse'
 components:
   schemas:
-    TabularIdentOrUuid:
-      oneOf:
-      - type: object
-        required:
-        - warehouse-id
-        - table-id
-        properties:
-          table-id:
-            type: string
-            format: uuid
-          warehouse-id:
-            type: string
-            format: uuid
-      - type: object
-        required:
-        - namespace
-        - table
-        - warehouse-id
-        properties:
-          namespace:
-            type: array
-            items:
-              type: string
-          table:
-            type: string
-            description: Name of the table, view, or generic table.
-          warehouse-id:
-            type: string
-            format: uuid
-      description: 'Identifier for a tabular (table, view, or generic table) — either a UUID
-
-        or its name and namespace. Wire format primary names are `table-id` and
-
-        `table`; `view_id` / `view` and `generic_table_id` / `generic_table` are
-
-        accepted as input aliases for client ergonomics.'
-    CedarFileSourceConfig:
+    ErrorModel:
       type: object
+      description: JSON error payload returned in a response with further details on the error
       required:
-      - file-path
+      - message
+      - type
+      - code
       properties:
-        file-path:
+        code:
+          type: integer
+          format: int32
+          description: HTTP response code
+          minimum: 0
+        message:
           type: string
-    GetCedarSchemaResponse:
+          description: Human-readable error message
+        stack:
+          type: array
+          items:
+            type: string
+        type:
+          type: string
+          description: Internal type definition of the error
+    CedarResourceConstraintPattern:
+      type: object
+      description: 'Constraint patterns for filtering policies by resource constraint type.
+
+
+        Each field corresponds to a Cedar resource constraint pattern.'
+      properties:
+        eq:
+          type: boolean
+          description: Include policies with `resource == <ResourceType>::"<id>"` (specific entity)
+          default: false
+        in:
+          type: boolean
+          description: 'Include policies with `resource in <ResourceType>::"<id>"` (within hierarchy)
+
+            Also covers `resource is <Path> in <ResourceType>::"<id>"` (typed entity within hierarchy)'
+          default: false
+        is:
+          type: boolean
+          description: Include policies with `resource is <ResourceType>` (any entity of this type)
+          default: false
+    IcebergErrorResponse:
+      type: object
+      description: JSON wrapper for all error responses (non-2xx)
+      required:
+      - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorModel'
+    CedarKubernetesConfigMapSourceConfig:
       type: object
       required:
-      - schema-fragments
+      - configmap-name
       properties:
-        schema-fragments:
-          type: object
-          description: 'The currently active Cedar schema fragments.
-
-            The key is the fragment file path, and the value is the fragment content.'
-          additionalProperties:
-            type: string
-          propertyNames:
-            type: string
-    CedarEffectFilter:
-      type: string
-      enum:
-      - Permit
-      - Forbid
-    NamespaceIdentOrUuid:
-      oneOf:
-      - type: object
-        required:
-        - namespace-id
-        - warehouse-id
-        properties:
-          namespace-id:
-            type: string
-            format: uuid
-          warehouse-id:
-            type: string
-            format: uuid
-      - type: object
-        required:
-        - namespace
-        - warehouse-id
-        properties:
-          namespace:
-            type: array
-            items:
-              type: string
-          warehouse-id:
-            type: string
-            format: uuid
-      description: Identifier for a namespace, either a UUID or its name and warehouse ID
+        configmap-name:
+          type: string
     ResolveCedarEntitiesResponse:
       type: object
       description: Response from resolving Cedar entities.
@@ -228,113 +199,54 @@ components:
           type: integer
           description: Total number of entities resolved.
           minimum: 0
-    ListCedarPoliciesQuery:
-      type: object
-      description: 'Query parameters for listing Cedar policies.
-
-
-        # Pagination Consistency
-
-
-        When using pagination with `page_token`, list continuation is only consistent if
-
-        policy sources have not changed between calls. If policy sources are added, removed,
-
-        or modified between paginated requests, results may be incomplete or contain duplicates.'
-      properties:
-        effect-filter:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/CedarEffectFilter'
-            description: 'Filter by effect (permit/forbid).
-
-              If not provided, policies of all effects are returned.'
-        page-size:
-          type: integer
-          description: 'Maximum number of policies to return per page.
-
-            Defaults to 1000 if not specified.'
-          minimum: 0
-        page-token:
-          type:
-          - string
-          - 'null'
-          description: 'Opaque page token from a previous response.
-
-            Use this to retrieve the next page of results.
-
-            The token represents a policy ID to start from.'
-        principal-type-filter:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/CedarPrincipalTypeFilter'
-            description: 'Filter by principal entity type names.
-
-              Returns policies where the principal scope matches any of these types.'
-        resource-type-filter:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/CedarResourceTypeFilter'
-            description: 'Filter by resource entity type names.
-
-              Returns policies where the resource scope matches any of these types.'
-        source-filter:
-          type:
-          - array
-          - 'null'
-          items:
-            type: string
-            format: uuid
-          description: 'Only return policies from the specified source IDs.
-
-            If not provided, policies from all sources are returned.'
-    CedarPolicySourceInfo:
+    CedarEntitySourceInfo:
       type: object
       required:
       - source-id
-      - policy-count
+      - entity-count
       - config
       properties:
         config:
           $ref: '#/components/schemas/CedarSourceConfig'
-          description: Configuration details of the policy source.
-        policy-count:
+          description: Configuration details of the source.
+        entity-count:
           type: integer
           format: int64
-          description: Number of policies associated with this source.
+          description: Number of entities associated with this source.
           minimum: 0
         source-id:
           type: string
           format: uuid
-          description: Unique identifier for the policy source.
-    GetCedarPoliciesResponse:
+          description: Unique identifier for the entity source.
+    UserOrRole:
+      oneOf:
+      - type: object
+        title: UserOrRoleUser
+        description: Id of the user
+        required:
+        - user
+        properties:
+          user:
+            type: string
+            description: Id of the user
+      - type: object
+        title: UserOrRoleRole
+        description: Id of the role
+        required:
+        - role
+        properties:
+          role:
+            type: string
+            format: uuid
+            description: Id of the role
+      description: Identifies a user or a role
+    CedarFileSourceConfig:
       type: object
       required:
-      - policies
+      - file-path
       properties:
-        next-page-token:
-          type:
-          - string
-          - 'null'
-          description: 'Opaque token for retrieving the next page of results.
-
-            If `None`, there are no more pages to retrieve.'
-        policies:
-          type: array
-          items: {}
-          description: 'List of JSON formatted Cedar policies.
-
-
-            For schema details, see `<https://docs.cedarpolicy.com/policies/json-format.html>`'
-    ListCedarPolicySourcesResponse:
-      type: object
-      required:
-      - policy-sources
-      properties:
-        policy-sources:
-          type: array
-          items:
-            $ref: '#/components/schemas/CedarPolicySourceInfo'
+        file-path:
+          type: string
     CedarResourceTypeFilter:
       type: object
       description: 'Filter for Cedar policy resource constraints.
@@ -420,179 +332,92 @@ components:
             eq: false
             in: false
             is: false
-    CedarPrincipalTypeFilter:
-      type: object
-      description: 'Filter for Cedar policy principal constraints.
-
-
-        This filter allows fine-grained control over which policies to retrieve based on
-
-        their principal scope. Each principal type has its own set of constraint patterns.'
-      properties:
-        any:
-          type: boolean
-          description: Include policies where `principal` is unconstrained (applies to all principals)
-          default: false
-        role:
-          oneOf:
-          - $ref: '#/components/schemas/CedarPrincipalConstraintPattern'
-            description: Constraint patterns for `Lakekeeper::Role` principals
-          default:
-            eq: false
-            in: false
-            is: false
-        user:
-          oneOf:
-          - $ref: '#/components/schemas/CedarPrincipalConstraintPattern'
-            description: Constraint patterns for `Lakekeeper::User` principals
-          default:
-            eq: false
-            in: false
-            is: false
-    CedarSourceConfig:
-      oneOf:
-      - allOf:
-        - $ref: '#/components/schemas/CedarFileSourceConfig'
-        - type: object
-          required:
-          - source-type
-          properties:
-            source-type:
-              type: string
-              enum:
-              - file
-      - allOf:
-        - $ref: '#/components/schemas/CedarKubernetesConfigMapSourceConfig'
-        - type: object
-          required:
-          - source-type
-          properties:
-            source-type:
-              type: string
-              enum:
-              - kubernetes-config-map
-    CedarKubernetesConfigMapSourceConfig:
-      type: object
-      required:
-      - configmap-name
-      properties:
-        configmap-name:
-          type: string
-    CedarPrincipalConstraintPattern:
-      type: object
-      description: 'Constraint patterns for filtering policies by principal constraint type.
-
-
-        Each field corresponds to a Cedar principal constraint pattern.'
-      properties:
-        eq:
-          type: boolean
-          description: Include policies with `principal == <PrincipalType>::"<id>"` (specific entity)
-          default: false
-        in:
-          type: boolean
-          description: 'Include policies with `principal in <PrincipalType>::"<id>"` (within hierarchy)
-
-            Also covers `principal is <Path> in <PrincipalType>::"<id>"` (typed entity within hierarchy)'
-          default: false
-        is:
-          type: boolean
-          description: Include policies with `principal is <PrincipalType>` (any entity of this type)
-          default: false
-    CedarResourceConstraintPattern:
-      type: object
-      description: 'Constraint patterns for filtering policies by resource constraint type.
-
-
-        Each field corresponds to a Cedar resource constraint pattern.'
-      properties:
-        eq:
-          type: boolean
-          description: Include policies with `resource == <ResourceType>::"<id>"` (specific entity)
-          default: false
-        in:
-          type: boolean
-          description: 'Include policies with `resource in <ResourceType>::"<id>"` (within hierarchy)
-
-            Also covers `resource is <Path> in <ResourceType>::"<id>"` (typed entity within hierarchy)'
-          default: false
-        is:
-          type: boolean
-          description: Include policies with `resource is <ResourceType>` (any entity of this type)
-          default: false
-    ListCedarEntitySourcesResponse:
-      type: object
-      required:
-      - entity-sources
-      properties:
-        entity-sources:
-          type: array
-          items:
-            $ref: '#/components/schemas/CedarEntitySourceInfo'
-    ErrorModel:
-      type: object
-      description: JSON error payload returned in a response with further details on the error
-      required:
-      - message
-      - type
-      - code
-      properties:
-        code:
-          type: integer
-          format: int32
-          description: HTTP response code
-          minimum: 0
-        message:
-          type: string
-          description: Human-readable error message
-        stack:
-          type: array
-          items:
-            type: string
-        type:
-          type: string
-          description: Internal type definition of the error
-    UserOrRole:
+    NamespaceIdentOrUuid:
       oneOf:
       - type: object
-        title: UserOrRoleUser
-        description: Id of the user
         required:
-        - user
+        - namespace-id
+        - warehouse-id
         properties:
-          user:
-            type: string
-            description: Id of the user
-      - type: object
-        title: UserOrRoleRole
-        description: Id of the role
-        required:
-        - role
-        properties:
-          role:
+          namespace-id:
             type: string
             format: uuid
-            description: Id of the role
-      description: Identifies a user or a role
-    CedarEntitySourceInfo:
+          warehouse-id:
+            type: string
+            format: uuid
+      - type: object
+        required:
+        - namespace
+        - warehouse-id
+        properties:
+          namespace:
+            type: array
+            items:
+              type: string
+          warehouse-id:
+            type: string
+            format: uuid
+      description: Identifier for a namespace, either a UUID or its name and warehouse ID
+    ListCedarPoliciesQuery:
       type: object
-      required:
-      - source-id
-      - entity-count
-      - config
+      description: 'Query parameters for listing Cedar policies.
+
+
+        # Pagination Consistency
+
+
+        When using pagination with `page_token`, list continuation is only consistent if
+
+        policy sources have not changed between calls. If policy sources are added, removed,
+
+        or modified between paginated requests, results may be incomplete or contain duplicates.'
       properties:
-        config:
-          $ref: '#/components/schemas/CedarSourceConfig'
-          description: Configuration details of the source.
-        entity-count:
+        effect-filter:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/CedarEffectFilter'
+            description: 'Filter by effect (permit/forbid).
+
+              If not provided, policies of all effects are returned.'
+        page-size:
           type: integer
-          format: int64
-          description: Number of entities associated with this source.
+          description: 'Maximum number of policies to return per page.
+
+            Defaults to 1000 if not specified.'
           minimum: 0
-        source-id:
-          type: string
-          format: uuid
-          description: Unique identifier for the entity source.
+        page-token:
+          type:
+          - string
+          - 'null'
+          description: 'Opaque page token from a previous response.
+
+            Use this to retrieve the next page of results.
+
+            The token represents a policy ID to start from.'
+        principal-type-filter:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/CedarPrincipalTypeFilter'
+            description: 'Filter by principal entity type names.
+
+              Returns policies where the principal scope matches any of these types.'
+        resource-type-filter:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/CedarResourceTypeFilter'
+            description: 'Filter by resource entity type names.
+
+              Returns policies where the resource scope matches any of these types.'
+        source-filter:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+            format: uuid
+          description: 'Only return policies from the specified source IDs.
+
+            If not provided, policies from all sources are returned.'
     CedarResolveResource:
       oneOf:
       - type: string
@@ -660,6 +485,175 @@ components:
         [`TabularIdentOrUuid`] so callers can address a resource by either UUID or by
 
         (warehouse + name), matching the rest of the management API.'
+    ListCedarPolicySourcesResponse:
+      type: object
+      required:
+      - policy-sources
+      properties:
+        policy-sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/CedarPolicySourceInfo'
+    GetCedarPoliciesResponse:
+      type: object
+      required:
+      - policies
+      properties:
+        next-page-token:
+          type:
+          - string
+          - 'null'
+          description: 'Opaque token for retrieving the next page of results.
+
+            If `None`, there are no more pages to retrieve.'
+        policies:
+          type: array
+          items: {}
+          description: 'List of JSON formatted Cedar policies.
+
+
+            For schema details, see `<https://docs.cedarpolicy.com/policies/json-format.html>`'
+    CedarSourceConfig:
+      oneOf:
+      - allOf:
+        - $ref: '#/components/schemas/CedarFileSourceConfig'
+        - type: object
+          required:
+          - source-type
+          properties:
+            source-type:
+              type: string
+              enum:
+              - file
+      - allOf:
+        - $ref: '#/components/schemas/CedarKubernetesConfigMapSourceConfig'
+        - type: object
+          required:
+          - source-type
+          properties:
+            source-type:
+              type: string
+              enum:
+              - kubernetes-config-map
+    CedarPrincipalConstraintPattern:
+      type: object
+      description: 'Constraint patterns for filtering policies by principal constraint type.
+
+
+        Each field corresponds to a Cedar principal constraint pattern.'
+      properties:
+        eq:
+          type: boolean
+          description: Include policies with `principal == <PrincipalType>::"<id>"` (specific entity)
+          default: false
+        in:
+          type: boolean
+          description: 'Include policies with `principal in <PrincipalType>::"<id>"` (within hierarchy)
+
+            Also covers `principal is <Path> in <PrincipalType>::"<id>"` (typed entity within hierarchy)'
+          default: false
+        is:
+          type: boolean
+          description: Include policies with `principal is <PrincipalType>` (any entity of this type)
+          default: false
+    CedarPrincipalTypeFilter:
+      type: object
+      description: 'Filter for Cedar policy principal constraints.
+
+
+        This filter allows fine-grained control over which policies to retrieve based on
+
+        their principal scope. Each principal type has its own set of constraint patterns.'
+      properties:
+        any:
+          type: boolean
+          description: Include policies where `principal` is unconstrained (applies to all principals)
+          default: false
+        role:
+          oneOf:
+          - $ref: '#/components/schemas/CedarPrincipalConstraintPattern'
+            description: Constraint patterns for `Lakekeeper::Role` principals
+          default:
+            eq: false
+            in: false
+            is: false
+        user:
+          oneOf:
+          - $ref: '#/components/schemas/CedarPrincipalConstraintPattern'
+            description: Constraint patterns for `Lakekeeper::User` principals
+          default:
+            eq: false
+            in: false
+            is: false
+    TabularIdentOrUuid:
+      oneOf:
+      - type: object
+        required:
+        - warehouse-id
+        - table-id
+        properties:
+          table-id:
+            type: string
+            format: uuid
+          warehouse-id:
+            type: string
+            format: uuid
+      - type: object
+        required:
+        - namespace
+        - table
+        - warehouse-id
+        properties:
+          namespace:
+            type: array
+            items:
+              type: string
+          table:
+            type: string
+            description: Name of the table, view, or generic table.
+          warehouse-id:
+            type: string
+            format: uuid
+      description: 'Identifier for a tabular (table, view, or generic table) — either a UUID
+
+        or its name and namespace. Wire format primary names are `table-id` and
+
+        `table`; `view_id` / `view` and `generic_table_id` / `generic_table` are
+
+        accepted as input aliases for client ergonomics.'
+    GetCedarSchemaResponse:
+      type: object
+      required:
+      - schema-fragments
+      properties:
+        schema-fragments:
+          type: object
+          description: 'The currently active Cedar schema fragments.
+
+            The key is the fragment file path, and the value is the fragment content.'
+          additionalProperties:
+            type: string
+          propertyNames:
+            type: string
+    CedarPolicySourceInfo:
+      type: object
+      required:
+      - source-id
+      - policy-count
+      - config
+      properties:
+        config:
+          $ref: '#/components/schemas/CedarSourceConfig'
+          description: Configuration details of the policy source.
+        policy-count:
+          type: integer
+          format: int64
+          description: Number of policies associated with this source.
+          minimum: 0
+        source-id:
+          type: string
+          format: uuid
+          description: Unique identifier for the policy source.
     ResolveCedarEntitiesRequest:
       type: object
       description: Request body for resolving Cedar entities.
@@ -676,14 +670,20 @@ components:
         resource:
           $ref: '#/components/schemas/CedarResolveResource'
           description: The resource to resolve entities for.
-    IcebergErrorResponse:
+    CedarEffectFilter:
+      type: string
+      enum:
+      - Permit
+      - Forbid
+    ListCedarEntitySourcesResponse:
       type: object
-      description: JSON wrapper for all error responses (non-2xx)
       required:
-      - error
+      - entity-sources
       properties:
-        error:
-          $ref: '#/components/schemas/ErrorModel'
+        entity-sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/CedarEntitySourceInfo'
   securitySchemes:
     bearerAuth:
       type: http

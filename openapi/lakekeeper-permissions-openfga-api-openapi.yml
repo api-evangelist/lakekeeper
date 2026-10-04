@@ -1272,7 +1272,52 @@ paths:
                 $ref: '#/components/schemas/GetOpenFGAViewActionsResponse'
 components:
   schemas:
-    TableRelation:
+    GetOpenFGAViewActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpenFGAViewAction'
+    GetGenericTableAssignmentsResponse:
+      type: object
+      required:
+      - assignments
+      properties:
+        assignments:
+          type: array
+          items:
+            $ref: '#/components/schemas/GenericTableAssignment'
+    GetOpenFGAGenericTableActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpenFGAGenericTableAction'
+    GetTableAccessResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/TableAction'
+    GetViewAccessResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ViewAction'
+    NamespaceRelation:
       type: string
       enum:
       - ownership
@@ -1280,18 +1325,269 @@ components:
       - manage_grants
       - describe
       - select
+      - create
       - modify
-    UpdateGenericTableAssignmentsRequest:
+    GetProjectAccessResponse:
       type: object
+      required:
+      - allowed-actions
       properties:
-        deletes:
+        allowed-actions:
           type: array
           items:
-            $ref: '#/components/schemas/GenericTableAssignment'
-        writes:
+            $ref: '#/components/schemas/ProjectAction'
+    GetNamespaceAssignmentsResponse:
+      type: object
+      required:
+      - assignments
+      properties:
+        assignments:
           type: array
           items:
-            $ref: '#/components/schemas/GenericTableAssignment'
+            $ref: '#/components/schemas/NamespaceAssignment'
+    NamespaceAssignment:
+      oneOf:
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - ownership
+        title: NamespaceAssignmentOwnership
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - pass_grants
+        title: NamespaceAssignmentPassGrants
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - manage_grants
+        title: NamespaceAssignmentManageGrants
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - describe
+        title: NamespaceAssignmentDescribe
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - select
+        title: NamespaceAssignmentSelect
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - create
+        title: NamespaceAssignmentCreate
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - modify
+        title: NamespaceAssignmentModify
+    ViewAction:
+      type: string
+      enum:
+      - drop
+      - commit
+      - get_metadata
+      - select
+      - rename
+      - read_assignments
+      - grant_pass_grants
+      - grant_manage_grants
+      - grant_describe
+      - grant_select
+      - grant_modify
+      - change_ownership
+      - get_tasks
+      - control_tasks
+      - set_protection
+    OpenFGATableAction:
+      type: string
+      enum:
+      - read_assignments
+      - grant_pass_grants
+      - grant_manage_grants
+      - grant_describe
+      - grant_select
+      - grant_modify
+      - change_ownership
+    GenericTableAssignment:
+      oneOf:
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - ownership
+        title: GenericTableAssignmentOwnership
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - pass_grants
+        title: GenericTableAssignmentPassGrants
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - manage_grants
+        title: GenericTableAssignmentManageGrants
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - describe
+        title: GenericTableAssignmentDescribe
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - select
+        title: GenericTableAssignmentSelect
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - modify
+        title: GenericTableAssignmentModify
+    GetServerAccessResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServerAction'
+    GetOpenFGAProjectActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpenFGAProjectAction'
+    ProjectRelation:
+      type: string
+      enum:
+      - project_admin
+      - security_admin
+      - data_admin
+      - role_creator
+      - describe
+      - select
+      - create
+      - modify
+    UserOrRole:
+      oneOf:
+      - type: object
+        title: UserOrRoleUser
+        description: Id of the user
+        required:
+        - user
+        properties:
+          user:
+            type: string
+            description: Id of the user
+      - type: object
+        title: UserOrRoleRole
+        description: Id of the role
+        required:
+        - role
+        properties:
+          role:
+            type: string
+            format: uuid
+            description: Id of the role
+      description: Identifies a user or a role
+    OpenFGARoleAction:
+      type: string
+      enum:
+      - assume
+      - can_grant_assignee
+      - can_change_ownership
+      - read_assignments
+    RoleAction:
+      type: string
+      enum:
+      - assume
+      - can_grant_assignee
+      - can_change_ownership
+      - delete
+      - update
+      - read
+      - read_assignments
     ServerAssignment:
       oneOf:
       - allOf:
@@ -1316,91 +1612,7 @@ components:
               enum:
               - operator
         title: ServerAssignmentOperator
-    TabularIdentOrUuid:
-      oneOf:
-      - type: object
-        required:
-        - warehouse-id
-        - table-id
-        properties:
-          table-id:
-            type: string
-            format: uuid
-          warehouse-id:
-            type: string
-            format: uuid
-      - type: object
-        required:
-        - namespace
-        - table
-        - warehouse-id
-        properties:
-          namespace:
-            type: array
-            items:
-              type: string
-          table:
-            type: string
-            description: Name of the table, view, or generic table.
-          warehouse-id:
-            type: string
-            format: uuid
-      description: 'Identifier for a tabular (table, view, or generic table) — either a UUID
-
-        or its name and namespace. Wire format primary names are `table-id` and
-
-        `table`; `view_id` / `view` and `generic_table_id` / `generic_table` are
-
-        accepted as input aliases for client ergonomics.'
-    GenericTableAction:
-      type: string
-      enum:
-      - drop
-      - undrop
-      - write_data
-      - read_data
-      - get_metadata
-      - rename
-      - include_in_list
-      - get_tasks
-      - control_tasks
-      - set_protection
-      - read_assignments
-      - grant_pass_grants
-      - grant_manage_grants
-      - grant_describe
-      - grant_select
-      - grant_modify
-      - change_ownership
-    OpenFGAGenericTableAction:
-      type: string
-      enum:
-      - read_assignments
-      - grant_pass_grants
-      - grant_manage_grants
-      - grant_describe
-      - grant_select
-      - grant_modify
-      - change_ownership
-    GetOpenFGATableActionsResponse:
-      type: object
-      required:
-      - allowed-actions
-      properties:
-        allowed-actions:
-          type: array
-          items:
-            $ref: '#/components/schemas/OpenFGATableAction'
-    GetRoleAssignmentsResponse:
-      type: object
-      required:
-      - assignments
-      properties:
-        assignments:
-          type: array
-          items:
-            $ref: '#/components/schemas/RoleAssignment'
-    NamespaceRelation:
+    WarehouseRelation:
       type: string
       enum:
       - ownership
@@ -1410,17 +1622,48 @@ components:
       - select
       - create
       - modify
-    GetNamespaceAuthPropertiesResponse:
+    GetWarehouseAuthPropertiesResponse:
       type: object
       required:
       - managed-access
-      - managed-access-inherited
       properties:
         managed-access:
           type: boolean
-        managed-access-inherited:
-          type: boolean
-    OpenFGATableAction:
+    UpdateWarehouseAssignmentsRequest:
+      type: object
+      properties:
+        deletes:
+          type: array
+          items:
+            $ref: '#/components/schemas/WarehouseAssignment'
+        writes:
+          type: array
+          items:
+            $ref: '#/components/schemas/WarehouseAssignment'
+    GetOpenFGANamespaceActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpenFGANamespaceAction'
+    CheckRequest:
+      type: object
+      description: Check if a specific action is allowed on the given object
+      required:
+      - operation
+      properties:
+        identity:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/UserOrRole'
+            description: The user or role to check access for.
+        operation:
+          $ref: '#/components/schemas/CheckOperation'
+          description: The operation to check.
+    OpenFGAViewAction:
       type: string
       enum:
       - read_assignments
@@ -1430,16 +1673,7 @@ components:
       - grant_select
       - grant_modify
       - change_ownership
-    ViewRelation:
-      type: string
-      enum:
-      - ownership
-      - pass_grants
-      - manage_grants
-      - describe
-      - select
-      - modify
-    GetProjectAccessResponse:
+    GetOpenFGAServerActionsResponse:
       type: object
       required:
       - allowed-actions
@@ -1447,25 +1681,50 @@ components:
         allowed-actions:
           type: array
           items:
-            $ref: '#/components/schemas/ProjectAction'
-    UpdateProjectAssignmentsRequest:
+            $ref: '#/components/schemas/OpenFGAServerAction'
+    OpenFGAWarehouseAction:
+      type: string
+      enum:
+      - read_assignments
+      - grant_create
+      - grant_describe
+      - grant_modify
+      - grant_select
+      - grant_pass_grants
+      - grant_manage_grants
+      - change_ownership
+    UpdateServerAssignmentsRequest:
       type: object
       properties:
         deletes:
           type: array
           items:
-            $ref: '#/components/schemas/ProjectAssignment'
+            $ref: '#/components/schemas/ServerAssignment'
         writes:
           type: array
           items:
-            $ref: '#/components/schemas/ProjectAssignment'
-    OpenFGARoleAction:
+            $ref: '#/components/schemas/ServerAssignment'
+    GetViewAssignmentsResponse:
+      type: object
+      required:
+      - assignments
+      properties:
+        assignments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ViewAssignment'
+    ServerRelation:
       type: string
       enum:
-      - assume
-      - can_grant_assignee
-      - can_change_ownership
-      - read_assignments
+      - admin
+      - operator
+    SetManagedAccessRequest:
+      type: object
+      required:
+      - managed-access
+      properties:
+        managed-access:
+          type: boolean
     TableAction:
       type: string
       enum:
@@ -1485,185 +1744,16 @@ components:
       - get_tasks
       - control_tasks
       - set_protection
-    GetServerAccessResponse:
-      type: object
-      required:
-      - allowed-actions
-      properties:
-        allowed-actions:
-          type: array
-          items:
-            $ref: '#/components/schemas/ServerAction'
-    GetProjectAssignmentsResponse:
-      type: object
-      required:
-      - assignments
-      - project-id
-      properties:
-        assignments:
-          type: array
-          items:
-            $ref: '#/components/schemas/ProjectAssignment'
-        project-id:
-          type: string
-          format: uuid
-    NamespaceIdentOrUuid:
-      oneOf:
-      - type: object
-        required:
-        - namespace-id
-        - warehouse-id
-        properties:
-          namespace-id:
-            type: string
-            format: uuid
-          warehouse-id:
-            type: string
-            format: uuid
-      - type: object
-        required:
-        - namespace
-        - warehouse-id
-        properties:
-          namespace:
-            type: array
-            items:
-              type: string
-          warehouse-id:
-            type: string
-            format: uuid
-      description: Identifier for a namespace, either a UUID or its name and warehouse ID
-    GetRoleAccessResponse:
-      type: object
-      required:
-      - allowed-actions
-      properties:
-        allowed-actions:
-          type: array
-          items:
-            $ref: '#/components/schemas/RoleAction'
-    GetOpenFGAViewActionsResponse:
-      type: object
-      required:
-      - allowed-actions
-      properties:
-        allowed-actions:
-          type: array
-          items:
-            $ref: '#/components/schemas/OpenFGAViewAction'
-    GetOpenFGAWarehouseActionsResponse:
-      type: object
-      required:
-      - allowed-actions
-      properties:
-        allowed-actions:
-          type: array
-          items:
-            $ref: '#/components/schemas/OpenFGAWarehouseAction'
-    TableAssignment:
-      oneOf:
-      - allOf:
-        - $ref: '#/components/schemas/UserOrRole'
-        - type: object
-          required:
-          - type
-          properties:
-            type:
-              type: string
-              enum:
-              - ownership
-        title: TableAssignmentOwnership
-      - allOf:
-        - $ref: '#/components/schemas/UserOrRole'
-        - type: object
-          required:
-          - type
-          properties:
-            type:
-              type: string
-              enum:
-              - pass_grants
-        title: TableAssignmentPassGrants
-      - allOf:
-        - $ref: '#/components/schemas/UserOrRole'
-        - type: object
-          required:
-          - type
-          properties:
-            type:
-              type: string
-              enum:
-              - manage_grants
-        title: TableAssignmentManageGrants
-      - allOf:
-        - $ref: '#/components/schemas/UserOrRole'
-        - type: object
-          required:
-          - type
-          properties:
-            type:
-              type: string
-              enum:
-              - describe
-        title: TableAssignmentDescribe
-      - allOf:
-        - $ref: '#/components/schemas/UserOrRole'
-        - type: object
-          required:
-          - type
-          properties:
-            type:
-              type: string
-              enum:
-              - select
-        title: TableAssignmentSelect
-      - allOf:
-        - $ref: '#/components/schemas/UserOrRole'
-        - type: object
-          required:
-          - type
-          properties:
-            type:
-              type: string
-              enum:
-              - modify
-        title: TableAssignmentModify
-    WarehouseRelation:
-      type: string
-      enum:
-      - ownership
-      - pass_grants
-      - manage_grants
-      - describe
-      - select
-      - create
-      - modify
-    RoleRelation:
-      type: string
-      enum:
-      - assignee
-      - ownership
-    GetNamespaceAccessResponse:
-      type: object
-      required:
-      - allowed-actions
-      properties:
-        allowed-actions:
-          type: array
-          items:
-            $ref: '#/components/schemas/NamespaceAction'
-    OpenFGAProjectAction:
+    OpenFGAGenericTableAction:
       type: string
       enum:
       - read_assignments
-      - grant_role_creator
-      - grant_create
+      - grant_pass_grants
+      - grant_manage_grants
       - grant_describe
-      - grant_modify
       - grant_select
-      - grant_project_admin
-      - grant_security_admin
-      - grant_data_admin
+      - grant_modify
+      - change_ownership
     ViewAssignment:
       oneOf:
       - allOf:
@@ -1732,74 +1822,152 @@ components:
               enum:
               - modify
         title: ViewAssignmentModify
-    OpenFGANamespaceAction:
+    CheckOperation:
+      oneOf:
+      - type: object
+        required:
+        - server
+        properties:
+          server:
+            type: object
+            required:
+            - action
+            properties:
+              action:
+                $ref: '#/components/schemas/ServerAction'
+      - type: object
+        required:
+        - project
+        properties:
+          project:
+            type: object
+            required:
+            - action
+            properties:
+              action:
+                $ref: '#/components/schemas/ProjectAction'
+              project-id:
+                type:
+                - string
+                - 'null'
+                format: uuid
+      - type: object
+        required:
+        - warehouse
+        properties:
+          warehouse:
+            type: object
+            required:
+            - action
+            - warehouse-id
+            properties:
+              action:
+                $ref: '#/components/schemas/WarehouseAction'
+              warehouse-id:
+                type: string
+                format: uuid
+      - type: object
+        required:
+        - namespace
+        properties:
+          namespace:
+            allOf:
+            - $ref: '#/components/schemas/NamespaceIdentOrUuid'
+            - type: object
+              required:
+              - action
+              properties:
+                action:
+                  $ref: '#/components/schemas/NamespaceAction'
+      - type: object
+        required:
+        - table
+        properties:
+          table:
+            allOf:
+            - $ref: '#/components/schemas/TabularIdentOrUuid'
+            - type: object
+              required:
+              - action
+              properties:
+                action:
+                  $ref: '#/components/schemas/TableAction'
+      - type: object
+        required:
+        - view
+        properties:
+          view:
+            allOf:
+            - $ref: '#/components/schemas/TabularIdentOrUuid'
+            - type: object
+              required:
+              - action
+              properties:
+                action:
+                  $ref: '#/components/schemas/ViewAction'
+      - type: object
+        required:
+        - generic-table
+        properties:
+          generic-table:
+            allOf:
+            - $ref: '#/components/schemas/TabularIdentOrUuid'
+            - type: object
+              required:
+              - action
+              properties:
+                action:
+                  $ref: '#/components/schemas/GenericTableAction'
+      description: Represents an action on an object
+    UpdateNamespaceAssignmentsRequest:
+      type: object
+      properties:
+        deletes:
+          type: array
+          items:
+            $ref: '#/components/schemas/NamespaceAssignment'
+        writes:
+          type: array
+          items:
+            $ref: '#/components/schemas/NamespaceAssignment'
+    CheckResponse:
+      type: object
+      required:
+      - allowed
+      properties:
+        allowed:
+          type: boolean
+          description: Whether the action is allowed.
+    GetNamespaceAuthPropertiesResponse:
+      type: object
+      required:
+      - managed-access
+      - managed-access-inherited
+      properties:
+        managed-access:
+          type: boolean
+        managed-access-inherited:
+          type: boolean
+    ProjectAction:
       type: string
       enum:
+      - create_warehouse
+      - delete
+      - rename
+      - list_warehouses
+      - create_role
+      - list_roles
+      - search_roles
       - read_assignments
+      - grant_role_creator
       - grant_create
       - grant_describe
       - grant_modify
       - grant_select
-      - grant_pass_grants
-      - grant_manage_grants
-    RoleAssignment:
-      oneOf:
-      - allOf:
-        - $ref: '#/components/schemas/UserOrRole'
-        - type: object
-          required:
-          - type
-          properties:
-            type:
-              type: string
-              enum:
-              - assignee
-        title: RoleAssignmentAssignee
-      - allOf:
-        - $ref: '#/components/schemas/UserOrRole'
-        - type: object
-          required:
-          - type
-          properties:
-            type:
-              type: string
-              enum:
-              - ownership
-        title: RoleAssignmentOwnership
-    SetManagedAccessRequest:
-      type: object
-      required:
-      - managed-access
-      properties:
-        managed-access:
-          type: boolean
-    GetOpenFGANamespaceActionsResponse:
-      type: object
-      required:
-      - allowed-actions
-      properties:
-        allowed-actions:
-          type: array
-          items:
-            $ref: '#/components/schemas/OpenFGANamespaceAction'
-    ProjectRelation:
-      type: string
-      enum:
-      - project_admin
-      - security_admin
-      - data_admin
-      - role_creator
-      - describe
-      - select
-      - create
-      - modify
-    GetWarehouseAuthPropertiesResponse:
-      type: object
-      required:
-      - managed-access
-      properties:
-        managed-access:
-          type: boolean
+      - grant_project_admin
+      - grant_security_admin
+      - grant_data_admin
+      - get_endpoint_statistics
     UpdateViewAssignmentsRequest:
       type: object
       properties:
@@ -1811,6 +1979,33 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ViewAssignment'
+    NamespaceAction:
+      type: string
+      enum:
+      - create_table
+      - create_view
+      - create_generic_table
+      - create_namespace
+      - delete
+      - update_properties
+      - get_metadata
+      - read_assignments
+      - grant_create
+      - grant_describe
+      - grant_modify
+      - grant_select
+      - grant_pass_grants
+      - grant_manage_grants
+      - set_protection
+    GetRoleAssignmentsResponse:
+      type: object
+      required:
+      - assignments
+      properties:
+        assignments:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleAssignment'
     GetTableAssignmentsResponse:
       type: object
       required:
@@ -1820,6 +2015,163 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TableAssignment'
+    GetOpenFGARoleActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpenFGARoleAction'
+    WarehouseAction:
+      type: string
+      enum:
+      - create_namespace
+      - delete
+      - modify_storage
+      - modify_storage_credential
+      - get_config
+      - get_metadata
+      - list_namespaces
+      - include_in_list
+      - deactivate
+      - activate
+      - rename
+      - list_deleted_tabulars
+      - read_assignments
+      - grant_create
+      - grant_describe
+      - grant_modify
+      - grant_select
+      - grant_pass_grants
+      - grant_manage_grants
+      - change_ownership
+      - get_all_tasks
+      - control_all_tasks
+      - set_protection
+      - set_format_version_policy
+      - get_endpoint_statistics
+    GetProjectAssignmentsResponse:
+      type: object
+      required:
+      - assignments
+      - project-id
+      properties:
+        assignments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectAssignment'
+        project-id:
+          type: string
+          format: uuid
+    RoleRelation:
+      type: string
+      enum:
+      - assignee
+      - ownership
+    GetRoleAccessResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleAction'
+    OpenFGAServerAction:
+      type: string
+      enum:
+      - read_assignments
+      - grant_admin
+    NamespaceIdentOrUuid:
+      oneOf:
+      - type: object
+        required:
+        - namespace-id
+        - warehouse-id
+        properties:
+          namespace-id:
+            type: string
+            format: uuid
+          warehouse-id:
+            type: string
+            format: uuid
+      - type: object
+        required:
+        - namespace
+        - warehouse-id
+        properties:
+          namespace:
+            type: array
+            items:
+              type: string
+          warehouse-id:
+            type: string
+            format: uuid
+      description: Identifier for a namespace, either a UUID or its name and warehouse ID
+    ViewRelation:
+      type: string
+      enum:
+      - ownership
+      - pass_grants
+      - manage_grants
+      - describe
+      - select
+      - modify
+    OpenFGAProjectAction:
+      type: string
+      enum:
+      - read_assignments
+      - grant_role_creator
+      - grant_create
+      - grant_describe
+      - grant_modify
+      - grant_select
+      - grant_project_admin
+      - grant_security_admin
+      - grant_data_admin
+    UpdateTableAssignmentsRequest:
+      type: object
+      properties:
+        deletes:
+          type: array
+          items:
+            $ref: '#/components/schemas/TableAssignment'
+        writes:
+          type: array
+          items:
+            $ref: '#/components/schemas/TableAssignment'
+    TableRelation:
+      type: string
+      enum:
+      - ownership
+      - pass_grants
+      - manage_grants
+      - describe
+      - select
+      - modify
+    OpenFGANamespaceAction:
+      type: string
+      enum:
+      - read_assignments
+      - grant_create
+      - grant_describe
+      - grant_modify
+      - grant_select
+      - grant_pass_grants
+      - grant_manage_grants
+    UpdateGenericTableAssignmentsRequest:
+      type: object
+      properties:
+        deletes:
+          type: array
+          items:
+            $ref: '#/components/schemas/GenericTableAssignment'
+        writes:
+          type: array
+          items:
+            $ref: '#/components/schemas/GenericTableAssignment'
     ServerAction:
       type: string
       enum:
@@ -1920,89 +2272,43 @@ components:
               enum:
               - modify
         title: ProjectAssignmentModify
-    GetViewAssignmentsResponse:
-      type: object
-      required:
-      - assignments
-      properties:
-        assignments:
-          type: array
-          items:
-            $ref: '#/components/schemas/ViewAssignment'
-    GenericTableAssignment:
+    TabularIdentOrUuid:
       oneOf:
-      - allOf:
-        - $ref: '#/components/schemas/UserOrRole'
-        - type: object
-          required:
-          - type
-          properties:
-            type:
+      - type: object
+        required:
+        - warehouse-id
+        - table-id
+        properties:
+          table-id:
+            type: string
+            format: uuid
+          warehouse-id:
+            type: string
+            format: uuid
+      - type: object
+        required:
+        - namespace
+        - table
+        - warehouse-id
+        properties:
+          namespace:
+            type: array
+            items:
               type: string
-              enum:
-              - ownership
-        title: GenericTableAssignmentOwnership
-      - allOf:
-        - $ref: '#/components/schemas/UserOrRole'
-        - type: object
-          required:
-          - type
-          properties:
-            type:
-              type: string
-              enum:
-              - pass_grants
-        title: GenericTableAssignmentPassGrants
-      - allOf:
-        - $ref: '#/components/schemas/UserOrRole'
-        - type: object
-          required:
-          - type
-          properties:
-            type:
-              type: string
-              enum:
-              - manage_grants
-        title: GenericTableAssignmentManageGrants
-      - allOf:
-        - $ref: '#/components/schemas/UserOrRole'
-        - type: object
-          required:
-          - type
-          properties:
-            type:
-              type: string
-              enum:
-              - describe
-        title: GenericTableAssignmentDescribe
-      - allOf:
-        - $ref: '#/components/schemas/UserOrRole'
-        - type: object
-          required:
-          - type
-          properties:
-            type:
-              type: string
-              enum:
-              - select
-        title: GenericTableAssignmentSelect
-      - allOf:
-        - $ref: '#/components/schemas/UserOrRole'
-        - type: object
-          required:
-          - type
-          properties:
-            type:
-              type: string
-              enum:
-              - modify
-        title: GenericTableAssignmentModify
-    OpenFGAServerAction:
-      type: string
-      enum:
-      - read_assignments
-      - grant_admin
-    GetOpenFGARoleActionsResponse:
+          table:
+            type: string
+            description: Name of the table, view, or generic table.
+          warehouse-id:
+            type: string
+            format: uuid
+      description: 'Identifier for a tabular (table, view, or generic table) — either a UUID
+
+        or its name and namespace. Wire format primary names are `table-id` and
+
+        `table`; `view_id` / `view` and `generic_table_id` / `generic_table` are
+
+        accepted as input aliases for client ergonomics.'
+    GetWarehouseAccessResponse:
       type: object
       required:
       - allowed-actions
@@ -2010,142 +2316,27 @@ components:
         allowed-actions:
           type: array
           items:
-            $ref: '#/components/schemas/OpenFGARoleAction'
-    GenericTableRelation:
-      type: string
-      enum:
-      - ownership
-      - pass_grants
-      - manage_grants
-      - describe
-      - select
-      - modify
-    GetViewAccessResponse:
-      type: object
-      required:
-      - allowed-actions
-      properties:
-        allowed-actions:
-          type: array
-          items:
-            $ref: '#/components/schemas/ViewAction'
-    CheckResponse:
-      type: object
-      required:
-      - allowed
-      properties:
-        allowed:
-          type: boolean
-          description: Whether the action is allowed.
-    CheckRequest:
-      type: object
-      description: Check if a specific action is allowed on the given object
-      required:
-      - operation
-      properties:
-        identity:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/UserOrRole'
-            description: The user or role to check access for.
-        operation:
-          $ref: '#/components/schemas/CheckOperation'
-          description: The operation to check.
-    UpdateNamespaceAssignmentsRequest:
+            $ref: '#/components/schemas/WarehouseAction'
+    UpdateProjectAssignmentsRequest:
       type: object
       properties:
         deletes:
           type: array
           items:
-            $ref: '#/components/schemas/NamespaceAssignment'
+            $ref: '#/components/schemas/ProjectAssignment'
         writes:
           type: array
           items:
-            $ref: '#/components/schemas/NamespaceAssignment'
-    ServerRelation:
-      type: string
-      enum:
-      - admin
-      - operator
-    NamespaceAssignment:
-      oneOf:
-      - allOf:
-        - $ref: '#/components/schemas/UserOrRole'
-        - type: object
-          required:
-          - type
-          properties:
-            type:
-              type: string
-              enum:
-              - ownership
-        title: NamespaceAssignmentOwnership
-      - allOf:
-        - $ref: '#/components/schemas/UserOrRole'
-        - type: object
-          required:
-          - type
-          properties:
-            type:
-              type: string
-              enum:
-              - pass_grants
-        title: NamespaceAssignmentPassGrants
-      - allOf:
-        - $ref: '#/components/schemas/UserOrRole'
-        - type: object
-          required:
-          - type
-          properties:
-            type:
-              type: string
-              enum:
-              - manage_grants
-        title: NamespaceAssignmentManageGrants
-      - allOf:
-        - $ref: '#/components/schemas/UserOrRole'
-        - type: object
-          required:
-          - type
-          properties:
-            type:
-              type: string
-              enum:
-              - describe
-        title: NamespaceAssignmentDescribe
-      - allOf:
-        - $ref: '#/components/schemas/UserOrRole'
-        - type: object
-          required:
-          - type
-          properties:
-            type:
-              type: string
-              enum:
-              - select
-        title: NamespaceAssignmentSelect
-      - allOf:
-        - $ref: '#/components/schemas/UserOrRole'
-        - type: object
-          required:
-          - type
-          properties:
-            type:
-              type: string
-              enum:
-              - create
-        title: NamespaceAssignmentCreate
-      - allOf:
-        - $ref: '#/components/schemas/UserOrRole'
-        - type: object
-          required:
-          - type
-          properties:
-            type:
-              type: string
-              enum:
-              - modify
-        title: NamespaceAssignmentModify
+            $ref: '#/components/schemas/ProjectAssignment'
+    GetOpenFGATableActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpenFGATableAction'
     UpdateRoleAssignmentsRequest:
       type: object
       properties:
@@ -2157,18 +2348,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RoleAssignment'
-    OpenFGAWarehouseAction:
-      type: string
-      enum:
-      - read_assignments
-      - grant_create
-      - grant_describe
-      - grant_modify
-      - grant_select
-      - grant_pass_grants
-      - grant_manage_grants
-      - change_ownership
-    GetTableAccessResponse:
+    GetOpenFGAWarehouseActionsResponse:
       type: object
       required:
       - allowed-actions
@@ -2176,241 +2356,36 @@ components:
         allowed-actions:
           type: array
           items:
-            $ref: '#/components/schemas/TableAction'
-    GetOpenFGAGenericTableActionsResponse:
-      type: object
-      required:
-      - allowed-actions
-      properties:
-        allowed-actions:
-          type: array
-          items:
-            $ref: '#/components/schemas/OpenFGAGenericTableAction'
-    ProjectAction:
+            $ref: '#/components/schemas/OpenFGAWarehouseAction'
+    GenericTableAction:
       type: string
       enum:
-      - create_warehouse
-      - delete
-      - rename
-      - list_warehouses
-      - create_role
-      - list_roles
-      - search_roles
-      - read_assignments
-      - grant_role_creator
-      - grant_create
-      - grant_describe
-      - grant_modify
-      - grant_select
-      - grant_project_admin
-      - grant_security_admin
-      - grant_data_admin
-      - get_endpoint_statistics
-    UpdateTableAssignmentsRequest:
-      type: object
-      properties:
-        deletes:
-          type: array
-          items:
-            $ref: '#/components/schemas/TableAssignment'
-        writes:
-          type: array
-          items:
-            $ref: '#/components/schemas/TableAssignment'
-    GetOpenFGAProjectActionsResponse:
-      type: object
-      required:
-      - allowed-actions
-      properties:
-        allowed-actions:
-          type: array
-          items:
-            $ref: '#/components/schemas/OpenFGAProjectAction'
-    GetGenericTableAssignmentsResponse:
-      type: object
-      required:
-      - assignments
-      properties:
-        assignments:
-          type: array
-          items:
-            $ref: '#/components/schemas/GenericTableAssignment'
-    UpdateWarehouseAssignmentsRequest:
-      type: object
-      properties:
-        deletes:
-          type: array
-          items:
-            $ref: '#/components/schemas/WarehouseAssignment'
-        writes:
-          type: array
-          items:
-            $ref: '#/components/schemas/WarehouseAssignment'
-    GetNamespaceAssignmentsResponse:
-      type: object
-      required:
-      - assignments
-      properties:
-        assignments:
-          type: array
-          items:
-            $ref: '#/components/schemas/NamespaceAssignment'
-    CheckOperation:
-      oneOf:
-      - type: object
-        required:
-        - server
-        properties:
-          server:
-            type: object
-            required:
-            - action
-            properties:
-              action:
-                $ref: '#/components/schemas/ServerAction'
-      - type: object
-        required:
-        - project
-        properties:
-          project:
-            type: object
-            required:
-            - action
-            properties:
-              action:
-                $ref: '#/components/schemas/ProjectAction'
-              project-id:
-                type:
-                - string
-                - 'null'
-                format: uuid
-      - type: object
-        required:
-        - warehouse
-        properties:
-          warehouse:
-            type: object
-            required:
-            - action
-            - warehouse-id
-            properties:
-              action:
-                $ref: '#/components/schemas/WarehouseAction'
-              warehouse-id:
-                type: string
-                format: uuid
-      - type: object
-        required:
-        - namespace
-        properties:
-          namespace:
-            allOf:
-            - $ref: '#/components/schemas/NamespaceIdentOrUuid'
-            - type: object
-              required:
-              - action
-              properties:
-                action:
-                  $ref: '#/components/schemas/NamespaceAction'
-      - type: object
-        required:
-        - table
-        properties:
-          table:
-            allOf:
-            - $ref: '#/components/schemas/TabularIdentOrUuid'
-            - type: object
-              required:
-              - action
-              properties:
-                action:
-                  $ref: '#/components/schemas/TableAction'
-      - type: object
-        required:
-        - view
-        properties:
-          view:
-            allOf:
-            - $ref: '#/components/schemas/TabularIdentOrUuid'
-            - type: object
-              required:
-              - action
-              properties:
-                action:
-                  $ref: '#/components/schemas/ViewAction'
-      - type: object
-        required:
-        - generic-table
-        properties:
-          generic-table:
-            allOf:
-            - $ref: '#/components/schemas/TabularIdentOrUuid'
-            - type: object
-              required:
-              - action
-              properties:
-                action:
-                  $ref: '#/components/schemas/GenericTableAction'
-      description: Represents an action on an object
-    UserOrRole:
-      oneOf:
-      - type: object
-        title: UserOrRoleUser
-        description: Id of the user
-        required:
-        - user
-        properties:
-          user:
-            type: string
-            description: Id of the user
-      - type: object
-        title: UserOrRoleRole
-        description: Id of the role
-        required:
-        - role
-        properties:
-          role:
-            type: string
-            format: uuid
-            description: Id of the role
-      description: Identifies a user or a role
-    WarehouseAction:
-      type: string
-      enum:
-      - create_namespace
-      - delete
-      - modify_storage
-      - modify_storage_credential
-      - get_config
+      - drop
+      - undrop
+      - write_data
+      - read_data
       - get_metadata
-      - list_namespaces
-      - include_in_list
-      - deactivate
-      - activate
       - rename
-      - list_deleted_tabulars
+      - include_in_list
+      - get_tasks
+      - control_tasks
+      - set_protection
       - read_assignments
-      - grant_create
-      - grant_describe
-      - grant_modify
-      - grant_select
       - grant_pass_grants
       - grant_manage_grants
+      - grant_describe
+      - grant_select
+      - grant_modify
       - change_ownership
-      - get_all_tasks
-      - control_all_tasks
-      - set_protection
-      - set_format_version_policy
-      - get_endpoint_statistics
-    GetServerAssignmentsResponse:
-      type: object
-      required:
-      - assignments
-      properties:
-        assignments:
-          type: array
-          items:
-            $ref: '#/components/schemas/ServerAssignment'
+    GenericTableRelation:
+      type: string
+      enum:
+      - ownership
+      - pass_grants
+      - manage_grants
+      - describe
+      - select
+      - modify
     GetWarehouseAssignmentsResponse:
       type: object
       required:
@@ -2420,91 +2395,39 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/WarehouseAssignment'
-    UpdateServerAssignmentsRequest:
+    GetServerAssignmentsResponse:
       type: object
+      required:
+      - assignments
       properties:
-        deletes:
+        assignments:
           type: array
           items:
             $ref: '#/components/schemas/ServerAssignment'
-        writes:
-          type: array
-          items:
-            $ref: '#/components/schemas/ServerAssignment'
-    ViewAction:
-      type: string
-      enum:
-      - drop
-      - commit
-      - get_metadata
-      - select
-      - rename
-      - read_assignments
-      - grant_pass_grants
-      - grant_manage_grants
-      - grant_describe
-      - grant_select
-      - grant_modify
-      - change_ownership
-      - get_tasks
-      - control_tasks
-      - set_protection
-    GetOpenFGAServerActionsResponse:
-      type: object
-      required:
-      - allowed-actions
-      properties:
-        allowed-actions:
-          type: array
-          items:
-            $ref: '#/components/schemas/OpenFGAServerAction'
-    OpenFGAViewAction:
-      type: string
-      enum:
-      - read_assignments
-      - grant_pass_grants
-      - grant_manage_grants
-      - grant_describe
-      - grant_select
-      - grant_modify
-      - change_ownership
-    RoleAction:
-      type: string
-      enum:
-      - assume
-      - can_grant_assignee
-      - can_change_ownership
-      - delete
-      - update
-      - read
-      - read_assignments
-    GetWarehouseAccessResponse:
-      type: object
-      required:
-      - allowed-actions
-      properties:
-        allowed-actions:
-          type: array
-          items:
-            $ref: '#/components/schemas/WarehouseAction'
-    NamespaceAction:
-      type: string
-      enum:
-      - create_table
-      - create_view
-      - create_generic_table
-      - create_namespace
-      - delete
-      - update_properties
-      - get_metadata
-      - read_assignments
-      - grant_create
-      - grant_describe
-      - grant_modify
-      - grant_select
-      - grant_pass_grants
-      - grant_manage_grants
-      - set_protection
+    RoleAssignment:
+      oneOf:
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - assignee
+        title: RoleAssignmentAssignee
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - ownership
+        title: RoleAssignmentOwnership
     WarehouseAssignment:
       oneOf:
       - allOf:
@@ -2584,6 +2507,83 @@ components:
               enum:
               - modify
         title: WarehouseAssignmentModify
+    TableAssignment:
+      oneOf:
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - ownership
+        title: TableAssignmentOwnership
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - pass_grants
+        title: TableAssignmentPassGrants
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - manage_grants
+        title: TableAssignmentManageGrants
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - describe
+        title: TableAssignmentDescribe
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - select
+        title: TableAssignmentSelect
+      - allOf:
+        - $ref: '#/components/schemas/UserOrRole'
+        - type: object
+          required:
+          - type
+          properties:
+            type:
+              type: string
+              enum:
+              - modify
+        title: TableAssignmentModify
+    GetNamespaceAccessResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/NamespaceAction'
   securitySchemes:
     bearerAuth:
       type: http

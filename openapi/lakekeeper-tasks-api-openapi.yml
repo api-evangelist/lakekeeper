@@ -685,12 +685,160 @@ paths:
                 $ref: '#/components/schemas/IcebergErrorResponse'
 components:
   schemas:
-    WarehouseTaskInfo:
+    ListTasksResponse:
+      type: object
+      required:
+      - tasks
+      properties:
+        next-page-token:
+          type:
+          - string
+          - 'null'
+          description: Token for the next page of results
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/WarehouseTaskInfo'
+          description: List of tasks
+    ErrorModel:
+      type: object
+      description: JSON error payload returned in a response with further details on the error
+      required:
+      - message
+      - type
+      - code
+      properties:
+        code:
+          type: integer
+          format: int32
+          description: HTTP response code
+          minimum: 0
+        message:
+          type: string
+          description: Human-readable error message
+        stack:
+          type: array
+          items:
+            type: string
+        type:
+          type: string
+          description: Internal type definition of the error
+    IcebergErrorResponse:
+      type: object
+      description: JSON wrapper for all error responses (non-2xx)
+      required:
+      - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorModel'
+    ScheduleRemoveOrphanFilesTaskRequest:
+      type: object
+      description: Request body for scheduling a task.
+      required:
+      - entity
+      properties:
+        entity:
+          $ref: '#/components/schemas/WarehouseTaskEntityId'
+          description: 'Entity to schedule the task for. Unsupported entity types return
+
+            `400` from the pre-check.'
+        scheduled-for:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: 'When the task should run. Omit (or pass `null`) to run on the next
+
+            worker poll. RFC 3339 / ISO 8601 format. Must be within roughly one
+
+            year of now; further-out values return
+
+            `400 ScheduledForTooFarInFuture`.'
+          example: 2026-12-31 23:59:59+00:00
+    TabularExpirationQueueConfig:
+      type: object
+      description: Warehouse-specific configuration for the tabular expiration (Soft-Deletion) queue.
+    TaskAttempt:
+      type: object
+      required:
+      - attempt
+      - status
+      - scheduled-for
+      - created-at
+      - progress
+      properties:
+        attempt:
+          type: integer
+          format: int32
+          description: Attempt number
+        created-at:
+          type: string
+          format: date-time
+          description: When this attempt was created
+        duration:
+          type:
+          - string
+          - 'null'
+          description: How long this attempt took
+          example: PT1H30M45.5S
+        execution-details:
+          type:
+          - object
+          - 'null'
+          description: Execution details for this attempt
+        message:
+          type:
+          - string
+          - 'null'
+          description: Message associated with this attempt
+        progress:
+          type: number
+          format: float
+          description: Progress achieved in this attempt
+        scheduled-for:
+          type: string
+          format: date-time
+          description: When this attempt was scheduled for
+        started-at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: When this attempt started
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+          description: Status of this attempt
+    SetTaskLogCleanupConfig:
+      type: object
+      required:
+      - queue-config
+      properties:
+        max-seconds-since-last-heartbeat:
+          type:
+          - integer
+          - 'null'
+          format: int64
+        queue-config:
+          $ref: '#/components/schemas/TaskLogCleanupConfig'
+    GetRemoveOrphanFilesQueueConfig:
+      type: object
+      required:
+      - queue-config
+      properties:
+        max-seconds-since-last-heartbeat:
+          type:
+          - integer
+          - 'null'
+          format: int64
+        queue-config:
+          $ref: '#/components/schemas/RemoveOrphanFilesQueueConfig'
+    PurgeQueueConfig:
+      type: object
+    ProjectTaskInfo:
       type: object
       required:
       - task-id
       - project-id
-      - warehouse-id
       - queue-name
       - status
       - scheduled-for
@@ -706,18 +854,6 @@ components:
           type: string
           format: date-time
           description: When this task attempt was created
-        entity:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/WarehouseTaskEntityId'
-            description: Type of the sub-entity this task operates on. None if this is a warehouse-level task.
-        entity-name:
-          type:
-          - array
-          - 'null'
-          items:
-            type: string
-          description: Name of the entity this task operates on. None if this is a warehouse-level task.
         last-heartbeat-at:
           type:
           - string
@@ -763,89 +899,21 @@ components:
           - 'null'
           format: date-time
           description: When the task was last updated
-        warehouse-id:
-          type: string
-          format: uuid
-          description: Warehouse ID associated with the task
-    PurgeQueueConfig:
+    ControlTasksRequest:
       type: object
-    ListProjectTasksRequest:
-      type: object
+      required:
+      - action
+      - task-ids
       properties:
-        created-after:
-          type:
-          - string
-          - 'null'
-          format: date-time
-          description: Filter tasks created after this timestamp
-          example: 2025-12-31 23:59:59+00:00
-        created-before:
-          type:
-          - string
-          - 'null'
-          format: date-time
-          description: Filter tasks created before this timestamp
-          example: 2025-12-31 23:59:59+00:00
-        page-size:
-          type:
-          - integer
-          - 'null'
-          format: int64
-          description: Number of results per page
-        page-token:
-          type:
-          - string
-          - 'null'
-          description: 'Next page token, re-use the same request as for the original request,
-
-            but set this to the `next_page_token` from the previous response.
-
-            Stop iterating when no more items are returned in a page.'
-        queue-name:
-          type:
-          - array
-          - 'null'
+        action:
+          $ref: '#/components/schemas/ControlTaskAction'
+          description: The action to perform on the task
+        task-ids:
+          type: array
           items:
             type: string
-          description: Filter by one or more queue names
-        status:
-          type:
-          - array
-          - 'null'
-          items:
-            $ref: '#/components/schemas/TaskStatus'
-          description: Filter by task status
-    GetProjectTaskDetailsResponse:
-      allOf:
-      - $ref: '#/components/schemas/ProjectTaskInfo'
-        description: Most recent task information
-      - type: object
-        required:
-        - task-data
-        - attempts
-        properties:
-          attempts:
-            type: array
-            items:
-              $ref: '#/components/schemas/TaskAttempt'
-            description: History of past attempts
-          execution-details:
-            type:
-            - object
-            - 'null'
-            description: Execution details for the current attempt
-          message:
-            type:
-            - string
-            - 'null'
-            description: 'Message for the current attempt: success result details if it
-
-              succeeded, or the failure reason if it failed. `null` while the
-
-              attempt is still running or scheduled.'
-          task-data:
-            type: object
-            description: Task-specific data
+            format: uuid
+          description: Tasks to apply the action to
     ListProjectTasksResponse:
       type: object
       required:
@@ -861,7 +929,17 @@ components:
           items:
             $ref: '#/components/schemas/ProjectTaskInfo'
           description: List of tasks
-    SetTaskLogCleanupConfig:
+    ScheduleTaskResponse:
+      type: object
+      description: Response returned on a successful schedule call.
+      required:
+      - task-id
+      properties:
+        task-id:
+          type: string
+          format: uuid
+          description: The id of the newly scheduled task.
+    GetPurgeQueueConfig:
       type: object
       required:
       - queue-config
@@ -872,16 +950,7 @@ components:
           - 'null'
           format: int64
         queue-config:
-          $ref: '#/components/schemas/TaskLogCleanupConfig'
-    TaskStatus:
-      type: string
-      enum:
-      - RUNNING
-      - SCHEDULED
-      - STOPPING
-      - CANCELLED
-      - SUCCESS
-      - FAILED
+          $ref: '#/components/schemas/PurgeQueueConfig'
     GetTaskDetailsResponse:
       allOf:
       - $ref: '#/components/schemas/WarehouseTaskInfo'
@@ -913,23 +982,65 @@ components:
           task-data:
             type: object
             description: Task-specific data
-    TaskLogCleanupConfig:
+    TaskStatus:
+      type: string
+      enum:
+      - RUNNING
+      - SCHEDULED
+      - STOPPING
+      - CANCELLED
+      - SUCCESS
+      - FAILED
+    GetTabularExpirationQueueConfig:
       type: object
+      required:
+      - queue-config
       properties:
-        cleanup-period:
+        max-seconds-since-last-heartbeat:
           type:
-          - string
+          - integer
           - 'null'
-          description: 'How often to run the cleanup task in ISO8601 duration format. Defaults to once a day (P1D).
-
-            If a value below 1 day is provided, it will be set to the default of 1 day.'
-          example: PT1H30M45.5S
-        retention-period:
+          format: int64
+        queue-config:
+          $ref: '#/components/schemas/TabularExpirationQueueConfig'
+    WarehouseTaskEntityId:
+      oneOf:
+      - type: object
+        required:
+        - table-id
+        - type
+        properties:
+          table-id:
+            type: string
+            format: uuid
           type:
-          - string
-          - 'null'
-          description: How long to retain task logs before deletion in ISO8601 duration format. Defaults to 90 days.
-          example: PT1H30M45.5S
+            type: string
+            enum:
+            - table
+      - type: object
+        required:
+        - view-id
+        - type
+        properties:
+          type:
+            type: string
+            enum:
+            - view
+          view-id:
+            type: string
+            format: uuid
+      - type: object
+        required:
+        - generic-table-id
+        - type
+        properties:
+          generic-table-id:
+            type: string
+            format: uuid
+          type:
+            type: string
+            enum:
+            - generic-table
     RemoveOrphanFilesQueueConfig:
       type: object
       properties:
@@ -1048,86 +1159,6 @@ components:
             by observed rate.'
           default: 1073741824
           minimum: 0
-    ListTasksResponse:
-      type: object
-      required:
-      - tasks
-      properties:
-        next-page-token:
-          type:
-          - string
-          - 'null'
-          description: Token for the next page of results
-        tasks:
-          type: array
-          items:
-            $ref: '#/components/schemas/WarehouseTaskInfo'
-          description: List of tasks
-    GetTaskLogCleanupConfig:
-      type: object
-      required:
-      - queue-config
-      properties:
-        max-seconds-since-last-heartbeat:
-          type:
-          - integer
-          - 'null'
-          format: int64
-        queue-config:
-          $ref: '#/components/schemas/TaskLogCleanupConfig'
-    TabularExpirationQueueConfig:
-      type: object
-      description: Warehouse-specific configuration for the tabular expiration (Soft-Deletion) queue.
-    TaskAttempt:
-      type: object
-      required:
-      - attempt
-      - status
-      - scheduled-for
-      - created-at
-      - progress
-      properties:
-        attempt:
-          type: integer
-          format: int32
-          description: Attempt number
-        created-at:
-          type: string
-          format: date-time
-          description: When this attempt was created
-        duration:
-          type:
-          - string
-          - 'null'
-          description: How long this attempt took
-          example: PT1H30M45.5S
-        execution-details:
-          type:
-          - object
-          - 'null'
-          description: Execution details for this attempt
-        message:
-          type:
-          - string
-          - 'null'
-          description: Message associated with this attempt
-        progress:
-          type: number
-          format: float
-          description: Progress achieved in this attempt
-        scheduled-for:
-          type: string
-          format: date-time
-          description: When this attempt was scheduled for
-        started-at:
-          type:
-          - string
-          - 'null'
-          format: date-time
-          description: When this attempt started
-        status:
-          $ref: '#/components/schemas/TaskStatus'
-          description: Status of this attempt
     ScheduleExpireSnapshotsTaskRequest:
       type: object
       description: Request body for scheduling a task.
@@ -1152,42 +1183,6 @@ components:
 
             `400 ScheduledForTooFarInFuture`.'
           example: 2026-12-31 23:59:59+00:00
-    ScheduleRemoveOrphanFilesTaskRequest:
-      type: object
-      description: Request body for scheduling a task.
-      required:
-      - entity
-      properties:
-        entity:
-          $ref: '#/components/schemas/WarehouseTaskEntityId'
-          description: 'Entity to schedule the task for. Unsupported entity types return
-
-            `400` from the pre-check.'
-        scheduled-for:
-          type:
-          - string
-          - 'null'
-          format: date-time
-          description: 'When the task should run. Omit (or pass `null`) to run on the next
-
-            worker poll. RFC 3339 / ISO 8601 format. Must be within roughly one
-
-            year of now; further-out values return
-
-            `400 ScheduledForTooFarInFuture`.'
-          example: 2026-12-31 23:59:59+00:00
-    GetTabularExpirationQueueConfig:
-      type: object
-      required:
-      - queue-config
-      properties:
-        max-seconds-since-last-heartbeat:
-          type:
-          - integer
-          - 'null'
-          format: int64
-        queue-config:
-          $ref: '#/components/schemas/TabularExpirationQueueConfig'
     GetExpireSnapshotsQueueConfig:
       type: object
       required:
@@ -1200,19 +1195,7 @@ components:
           format: int64
         queue-config:
           $ref: '#/components/schemas/ExpireSnapshotsQueueConfig'
-    SetExpireSnapshotsQueueConfig:
-      type: object
-      required:
-      - queue-config
-      properties:
-        max-seconds-since-last-heartbeat:
-          type:
-          - integer
-          - 'null'
-          format: int64
-        queue-config:
-          $ref: '#/components/schemas/ExpireSnapshotsQueueConfig'
-    GetPurgeQueueConfig:
+    SetPurgeQueueConfig:
       type: object
       required:
       - queue-config
@@ -1224,11 +1207,88 @@ components:
           format: int64
         queue-config:
           $ref: '#/components/schemas/PurgeQueueConfig'
-    ProjectTaskInfo:
+    WarehouseTaskEntityFilter:
+      oneOf:
+      - type: object
+        description: Get tasks for a specific table
+        required:
+        - table-id
+        - type
+        properties:
+          table-id:
+            type: string
+            format: uuid
+          type:
+            type: string
+            enum:
+            - table
+      - type: object
+        description: Get tasks for a specific view
+        required:
+        - view-id
+        - type
+        properties:
+          type:
+            type: string
+            enum:
+            - view
+          view-id:
+            type: string
+            format: uuid
+      - type: object
+        description: Get tasks for a specific generic table
+        required:
+        - generic-table-id
+        - type
+        properties:
+          generic-table-id:
+            type: string
+            format: uuid
+          type:
+            type: string
+            enum:
+            - generic-table
+      - type: object
+        description: 'Get Warehouse-level tasks which are not associated with a specific entity
+
+          inside the warehouse'
+        required:
+        - type
+        properties:
+          type:
+            type: string
+            enum:
+            - warehouse
+    SetRemoveOrphanFilesQueueConfig:
+      type: object
+      required:
+      - queue-config
+      properties:
+        max-seconds-since-last-heartbeat:
+          type:
+          - integer
+          - 'null'
+          format: int64
+        queue-config:
+          $ref: '#/components/schemas/RemoveOrphanFilesQueueConfig'
+    SetTabularExpirationQueueConfig:
+      type: object
+      required:
+      - queue-config
+      properties:
+        max-seconds-since-last-heartbeat:
+          type:
+          - integer
+          - 'null'
+          format: int64
+        queue-config:
+          $ref: '#/components/schemas/TabularExpirationQueueConfig'
+    WarehouseTaskInfo:
       type: object
       required:
       - task-id
       - project-id
+      - warehouse-id
       - queue-name
       - status
       - scheduled-for
@@ -1244,6 +1304,18 @@ components:
           type: string
           format: date-time
           description: When this task attempt was created
+        entity:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/WarehouseTaskEntityId'
+            description: Type of the sub-entity this task operates on. None if this is a warehouse-level task.
+        entity-name:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+          description: Name of the entity this task operates on. None if this is a warehouse-level task.
         last-heartbeat-at:
           type:
           - string
@@ -1289,45 +1361,106 @@ components:
           - 'null'
           format: date-time
           description: When the task was last updated
-    ControlTasksRequest:
+        warehouse-id:
+          type: string
+          format: uuid
+          description: Warehouse ID associated with the task
+    SetExpireSnapshotsQueueConfig:
       type: object
       required:
-      - action
-      - task-ids
+      - queue-config
       properties:
-        action:
-          $ref: '#/components/schemas/ControlTaskAction'
-          description: The action to perform on the task
-        task-ids:
-          type: array
+        max-seconds-since-last-heartbeat:
+          type:
+          - integer
+          - 'null'
+          format: int64
+        queue-config:
+          $ref: '#/components/schemas/ExpireSnapshotsQueueConfig'
+    ListTasksRequest:
+      type: object
+      properties:
+        created-after:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Filter tasks created after this timestamp
+          example: 2025-12-31 23:59:59+00:00
+        created-before:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Filter tasks created before this timestamp
+          example: 2025-12-31 23:59:59+00:00
+        entities:
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/WarehouseTaskEntityFilter'
+          description: Filter by specific entity
+        page-size:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          description: Number of results per page
+        page-token:
+          type:
+          - string
+          - 'null'
+          description: 'Next page token, re-use the same request as for the original request,
+
+            but set this to the `next_page_token` from the previous response.
+
+            Stop iterating when no more items are returned in a page.'
+        queue-name:
+          type:
+          - array
+          - 'null'
           items:
             type: string
-            format: uuid
-          description: Tasks to apply the action to
-    SetPurgeQueueConfig:
-      type: object
-      required:
-      - queue-config
-      properties:
-        max-seconds-since-last-heartbeat:
+          description: Filter by one or more queue names
+        status:
           type:
-          - integer
+          - array
           - 'null'
-          format: int64
-        queue-config:
-          $ref: '#/components/schemas/PurgeQueueConfig'
-    SetRemoveOrphanFilesQueueConfig:
-      type: object
-      required:
-      - queue-config
-      properties:
-        max-seconds-since-last-heartbeat:
-          type:
-          - integer
-          - 'null'
-          format: int64
-        queue-config:
-          $ref: '#/components/schemas/RemoveOrphanFilesQueueConfig'
+          items:
+            $ref: '#/components/schemas/TaskStatus'
+          description: Filter by task status
+    GetProjectTaskDetailsResponse:
+      allOf:
+      - $ref: '#/components/schemas/ProjectTaskInfo'
+        description: Most recent task information
+      - type: object
+        required:
+        - task-data
+        - attempts
+        properties:
+          attempts:
+            type: array
+            items:
+              $ref: '#/components/schemas/TaskAttempt'
+            description: History of past attempts
+          execution-details:
+            type:
+            - object
+            - 'null'
+            description: Execution details for the current attempt
+          message:
+            type:
+            - string
+            - 'null'
+            description: 'Message for the current attempt: success result details if it
+
+              succeeded, or the failure reason if it failed. `null` while the
+
+              attempt is still running or scheduled.'
+          task-data:
+            type: object
+            description: Task-specific data
     ExpireSnapshotsQueueConfig:
       type: object
       description: 'Warehouse-specific configuration for the expiration queue.
@@ -1391,80 +1524,69 @@ components:
 
             Can be overridden on a per-table level with the table property `history.expire.min-snapshots-to-keep`.'
           default: 1
-    GetRemoveOrphanFilesQueueConfig:
+    TaskLogCleanupConfig:
       type: object
-      required:
-      - queue-config
       properties:
-        max-seconds-since-last-heartbeat:
+        cleanup-period:
+          type:
+          - string
+          - 'null'
+          description: 'How often to run the cleanup task in ISO8601 duration format. Defaults to once a day (P1D).
+
+            If a value below 1 day is provided, it will be set to the default of 1 day.'
+          example: PT1H30M45.5S
+        retention-period:
+          type:
+          - string
+          - 'null'
+          description: How long to retain task logs before deletion in ISO8601 duration format. Defaults to 90 days.
+          example: PT1H30M45.5S
+    ListProjectTasksRequest:
+      type: object
+      properties:
+        created-after:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Filter tasks created after this timestamp
+          example: 2025-12-31 23:59:59+00:00
+        created-before:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Filter tasks created before this timestamp
+          example: 2025-12-31 23:59:59+00:00
+        page-size:
           type:
           - integer
           - 'null'
           format: int64
-        queue-config:
-          $ref: '#/components/schemas/RemoveOrphanFilesQueueConfig'
-    WarehouseTaskEntityFilter:
-      oneOf:
-      - type: object
-        description: Get tasks for a specific table
-        required:
-        - table-id
-        - type
-        properties:
-          table-id:
-            type: string
-            format: uuid
+          description: Number of results per page
+        page-token:
           type:
-            type: string
-            enum:
-            - table
-      - type: object
-        description: Get tasks for a specific view
-        required:
-        - view-id
-        - type
-        properties:
-          type:
-            type: string
-            enum:
-            - view
-          view-id:
-            type: string
-            format: uuid
-      - type: object
-        description: Get tasks for a specific generic table
-        required:
-        - generic-table-id
-        - type
-        properties:
-          generic-table-id:
-            type: string
-            format: uuid
-          type:
-            type: string
-            enum:
-            - generic-table
-      - type: object
-        description: 'Get Warehouse-level tasks which are not associated with a specific entity
+          - string
+          - 'null'
+          description: 'Next page token, re-use the same request as for the original request,
 
-          inside the warehouse'
-        required:
-        - type
-        properties:
+            but set this to the `next_page_token` from the previous response.
+
+            Stop iterating when no more items are returned in a page.'
+        queue-name:
           type:
+          - array
+          - 'null'
+          items:
             type: string
-            enum:
-            - warehouse
-    ScheduleTaskResponse:
-      type: object
-      description: Response returned on a successful schedule call.
-      required:
-      - task-id
-      properties:
-        task-id:
-          type: string
-          format: uuid
-          description: The id of the newly scheduled task.
+          description: Filter by one or more queue names
+        status:
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/TaskStatus'
+          description: Filter by task status
     ControlTaskAction:
       oneOf:
       - type: object
@@ -1515,121 +1637,7 @@ components:
             format: date-time
             description: The time to run the task at
             example: 2025-12-31 23:59:59+00:00
-    ErrorModel:
-      type: object
-      description: JSON error payload returned in a response with further details on the error
-      required:
-      - message
-      - type
-      - code
-      properties:
-        code:
-          type: integer
-          format: int32
-          description: HTTP response code
-          minimum: 0
-        message:
-          type: string
-          description: Human-readable error message
-        stack:
-          type: array
-          items:
-            type: string
-        type:
-          type: string
-          description: Internal type definition of the error
-    ListTasksRequest:
-      type: object
-      properties:
-        created-after:
-          type:
-          - string
-          - 'null'
-          format: date-time
-          description: Filter tasks created after this timestamp
-          example: 2025-12-31 23:59:59+00:00
-        created-before:
-          type:
-          - string
-          - 'null'
-          format: date-time
-          description: Filter tasks created before this timestamp
-          example: 2025-12-31 23:59:59+00:00
-        entities:
-          type:
-          - array
-          - 'null'
-          items:
-            $ref: '#/components/schemas/WarehouseTaskEntityFilter'
-          description: Filter by specific entity
-        page-size:
-          type:
-          - integer
-          - 'null'
-          format: int64
-          description: Number of results per page
-        page-token:
-          type:
-          - string
-          - 'null'
-          description: 'Next page token, re-use the same request as for the original request,
-
-            but set this to the `next_page_token` from the previous response.
-
-            Stop iterating when no more items are returned in a page.'
-        queue-name:
-          type:
-          - array
-          - 'null'
-          items:
-            type: string
-          description: Filter by one or more queue names
-        status:
-          type:
-          - array
-          - 'null'
-          items:
-            $ref: '#/components/schemas/TaskStatus'
-          description: Filter by task status
-    WarehouseTaskEntityId:
-      oneOf:
-      - type: object
-        required:
-        - table-id
-        - type
-        properties:
-          table-id:
-            type: string
-            format: uuid
-          type:
-            type: string
-            enum:
-            - table
-      - type: object
-        required:
-        - view-id
-        - type
-        properties:
-          type:
-            type: string
-            enum:
-            - view
-          view-id:
-            type: string
-            format: uuid
-      - type: object
-        required:
-        - generic-table-id
-        - type
-        properties:
-          generic-table-id:
-            type: string
-            format: uuid
-          type:
-            type: string
-            enum:
-            - generic-table
-    SetTabularExpirationQueueConfig:
+    GetTaskLogCleanupConfig:
       type: object
       required:
       - queue-config
@@ -1640,15 +1648,7 @@ components:
           - 'null'
           format: int64
         queue-config:
-          $ref: '#/components/schemas/TabularExpirationQueueConfig'
-    IcebergErrorResponse:
-      type: object
-      description: JSON wrapper for all error responses (non-2xx)
-      required:
-      - error
-      properties:
-        error:
-          $ref: '#/components/schemas/ErrorModel'
+          $ref: '#/components/schemas/TaskLogCleanupConfig'
   securitySchemes:
     bearerAuth:
       type: http
