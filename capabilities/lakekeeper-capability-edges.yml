@@ -1,0 +1,67 @@
+slug: lakekeeper
+provider: Lakekeeper
+generated_by: planning/capability-mapping/scripts/classify_capabilities.py
+model: claude-opus-5
+frame:
+- Software & Technology
+min_confidence: 0.7
+capability_model:
+  source: https://github.com/vincentmakes/turbo-ea-capabilities
+  license: CC-BY-4.0
+  attribution: Turbo EA Capabilities by Vincent Verdet — Turbo EA, https://github.com/vincentmakes/turbo-ea-capabilities,
+    CC BY 4.0
+  notice: NOTICE
+edge_count: 5
+edges:
+- tag: permissions-openfga
+  spec_file: lakekeeper-permissions-openfga-api-openapi.yml
+  capability_id: BC-620.20
+  capability_id_l1: BC-620
+  capability_name: Identity & Access Management
+  confidence: 0.85
+  evidence: POST /management/v1/permissions/check check Check if a specific action is allowed on the given
+    object; POST /management/v1/permissions/namespace/{namespace_id}/assignments update_namespace_assignments_by_id
+    Update permissions for a namespace
+  reason: Permission checks and user/role assignment management over catalog objects is squarely authorisation
+    and access management.
+- tag: Authorization
+  spec_file: lakekeeper-authorization-api-openapi.yml
+  capability_id: BC-620.20
+  capability_id_l1: BC-620
+  capability_name: Identity & Access Management
+  confidence: 0.8
+  evidence: POST /management/v1/action/batch-check batch_check_actions 'Batch Check Catalog Actions';
+    schemas UserOrRole, LakekeeperTableAction, CatalogActionCheckItem
+  reason: Permission checking for users/roles against catalog objects — authorization decisions, which
+    is Identity & Access Management. Vendor description confirms 'If Authorization is enabled, permissions
+    can also be managed.'
+- tag: Role
+  spec_file: lakekeeper-role-api-openapi.yml
+  capability_id: BC-620.20
+  capability_id_l1: BC-620
+  capability_name: Identity & Access Management
+  confidence: 0.8
+  evidence: POST /management/v1/role create_role Create Role; POST /management/v1/role/{role_id}/members
+    add_role_members Add Role Members; schema RoleMembership
+  reason: Operations create roles and manage role membership hierarchies for principals in the catalog
+    — role-based access administration, i.e. Identity & Access Management.
+- tag: User
+  spec_file: lakekeeper-user-api-openapi.yml
+  capability_id: BC-620.20
+  capability_id_l1: BC-620
+  capability_name: Identity & Access Management
+  confidence: 0.8
+  evidence: POST /management/v1/user create_user Provision User; GET /management/v1/user/{user_id}/roles
+    list_user_roles List User Roles; GET /management/v1/whoami whoami
+  reason: User provisioning, replacement, deletion and role membership lookup for catalog principals is
+    identity and access administration, not HR employee records.
+- tag: permissions-cedar
+  spec_file: lakekeeper-permissions-cedar-api-openapi.yml
+  capability_id: BC-620.20
+  capability_id_l1: BC-620
+  capability_name: Identity & Access Management
+  confidence: 0.75
+  evidence: POST /management/v1/permissions/cedar/policy-list list_cedar_policies Get active Cedar policies;
+    POST .../resolve-entities resolve_cedar_entities
+  reason: Inspection of active Cedar authorisation policies, schema and principal/resource entities —
+    authorisation policy administration, i.e. access management.
