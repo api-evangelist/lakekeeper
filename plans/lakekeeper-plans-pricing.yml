@@ -54,3 +54,29 @@ gaps:
 - >-
   "Reserved capacity and data volume" and "API calls and processed data volume" name the meters but not the
   units, so no cost can be estimated without a sales conversation.
+x-canonical:
+  generated: '2026-10-08'
+  vocabulary: all/0-working/economics/plans-canonical.yml
+  models:
+  - free
+  units: []
+  plans:
+  - name: Lakekeeper (Open Source)
+    access: other
+    model: free
+    model_how: derived
+    units: []
+    periods:
+    - one-time
+  - name: Lakekeeper+ (Self Managed)
+    access: other
+    model: unstated
+    model_how: derived
+    units: []
+    periods: []
+  - name: Lakekeeper Cloud (Fully Managed)
+    access: other
+    model: unstated
+    model_how: derived
+    units: []
+    periods: []
