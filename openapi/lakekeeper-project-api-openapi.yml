@@ -364,123 +364,14 @@ paths:
       deprecated: true
 components:
   schemas:
-    GetLakekeeperProjectActionsResponse:
-      type: object
-      required:
-      - allowed-actions
-      properties:
-        allowed-actions:
-          type: array
-          items:
-            $ref: '#/components/schemas/LakekeeperProjectActionKind'
-    CreateProjectRequest:
-      type: object
-      required:
-      - project-name
-      properties:
-        project-id:
-          type:
-          - string
-          - 'null'
-          description: 'Request a specific project ID - optional.
-
-            If not provided, a new project ID will be generated (recommended).'
-        project-name:
-          type: string
-          description: Name of the project to create.
-    ErrorModel:
-      type: object
-      description: JSON error payload returned in a response with further details on the error
-      required:
-      - message
-      - type
-      - code
-      properties:
-        code:
-          type: integer
-          format: int32
-          description: HTTP response code
-          minimum: 0
-        message:
-          type: string
-          description: Human-readable error message
-        stack:
-          type: array
-          items:
-            type: string
-        type:
-          type: string
-          description: Internal type definition of the error
-    IcebergErrorResponse:
-      type: object
-      description: JSON wrapper for all error responses (non-2xx)
-      required:
-      - error
-      properties:
-        error:
-          $ref: '#/components/schemas/ErrorModel'
-    GetProjectResponse:
+    CreateProjectResponse:
       type: object
       required:
       - project-id
-      - project-name
       properties:
         project-id:
           type: string
-          description: ID of the project.
-        project-name:
-          type: string
-          description: Name of the project
-    TimeWindowSelector:
-      oneOf:
-      - type: object
-        required:
-        - end
-        - interval
-        - type
-        properties:
-          end:
-            type: string
-            format: date-time
-            description: 'End timestamp of the time window
-
-              Specify'
-            example: 2023-12-31 23:59:59+00:00
-          interval:
-            type: string
-            description: 'Duration/span of the time window
-
-
-              The returned statistics will be for the time window from `end` - `interval` to `end`.
-
-              Specify a ISO8601 duration string, e.g. `PT1H` for 1 hour, `P1D` for 1 day.'
-            example: P1D
-          type:
-            type: string
-            enum:
-            - window
-        example:
-          type: window
-          end: 2023-12-31 23:59:59+00:00
-          interval: P1D
-      - type: object
-        required:
-        - token
-        - type
-        properties:
-          token:
-            type: string
-            description: 'Opaque Token from previous response for paginating through time windows
-
-
-              Use the `next_page_token` or `previous_page_token` from a previous response'
-          type:
-            type: string
-            enum:
-            - page-token
-        example:
-          type: page-token
-          token: xyz
+          description: ID of the created project.
     LakekeeperProjectActionKind:
       oneOf:
       - type: object
@@ -595,6 +486,24 @@ components:
             type: string
             enum:
             - control_project_tasks
+    IcebergErrorResponse:
+      type: object
+      description: JSON wrapper for all error responses (non-2xx)
+      required:
+      - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorModel'
+    ListProjectsResponse:
+      type: object
+      required:
+      - projects
+      properties:
+        projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/GetProjectResponse'
+          description: List of projects
     RenameProjectRequest:
       type: object
       required:
@@ -603,6 +512,18 @@ components:
         new-name:
           type: string
           description: New name for the project.
+    GetProjectResponse:
+      type: object
+      required:
+      - project-id
+      - project-name
+      properties:
+        project-id:
+          type: string
+          description: ID of the project.
+        project-name:
+          type: string
+          description: Name of the project
     WarehouseFilter:
       oneOf:
       - type: object
@@ -636,6 +557,65 @@ components:
             type: string
             enum:
             - all
+    GetLakekeeperProjectActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LakekeeperProjectActionKind'
+    TimeWindowSelector:
+      oneOf:
+      - type: object
+        required:
+        - end
+        - interval
+        - type
+        properties:
+          end:
+            type: string
+            format: date-time
+            description: 'End timestamp of the time window
+
+              Specify'
+            example: 2023-12-31 23:59:59+00:00
+          interval:
+            type: string
+            description: 'Duration/span of the time window
+
+
+              The returned statistics will be for the time window from `end` - `interval` to `end`.
+
+              Specify a ISO8601 duration string, e.g. `PT1H` for 1 hour, `P1D` for 1 day.'
+            example: P1D
+          type:
+            type: string
+            enum:
+            - window
+        example:
+          type: window
+          end: 2023-12-31 23:59:59+00:00
+          interval: P1D
+      - type: object
+        required:
+        - token
+        - type
+        properties:
+          token:
+            type: string
+            description: 'Opaque Token from previous response for paginating through time windows
+
+
+              Use the `next_page_token` or `previous_page_token` from a previous response'
+          type:
+            type: string
+            enum:
+            - page-token
+        example:
+          type: page-token
+          token: xyz
     GetEndpointStatisticsRequest:
       type: object
       required:
@@ -671,14 +651,59 @@ components:
             Can return statistics for a specific warehouse, all warehouses or requests that could not be
 
             associated to any warehouse.'
-    CreateProjectResponse:
+    EndpointStatisticsResponse:
       type: object
       required:
-      - project-id
+      - timestamps
+      - called-endpoints
+      - previous-page-token
+      - next-page-token
       properties:
-        project-id:
+        called-endpoints:
+          type: array
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/EndpointStatistic'
+          description: 'Array of arrays of statistics detailing each called endpoint for each `timestamp`.
+
+
+            See docs of `timestamps` for more details.'
+        next-page-token:
           type: string
-          description: ID of the created project.
+          description: 'Token to get the next page of results.
+
+
+            Inverse of `previous-page-token`, see its documentation above.'
+        previous-page-token:
+          type: string
+          description: 'Token to get the previous page of results.
+
+
+            Endpoint statistics are not paginated through page-limits, we paginate them by stepping
+
+            through time. By default, the list-statistics endpoint will return all statistics for
+
+            `now()` - 1 day to `now()`. In the request, you can specify a `range_specifier` to set the end
+
+            date and step interval. The `previous-page-token` will then move to the neighboring window.
+
+            E.g. in the default case of `now()` and 1 day, it''d be `now()` - 2 days to `now()` - 1 day.'
+        timestamps:
+          type: array
+          items:
+            type: string
+            format: date-time
+          description: 'Array of timestamps indicating the time at which each entry in the `called_endpoints` array
+
+            is valid.
+
+
+            We lazily create a new statistics entry every hour, in between hours, the existing entry
+
+            is being updated. If any endpoint is called in the following hour, there''ll be an entry in
+
+            `timestamps` for the following hour. If not, then there''ll be no entry.'
     EndpointStatistic:
       type: object
       required:
@@ -745,69 +770,44 @@ components:
             endpoints cannot be associated with a warehouse, e.g. warehouse creation or user management
 
             will not have a `warehouse-id`'
-    EndpointStatisticsResponse:
+    ErrorModel:
       type: object
+      description: JSON error payload returned in a response with further details on the error
       required:
-      - timestamps
-      - called-endpoints
-      - previous-page-token
-      - next-page-token
+      - message
+      - type
+      - code
       properties:
-        called-endpoints:
-          type: array
-          items:
-            type: array
-            items:
-              $ref: '#/components/schemas/EndpointStatistic'
-          description: 'Array of arrays of statistics detailing each called endpoint for each `timestamp`.
-
-
-            See docs of `timestamps` for more details.'
-        next-page-token:
+        code:
+          type: integer
+          format: int32
+          description: HTTP response code
+          minimum: 0
+        message:
           type: string
-          description: 'Token to get the next page of results.
-
-
-            Inverse of `previous-page-token`, see its documentation above.'
-        previous-page-token:
-          type: string
-          description: 'Token to get the previous page of results.
-
-
-            Endpoint statistics are not paginated through page-limits, we paginate them by stepping
-
-            through time. By default, the list-statistics endpoint will return all statistics for
-
-            `now()` - 1 day to `now()`. In the request, you can specify a `range_specifier` to set the end
-
-            date and step interval. The `previous-page-token` will then move to the neighboring window.
-
-            E.g. in the default case of `now()` and 1 day, it''d be `now()` - 2 days to `now()` - 1 day.'
-        timestamps:
+          description: Human-readable error message
+        stack:
           type: array
           items:
             type: string
-            format: date-time
-          description: 'Array of timestamps indicating the time at which each entry in the `called_endpoints` array
-
-            is valid.
-
-
-            We lazily create a new statistics entry every hour, in between hours, the existing entry
-
-            is being updated. If any endpoint is called in the following hour, there''ll be an entry in
-
-            `timestamps` for the following hour. If not, then there''ll be no entry.'
-    ListProjectsResponse:
+        type:
+          type: string
+          description: Internal type definition of the error
+    CreateProjectRequest:
       type: object
       required:
-      - projects
+      - project-name
       properties:
-        projects:
-          type: array
-          items:
-            $ref: '#/components/schemas/GetProjectResponse'
-          description: List of projects
+        project-id:
+          type:
+          - string
+          - 'null'
+          description: 'Request a specific project ID - optional.
+
+            If not provided, a new project ID will be generated (recommended).'
+        project-name:
+          type: string
+          description: Name of the project to create.
   securitySchemes:
     bearerAuth:
       type: http

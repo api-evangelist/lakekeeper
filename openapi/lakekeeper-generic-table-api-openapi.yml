@@ -239,19 +239,67 @@ paths:
                 $ref: '#/components/schemas/IcebergErrorResponse'
 components:
   schemas:
-    ListGenericTablesResponse:
+    ErrorModel:
       type: object
+      description: JSON error payload returned in a response with further details on the error
       required:
-      - identifiers
+      - message
+      - type
+      - code
       properties:
-        identifiers:
+        code:
+          type: integer
+          format: int32
+          description: HTTP response code
+          minimum: 0
+        message:
+          type: string
+          description: Human-readable error message
+        stack:
           type: array
           items:
-            $ref: '#/components/schemas/GenericTableIdentifier'
-        next-page-token:
+            type: string
+        type:
+          type: string
+          description: Internal type definition of the error
+    GenericTableIdentifier:
+      type: object
+      required:
+      - namespace
+      - name
+      properties:
+        format:
           type:
           - string
           - 'null'
+        id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        name:
+          type: string
+        namespace:
+          type: array
+          items:
+            type: string
+    IcebergErrorResponse:
+      type: object
+      description: JSON wrapper for all error responses (non-2xx)
+      required:
+      - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorModel'
+    LoadGenericTableCredentialsResponse:
+      type: object
+      required:
+      - storage-credentials
+      properties:
+        storage-credentials:
+          type: array
+          items:
+            $ref: '#/components/schemas/StorageCredential'
     StorageCredential:
       type: object
       required:
@@ -266,6 +314,55 @@ components:
             type: string
         prefix:
           type: string
+    RenameGenericTableRequest:
+      type: object
+      required:
+      - source
+      - destination
+      properties:
+        destination:
+          $ref: '#/components/schemas/RenameGenericTableTarget'
+        source:
+          $ref: '#/components/schemas/RenameGenericTableTarget'
+    CreateGenericTableRequest:
+      type: object
+      required:
+      - name
+      - format
+      properties:
+        base-location:
+          type:
+          - string
+          - 'null'
+        doc:
+          type:
+          - string
+          - 'null'
+        format:
+          type: string
+        name:
+          type: string
+        properties:
+          type: object
+          additionalProperties:
+            type: string
+          propertyNames:
+            type: string
+        schema: {}
+        statistics: {}
+    ListGenericTablesResponse:
+      type: object
+      required:
+      - identifiers
+      properties:
+        identifiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/GenericTableIdentifier'
+        next-page-token:
+          type:
+          - string
+          - 'null'
     GenericTableData:
       type: object
       required:
@@ -295,72 +392,18 @@ components:
           description: Whether the generic table is protected from being deleted.
         schema: {}
         statistics: {}
-    LoadGenericTableCredentialsResponse:
+    RenameGenericTableTarget:
       type: object
       required:
-      - storage-credentials
-      properties:
-        storage-credentials:
-          type: array
-          items:
-            $ref: '#/components/schemas/StorageCredential'
-    ErrorModel:
-      type: object
-      description: JSON error payload returned in a response with further details on the error
-      required:
-      - message
-      - type
-      - code
-      properties:
-        code:
-          type: integer
-          format: int32
-          description: HTTP response code
-          minimum: 0
-        message:
-          type: string
-          description: Human-readable error message
-        stack:
-          type: array
-          items:
-            type: string
-        type:
-          type: string
-          description: Internal type definition of the error
-    IcebergErrorResponse:
-      type: object
-      description: JSON wrapper for all error responses (non-2xx)
-      required:
-      - error
-      properties:
-        error:
-          $ref: '#/components/schemas/ErrorModel'
-    CreateGenericTableRequest:
-      type: object
-      required:
+      - namespace
       - name
-      - format
       properties:
-        base-location:
-          type:
-          - string
-          - 'null'
-        doc:
-          type:
-          - string
-          - 'null'
-        format:
-          type: string
         name:
           type: string
-        properties:
-          type: object
-          additionalProperties:
+        namespace:
+          type: array
+          items:
             type: string
-          propertyNames:
-            type: string
-        schema: {}
-        statistics: {}
     LoadGenericTableResponse:
       type: object
       required:
@@ -382,49 +425,6 @@ components:
             $ref: '#/components/schemas/StorageCredential'
         table:
           $ref: '#/components/schemas/GenericTableData'
-    GenericTableIdentifier:
-      type: object
-      required:
-      - namespace
-      - name
-      properties:
-        format:
-          type:
-          - string
-          - 'null'
-        id:
-          type:
-          - string
-          - 'null'
-          format: uuid
-        name:
-          type: string
-        namespace:
-          type: array
-          items:
-            type: string
-    RenameGenericTableTarget:
-      type: object
-      required:
-      - namespace
-      - name
-      properties:
-        name:
-          type: string
-        namespace:
-          type: array
-          items:
-            type: string
-    RenameGenericTableRequest:
-      type: object
-      required:
-      - source
-      - destination
-      properties:
-        destination:
-          $ref: '#/components/schemas/RenameGenericTableTarget'
-        source:
-          $ref: '#/components/schemas/RenameGenericTableTarget'
   securitySchemes:
     bearerAuth:
       type: http

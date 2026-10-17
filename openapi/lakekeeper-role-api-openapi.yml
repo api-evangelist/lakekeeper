@@ -772,6 +772,72 @@ paths:
                 $ref: '#/components/schemas/IcebergErrorResponse'
 components:
   schemas:
+    ListRoleMembersResponse:
+      type: object
+      description: 'One page of a role''s members (users ∪ member roles) — direct for `/members`,
+
+        transitive for `/members/transitive`.'
+      required:
+      - members
+      properties:
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleMember'
+        next-page-token:
+          type:
+          - string
+          - 'null'
+          description: 'Token for the next page; `null`/absent once the listing is exhausted.
+
+            Note for SDK authors: **stop when `next-page-token` is null/absent.** The
+
+            final page of results may itself return a null token, so don''t rely on
+
+            receiving a separate trailing empty page — keep requesting until the token
+
+            is null.'
+    RoleMembership:
+      type: object
+      description: 'A role''s display identity in a membership listing: the role-member variant of
+
+        [`RoleMember`], and the item type of `/member-of` and `/user/{id}/roles`.
+
+        `ident` (`provider/source-id`) is the stable external handle a client references
+
+        the role by; `id` is the internal UUID. All fields are always present — a role
+
+        whose id no longer resolves in the catalog (a dangling authorizer edge) is
+
+        dropped from the listing and logged, never surfaced with a null identity.'
+      required:
+      - id
+      - ident
+      - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        ident:
+          type: string
+        name:
+          type: string
+    SearchRoleResponse:
+      type: object
+      required:
+      - roles
+      properties:
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+          description: List of roles matching the search criteria
+    UserType:
+      type: string
+      description: Type of a User
+      enum:
+      - human
+      - application
     RoleMemberRef:
       oneOf:
       - type: object
@@ -806,6 +872,88 @@ components:
         (remove returns `204` with no body). Unlike [`RoleMember`] it is never hydrated
 
         (no display name): it names *which* principal, not its display identity.'
+    AddRoleMembersRequest:
+      type: object
+      description: 'Request body for `POST /role/{id}/members`. Batch: adds every listed member to
+
+        the role atomically (all-or-nothing).'
+      required:
+      - members
+      properties:
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleMemberRef'
+    CreateRoleRequest:
+      type: object
+      required:
+      - name
+      properties:
+        description:
+          type:
+          - string
+          - 'null'
+          description: Description of the role
+        name:
+          type: string
+          description: Name of the role to create
+        project-id:
+          type:
+          - string
+          - 'null'
+          description: 'Project ID in which the role is created.
+
+            Deprecated: Please use the `x-project-id` header instead.'
+        provider-id:
+          type:
+          - string
+          - 'null'
+          description: 'Provider that owns this role (e.g. `"lakekeeper"`, `"oidc"`).
+
+            Must be provided together with `source-id`. Omit both to let the server
+
+            assign `provider-id = "lakekeeper"` and a fresh UUIDv7 `source-id`.'
+        source-id:
+          type:
+          - string
+          - 'null'
+          description: 'Identifier of the role in the provider.
+
+            Must be provided together with `provider-id`.'
+    UserMembership:
+      type: object
+      description: 'A user''s identity in a membership listing (the `user` variant of
+
+        [`RoleMember`]). All identity fields are nullable: under an assignment-managing
+
+        authorizer (e.g. OpenFGA) a member may be assigned but not yet provisioned in
+
+        the catalog, so only the `id` is known. `name`/`email` are also `null` for a
+
+        provisioned-but-nameless user.'
+      required:
+      - id
+      properties:
+        email:
+          type:
+          - string
+          - 'null'
+          description: Email; `null` if unknown.
+        id:
+          type: string
+          description: '`IdP` subject id of the user.'
+        name:
+          type:
+          - string
+          - 'null'
+          description: Display name; `null` when the user has no name.
+        user-type:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/UserType'
+            description: 'Whether the principal is a human or an application; `null` when the user
+
+              is assigned but not provisioned in the catalog (the id is all that''s known).'
     AddRoleMembersResponse:
       type: object
       description: 'Response for `POST /role/{id}/members`: the requested members confirmed present
@@ -834,62 +982,66 @@ components:
         source-id:
           type: string
           description: New Source ID / External ID of the role.
-    ErrorModel:
+    RoleMemberType:
+      type: string
+      description: Kind of a role member. Serializes as `"user"` / `"role"`.
+      enum:
+      - user
+      - role
+    GetLakekeeperRoleActionsResponse:
       type: object
-      description: JSON error payload returned in a response with further details on the error
       required:
-      - message
-      - type
-      - code
+      - allowed-actions
       properties:
-        code:
-          type: integer
-          format: int32
-          description: HTTP response code
-          minimum: 0
-        message:
-          type: string
-          description: Human-readable error message
-        stack:
+        allowed-actions:
           type: array
           items:
-            type: string
-        type:
-          type: string
-          description: Internal type definition of the error
-    IcebergErrorResponse:
+            $ref: '#/components/schemas/LakekeeperRoleActionKind'
+    RoleMetadata:
       type: object
-      description: JSON wrapper for all error responses (non-2xx)
-      required:
-      - error
-      properties:
-        error:
-          $ref: '#/components/schemas/ErrorModel'
-    ListRoleMembersResponse:
-      type: object
-      description: 'One page of a role''s members (users ∪ member roles) — direct for `/members`,
+      description: 'Metadata of a role with reduced information.
 
-        transitive for `/members/transitive`.'
+        Returned for cross-project role references.'
       required:
-      - members
+      - id
+      - ident
+      - provider-id
+      - source-id
+      - name
+      - project-id
       properties:
-        members:
-          type: array
-          items:
-            $ref: '#/components/schemas/RoleMember'
+        id:
+          type: string
+          format: uuid
+          description: Globally unique UUID identifier
+        ident:
+          type: string
+          description: Composite project-scoped identifier (`provider~source_id`).
+        name:
+          type: string
+          description: Name of the role
+        project-id:
+          type: string
+          description: Project ID in which the role is created.
+        provider-id:
+          type: string
+          description: Provider that owns this role (e.g. `"lakekeeper"`, `"oidc"`).
+        source-id:
+          type: string
+          description: Identifier of the role in the provider.
+    ListRolesResponse:
+      type: object
+      required:
+      - roles
+      properties:
         next-page-token:
           type:
           - string
           - 'null'
-          description: 'Token for the next page; `null`/absent once the listing is exhausted.
-
-            Note for SDK authors: **stop when `next-page-token` is null/absent.** The
-
-            final page of results may itself return a null token, so don''t rely on
-
-            receiving a separate trailing empty page — keep requesting until the token
-
-            is null.'
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
     ListRoleMembershipsResponse:
       type: object
       description: 'One page of roles — the `member-of` set or a user''s roles, direct or transitive
@@ -915,18 +1067,89 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RoleMembership'
-    AddRoleMembersRequest:
+    Role:
       type: object
-      description: 'Request body for `POST /role/{id}/members`. Batch: adds every listed member to
-
-        the role atomically (all-or-nothing).'
       required:
-      - members
+      - id
+      - ident
+      - provider-id
+      - source-id
+      - name
+      - project-id
+      - created-at
       properties:
-        members:
+        created-at:
+          type: string
+          format: date-time
+          description: Timestamp when the role was created
+        description:
+          type:
+          - string
+          - 'null'
+          description: Description of the role
+        id:
+          type: string
+          format: uuid
+          description: Globally unique UUID identifier
+        ident:
+          type: string
+          description: 'Composite project-scoped identifier (`provider~source_id`).
+
+            Unique within a project.'
+        name:
+          type: string
+          description: Name of the role
+        project-id:
+          type: string
+          description: Project ID in which the role is created.
+        provider-id:
+          type: string
+          description: Provider that owns this role (e.g. `"lakekeeper"`, `"oidc"`).
+        source-id:
+          type: string
+          description: Identifier of the role in the provider.
+        updated-at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Timestamp when the role was last updated
+    ErrorModel:
+      type: object
+      description: JSON error payload returned in a response with further details on the error
+      required:
+      - message
+      - type
+      - code
+      properties:
+        code:
+          type: integer
+          format: int32
+          description: HTTP response code
+          minimum: 0
+        message:
+          type: string
+          description: Human-readable error message
+        stack:
           type: array
           items:
-            $ref: '#/components/schemas/RoleMemberRef'
+            type: string
+        type:
+          type: string
+          description: Internal type definition of the error
+    UpdateRoleRequest:
+      type: object
+      required:
+      - name
+      properties:
+        description:
+          type:
+          - string
+          - 'null'
+          description: Description of the role. If not set, the description will be removed.
+        name:
+          type: string
+          description: Name of the role to create
     LakekeeperRoleActionKind:
       oneOf:
       - type: object
@@ -985,85 +1208,31 @@ components:
             type: string
             enum:
             - update_source_system
-    RoleMembership:
+    IcebergErrorResponse:
       type: object
-      description: 'A role''s display identity in a membership listing: the role-member variant of
-
-        [`RoleMember`], and the item type of `/member-of` and `/user/{id}/roles`.
-
-        `ident` (`provider/source-id`) is the stable external handle a client references
-
-        the role by; `id` is the internal UUID. All fields are always present — a role
-
-        whose id no longer resolves in the catalog (a dangling authorizer edge) is
-
-        dropped from the listing and logged, never surfaced with a null identity.'
+      description: JSON wrapper for all error responses (non-2xx)
       required:
-      - id
-      - ident
-      - name
+      - error
       properties:
-        id:
-          type: string
-          format: uuid
-        ident:
-          type: string
-        name:
-          type: string
-    GetLakekeeperRoleActionsResponse:
+        error:
+          $ref: '#/components/schemas/ErrorModel'
+    SearchRoleRequest:
       type: object
       required:
-      - allowed-actions
+      - search
       properties:
-        allowed-actions:
-          type: array
-          items:
-            $ref: '#/components/schemas/LakekeeperRoleActionKind'
-    RoleMetadata:
-      type: object
-      description: 'Metadata of a role with reduced information.
-
-        Returned for cross-project role references.'
-      required:
-      - id
-      - ident
-      - provider-id
-      - source-id
-      - name
-      - project-id
-      properties:
-        id:
-          type: string
-          format: uuid
-          description: Globally unique UUID identifier
-        ident:
-          type: string
-          description: Composite project-scoped identifier (`provider~source_id`).
-        name:
-          type: string
-          description: Name of the role
         project-id:
-          type: string
-          description: Project ID in which the role is created.
-        provider-id:
-          type: string
-          description: Provider that owns this role (e.g. `"lakekeeper"`, `"oidc"`).
-        source-id:
-          type: string
-          description: Identifier of the role in the provider.
-    ListRolesResponse:
-      type: object
-      required:
-      - roles
-      properties:
-        next-page-token:
           type:
           - string
           - 'null'
-        roles:
-          type: array
-          items:
-            $ref: '#/components/schemas/Role'
+          description: 'Deprecated: Please use the `x-project-id` header instead.
+
+            Project ID in which the role is created.'
+        search:
+          type: string
+          description: 'Search string for fuzzy search.
+
+            Length is truncated to 64 characters.'
     RoleMember:
       oneOf:
       - allOf:
@@ -1097,175 +1266,6 @@ components:
         Identity is hydrated; for requests and add confirmations use the
 
         un-hydrated [`RoleMemberRef`] instead.'
-    UserMembership:
-      type: object
-      description: 'A user''s identity in a membership listing (the `user` variant of
-
-        [`RoleMember`]). All identity fields are nullable: under an assignment-managing
-
-        authorizer (e.g. OpenFGA) a member may be assigned but not yet provisioned in
-
-        the catalog, so only the `id` is known. `name`/`email` are also `null` for a
-
-        provisioned-but-nameless user.'
-      required:
-      - id
-      properties:
-        email:
-          type:
-          - string
-          - 'null'
-          description: Email; `null` if unknown.
-        id:
-          type: string
-          description: '`IdP` subject id of the user.'
-        name:
-          type:
-          - string
-          - 'null'
-          description: Display name; `null` when the user has no name.
-        user-type:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/UserType'
-            description: 'Whether the principal is a human or an application; `null` when the user
-
-              is assigned but not provisioned in the catalog (the id is all that''s known).'
-    CreateRoleRequest:
-      type: object
-      required:
-      - name
-      properties:
-        description:
-          type:
-          - string
-          - 'null'
-          description: Description of the role
-        name:
-          type: string
-          description: Name of the role to create
-        project-id:
-          type:
-          - string
-          - 'null'
-          description: 'Project ID in which the role is created.
-
-            Deprecated: Please use the `x-project-id` header instead.'
-        provider-id:
-          type:
-          - string
-          - 'null'
-          description: 'Provider that owns this role (e.g. `"lakekeeper"`, `"oidc"`).
-
-            Must be provided together with `source-id`. Omit both to let the server
-
-            assign `provider-id = "lakekeeper"` and a fresh UUIDv7 `source-id`.'
-        source-id:
-          type:
-          - string
-          - 'null'
-          description: 'Identifier of the role in the provider.
-
-            Must be provided together with `provider-id`.'
-    UpdateRoleRequest:
-      type: object
-      required:
-      - name
-      properties:
-        description:
-          type:
-          - string
-          - 'null'
-          description: Description of the role. If not set, the description will be removed.
-        name:
-          type: string
-          description: Name of the role to create
-    RoleMemberType:
-      type: string
-      description: Kind of a role member. Serializes as `"user"` / `"role"`.
-      enum:
-      - user
-      - role
-    UserType:
-      type: string
-      description: Type of a User
-      enum:
-      - human
-      - application
-    SearchRoleResponse:
-      type: object
-      required:
-      - roles
-      properties:
-        roles:
-          type: array
-          items:
-            $ref: '#/components/schemas/Role'
-          description: List of roles matching the search criteria
-    Role:
-      type: object
-      required:
-      - id
-      - ident
-      - provider-id
-      - source-id
-      - name
-      - project-id
-      - created-at
-      properties:
-        created-at:
-          type: string
-          format: date-time
-          description: Timestamp when the role was created
-        description:
-          type:
-          - string
-          - 'null'
-          description: Description of the role
-        id:
-          type: string
-          format: uuid
-          description: Globally unique UUID identifier
-        ident:
-          type: string
-          description: 'Composite project-scoped identifier (`provider~source_id`).
-
-            Unique within a project.'
-        name:
-          type: string
-          description: Name of the role
-        project-id:
-          type: string
-          description: Project ID in which the role is created.
-        provider-id:
-          type: string
-          description: Provider that owns this role (e.g. `"lakekeeper"`, `"oidc"`).
-        source-id:
-          type: string
-          description: Identifier of the role in the provider.
-        updated-at:
-          type:
-          - string
-          - 'null'
-          format: date-time
-          description: Timestamp when the role was last updated
-    SearchRoleRequest:
-      type: object
-      required:
-      - search
-      properties:
-        project-id:
-          type:
-          - string
-          - 'null'
-          description: 'Deprecated: Please use the `x-project-id` header instead.
-
-            Project ID in which the role is created.'
-        search:
-          type: string
-          description: 'Search string for fuzzy search.
-
-            Length is truncated to 64 characters.'
   securitySchemes:
     bearerAuth:
       type: http
