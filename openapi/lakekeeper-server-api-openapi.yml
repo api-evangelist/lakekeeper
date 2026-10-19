@@ -119,167 +119,6 @@ paths:
                 $ref: '#/components/schemas/IcebergErrorResponse'
 components:
   schemas:
-    GetLakekeeperServerActionsResponse:
-      type: object
-      required:
-      - allowed-actions
-      properties:
-        allowed-actions:
-          type: array
-          items:
-            $ref: '#/components/schemas/LakekeeperServerActionKind'
-    LicenseStatus:
-      type: object
-      description: Status of license validation
-      required:
-      - license-type
-      - valid
-      properties:
-        audience:
-          type:
-          - string
-          - 'null'
-          description: Audience or entity the license is issued to
-        customer:
-          type:
-          - string
-          - 'null'
-          description: Customer name the license is issued to (None for open source)
-        error:
-          type:
-          - string
-          - 'null'
-          description: Any validation error that occurred
-        expiration:
-          type:
-          - string
-          - 'null'
-          format: date-time
-          description: License expiration date (None for perpetual licenses like Apache)
-        issuer:
-          type:
-          - string
-          - 'null'
-          description: Organization or entity that issued the license for Lakekeeper
-        license-id:
-          type:
-          - string
-          - 'null'
-          description: License ID or identifier
-        license-type:
-          type: string
-          description: License type (e.g., "Apache-2.0", "Vakamo-Enterprise", etc.)
-        valid:
-          type: boolean
-          description: If the license is valid and active
-    BootstrapRequest:
-      type: object
-      required:
-      - accept-terms-of-use
-      properties:
-        accept-terms-of-use:
-          type: boolean
-          description: Set to true if you accept LAKEKEEPER terms of use.
-        is-operator:
-          type: boolean
-          description: 'If set to true, the calling user is treated as an operator and obtain
-
-            a corresponding role. If not specified, the user is treated as a human.'
-        user-email:
-          type:
-          - string
-          - 'null'
-          description: 'Email of the user performing bootstrap. Optional. If not provided
-
-            the server will try to parse the email from the provided token.'
-        user-name:
-          type:
-          - string
-          - 'null'
-          description: 'Name of the user performing bootstrap. Optional. If not provided
-
-            the server will try to parse the name from the provided token.
-
-            The initial user will become the global admin.'
-        user-type:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/UserType'
-            description: 'Type of the user performing bootstrap. Optional. If not provided
-
-              the server will try to parse the type from the provided token.'
-    IcebergErrorResponse:
-      type: object
-      description: JSON wrapper for all error responses (non-2xx)
-      required:
-      - error
-      properties:
-        error:
-          $ref: '#/components/schemas/ErrorModel'
-    ConsoleInfo:
-      type: object
-      description: Information about the UI (console) shipped with this binary.
-      required:
-      - edition
-      - version
-      properties:
-        commit-sha:
-          type:
-          - string
-          - 'null'
-          description: Git commit SHA of the console source, if known.
-        edition:
-          type: string
-          description: 'Edition / crate name of the bundled console.
-
-            e.g. `lakekeeper-console` for the OSS console or
-
-            `lakekeeper-console-plus` for the enterprise console.'
-        version:
-          type: string
-          description: SemVer of the console crate.
-    LakekeeperServerActionKind:
-      oneOf:
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - create_project
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - update_users
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - delete_users
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - list_users
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - provision_users
     ServerInfo:
       type: object
       required:
@@ -365,12 +204,79 @@ components:
 
             read `lakekeeper-version` and/or `lakekeeper-enterprise-version`.'
           deprecated: true
-    UserType:
-      type: string
-      description: Type of a User
-      enum:
-      - human
-      - application
+    GetLakekeeperServerActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LakekeeperServerActionKind'
+    ConsoleInfo:
+      type: object
+      description: Information about the UI (console) shipped with this binary.
+      required:
+      - edition
+      - version
+      properties:
+        commit-sha:
+          type:
+          - string
+          - 'null'
+          description: Git commit SHA of the console source, if known.
+        edition:
+          type: string
+          description: 'Edition / crate name of the bundled console.
+
+            e.g. `lakekeeper-console` for the OSS console or
+
+            `lakekeeper-console-plus` for the enterprise console.'
+        version:
+          type: string
+          description: SemVer of the console crate.
+    LakekeeperServerActionKind:
+      oneOf:
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - create_project
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - update_users
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - delete_users
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - list_users
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - provision_users
     ErrorModel:
       type: object
       description: JSON error payload returned in a response with further details on the error
@@ -394,6 +300,100 @@ components:
         type:
           type: string
           description: Internal type definition of the error
+    LicenseStatus:
+      type: object
+      description: Status of license validation
+      required:
+      - license-type
+      - valid
+      properties:
+        audience:
+          type:
+          - string
+          - 'null'
+          description: Audience or entity the license is issued to
+        customer:
+          type:
+          - string
+          - 'null'
+          description: Customer name the license is issued to (None for open source)
+        error:
+          type:
+          - string
+          - 'null'
+          description: Any validation error that occurred
+        expiration:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: License expiration date (None for perpetual licenses like Apache)
+        issuer:
+          type:
+          - string
+          - 'null'
+          description: Organization or entity that issued the license for Lakekeeper
+        license-id:
+          type:
+          - string
+          - 'null'
+          description: License ID or identifier
+        license-type:
+          type: string
+          description: License type (e.g., "Apache-2.0", "Vakamo-Enterprise", etc.)
+        valid:
+          type: boolean
+          description: If the license is valid and active
+    IcebergErrorResponse:
+      type: object
+      description: JSON wrapper for all error responses (non-2xx)
+      required:
+      - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorModel'
+    UserType:
+      type: string
+      description: Type of a User
+      enum:
+      - human
+      - application
+    BootstrapRequest:
+      type: object
+      required:
+      - accept-terms-of-use
+      properties:
+        accept-terms-of-use:
+          type: boolean
+          description: Set to true if you accept LAKEKEEPER terms of use.
+        is-operator:
+          type: boolean
+          description: 'If set to true, the calling user is treated as an operator and obtain
+
+            a corresponding role. If not specified, the user is treated as a human.'
+        user-email:
+          type:
+          - string
+          - 'null'
+          description: 'Email of the user performing bootstrap. Optional. If not provided
+
+            the server will try to parse the email from the provided token.'
+        user-name:
+          type:
+          - string
+          - 'null'
+          description: 'Name of the user performing bootstrap. Optional. If not provided
+
+            the server will try to parse the name from the provided token.
+
+            The initial user will become the global admin.'
+        user-type:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/UserType'
+            description: 'Type of the user performing bootstrap. Optional. If not provided
+
+              the server will try to parse the type from the provided token.'
   securitySchemes:
     bearerAuth:
       type: http

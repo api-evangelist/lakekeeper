@@ -387,46 +387,29 @@ paths:
                 $ref: '#/components/schemas/IcebergErrorResponse'
 components:
   schemas:
-    UpdateUserRequest:
+    SearchUser:
       type: object
       required:
       - name
+      - id
       - user-type
       properties:
         email:
           type:
           - string
           - 'null'
+          description: 'Email of the user. If id is not specified, the email is extracted
+
+            from the provided token.'
+        id:
+          type: string
+          description: ID of the user
         name:
           type: string
+          description: Name of the user
         user-type:
           $ref: '#/components/schemas/UserType'
-    UserLastUpdatedWith:
-      type: string
-      description: How the user was last updated
-      enum:
-      - create-endpoint
-      - config-call-creation
-      - update-endpoint
-      - role-provider
-    SearchUserRequest:
-      type: object
-      required:
-      - search
-      properties:
-        search:
-          type: string
-          description: 'Search string for fuzzy search.
-
-            Length is truncated to 64 characters.'
-    IcebergErrorResponse:
-      type: object
-      description: JSON wrapper for all error responses (non-2xx)
-      required:
-      - error
-      properties:
-        error:
-          $ref: '#/components/schemas/ErrorModel'
+          description: Type of the user
     ListRoleMembershipsResponse:
       type: object
       description: 'One page of roles — the `member-of` set or a user''s roles, direct or transitive
@@ -490,12 +473,48 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/User'
-    UserType:
-      type: string
-      description: Type of a User
-      enum:
-      - human
-      - application
+    GetLakekeeperUserActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LakekeeperUserAction'
+    ErrorModel:
+      type: object
+      description: JSON error payload returned in a response with further details on the error
+      required:
+      - message
+      - type
+      - code
+      properties:
+        code:
+          type: integer
+          format: int32
+          description: HTTP response code
+          minimum: 0
+        message:
+          type: string
+          description: Human-readable error message
+        stack:
+          type: array
+          items:
+            type: string
+        type:
+          type: string
+          description: Internal type definition of the error
+    SearchUserRequest:
+      type: object
+      required:
+      - search
+      properties:
+        search:
+          type: string
+          description: 'Search string for fuzzy search.
+
+            Length is truncated to 64 characters.'
     WhoamiResponse:
       allOf:
       - $ref: '#/components/schemas/User'
@@ -515,6 +534,65 @@ components:
       description: 'Response of the `whoami` endpoint: the catalog user for the current token,
 
         plus request-scoped privilege not stored on the user record.'
+    UserType:
+      type: string
+      description: Type of a User
+      enum:
+      - human
+      - application
+    SearchUserResponse:
+      type: object
+      description: Search result for users
+      required:
+      - users
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchUser'
+          description: List of users matching the search criteria
+    IcebergErrorResponse:
+      type: object
+      description: JSON wrapper for all error responses (non-2xx)
+      required:
+      - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorModel'
+    LakekeeperUserAction:
+      oneOf:
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - read
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - update
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - delete
+      - type: object
+        required:
+        - action
+        properties:
+          action:
+            type: string
+            enum:
+            - read_role_assignments
     CreateUserRequest:
       type: object
       properties:
@@ -557,106 +635,6 @@ components:
           - type: 'null'
           - $ref: '#/components/schemas/UserType'
             description: Type of the user. Useful to override wrongly classified users
-    GetLakekeeperUserActionsResponse:
-      type: object
-      required:
-      - allowed-actions
-      properties:
-        allowed-actions:
-          type: array
-          items:
-            $ref: '#/components/schemas/LakekeeperUserAction'
-    ErrorModel:
-      type: object
-      description: JSON error payload returned in a response with further details on the error
-      required:
-      - message
-      - type
-      - code
-      properties:
-        code:
-          type: integer
-          format: int32
-          description: HTTP response code
-          minimum: 0
-        message:
-          type: string
-          description: Human-readable error message
-        stack:
-          type: array
-          items:
-            type: string
-        type:
-          type: string
-          description: Internal type definition of the error
-    SearchUserResponse:
-      type: object
-      description: Search result for users
-      required:
-      - users
-      properties:
-        users:
-          type: array
-          items:
-            $ref: '#/components/schemas/SearchUser'
-          description: List of users matching the search criteria
-    LakekeeperUserAction:
-      oneOf:
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - read
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - update
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - delete
-      - type: object
-        required:
-        - action
-        properties:
-          action:
-            type: string
-            enum:
-            - read_role_assignments
-    SearchUser:
-      type: object
-      required:
-      - name
-      - id
-      - user-type
-      properties:
-        email:
-          type:
-          - string
-          - 'null'
-          description: 'Email of the user. If id is not specified, the email is extracted
-
-            from the provided token.'
-        id:
-          type: string
-          description: ID of the user
-        name:
-          type: string
-          description: Name of the user
-        user-type:
-          $ref: '#/components/schemas/UserType'
-          description: Type of the user
     User:
       type: object
       description: User of the catalog
@@ -694,6 +672,28 @@ components:
         user-type:
           $ref: '#/components/schemas/UserType'
           description: Type of the user
+    UserLastUpdatedWith:
+      type: string
+      description: How the user was last updated
+      enum:
+      - create-endpoint
+      - config-call-creation
+      - update-endpoint
+      - role-provider
+    UpdateUserRequest:
+      type: object
+      required:
+      - name
+      - user-type
+      properties:
+        email:
+          type:
+          - string
+          - 'null'
+        name:
+          type: string
+        user-type:
+          $ref: '#/components/schemas/UserType'
   securitySchemes:
     bearerAuth:
       type: http

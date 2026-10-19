@@ -364,14 +364,39 @@ paths:
       deprecated: true
 components:
   schemas:
-    CreateProjectResponse:
-      type: object
-      required:
-      - project-id
-      properties:
-        project-id:
-          type: string
-          description: ID of the created project.
+    WarehouseFilter:
+      oneOf:
+      - type: object
+        description: Filter for a specific warehouse
+        required:
+        - id
+        - type
+        properties:
+          id:
+            type: string
+            format: uuid
+          type:
+            type: string
+            enum:
+            - warehouse-id
+      - type: object
+        description: Filter for items that are not associated with a warehouse
+        required:
+        - type
+        properties:
+          type:
+            type: string
+            enum:
+            - unmapped
+      - type: object
+        description: Return all items in the current project, regardless of warehouse association
+        required:
+        - type
+        properties:
+          type:
+            type: string
+            enum:
+            - all
     LakekeeperProjectActionKind:
       oneOf:
       - type: object
@@ -486,32 +511,29 @@ components:
             type: string
             enum:
             - control_project_tasks
-    IcebergErrorResponse:
+    ErrorModel:
       type: object
-      description: JSON wrapper for all error responses (non-2xx)
+      description: JSON error payload returned in a response with further details on the error
       required:
-      - error
+      - message
+      - type
+      - code
       properties:
-        error:
-          $ref: '#/components/schemas/ErrorModel'
-    ListProjectsResponse:
-      type: object
-      required:
-      - projects
-      properties:
-        projects:
+        code:
+          type: integer
+          format: int32
+          description: HTTP response code
+          minimum: 0
+        message:
+          type: string
+          description: Human-readable error message
+        stack:
           type: array
           items:
-            $ref: '#/components/schemas/GetProjectResponse'
-          description: List of projects
-    RenameProjectRequest:
-      type: object
-      required:
-      - new-name
-      properties:
-        new-name:
+            type: string
+        type:
           type: string
-          description: New name for the project.
+          description: Internal type definition of the error
     GetProjectResponse:
       type: object
       required:
@@ -524,48 +546,49 @@ components:
         project-name:
           type: string
           description: Name of the project
-    WarehouseFilter:
-      oneOf:
-      - type: object
-        description: Filter for a specific warehouse
-        required:
-        - id
-        - type
-        properties:
-          id:
-            type: string
-            format: uuid
-          type:
-            type: string
-            enum:
-            - warehouse-id
-      - type: object
-        description: Filter for items that are not associated with a warehouse
-        required:
-        - type
-        properties:
-          type:
-            type: string
-            enum:
-            - unmapped
-      - type: object
-        description: Return all items in the current project, regardless of warehouse association
-        required:
-        - type
-        properties:
-          type:
-            type: string
-            enum:
-            - all
-    GetLakekeeperProjectActionsResponse:
+    GetEndpointStatisticsRequest:
       type: object
       required:
-      - allowed-actions
+      - warehouse
       properties:
-        allowed-actions:
-          type: array
+        range-specifier:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/TimeWindowSelector'
+            description: 'Range specifier
+
+
+              Either for an explicit range or a page token to paginate through the results. See the docs of
+
+              `TimeWindowSelector` for more details.'
+        status-codes:
+          type:
+          - array
+          - 'null'
           items:
-            $ref: '#/components/schemas/LakekeeperProjectActionKind'
+            type: integer
+            format: int32
+            minimum: 0
+          description: 'Status code filter
+
+
+            Optional filter to only return statistics for requests with specific status codes.'
+        warehouse:
+          $ref: '#/components/schemas/WarehouseFilter'
+          description: 'Warehouse filter
+
+
+            Can return statistics for a specific warehouse, all warehouses or requests that could not be
+
+            associated to any warehouse.'
+    IcebergErrorResponse:
+      type: object
+      description: JSON wrapper for all error responses (non-2xx)
+      required:
+      - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorModel'
     TimeWindowSelector:
       oneOf:
       - type: object
@@ -616,41 +639,6 @@ components:
         example:
           type: page-token
           token: xyz
-    GetEndpointStatisticsRequest:
-      type: object
-      required:
-      - warehouse
-      properties:
-        range-specifier:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/TimeWindowSelector'
-            description: 'Range specifier
-
-
-              Either for an explicit range or a page token to paginate through the results. See the docs of
-
-              `TimeWindowSelector` for more details.'
-        status-codes:
-          type:
-          - array
-          - 'null'
-          items:
-            type: integer
-            format: int32
-            minimum: 0
-          description: 'Status code filter
-
-
-            Optional filter to only return statistics for requests with specific status codes.'
-        warehouse:
-          $ref: '#/components/schemas/WarehouseFilter'
-          description: 'Warehouse filter
-
-
-            Can return statistics for a specific warehouse, all warehouses or requests that could not be
-
-            associated to any warehouse.'
     EndpointStatisticsResponse:
       type: object
       required:
@@ -704,6 +692,15 @@ components:
             is being updated. If any endpoint is called in the following hour, there''ll be an entry in
 
             `timestamps` for the following hour. If not, then there''ll be no entry.'
+    GetLakekeeperProjectActionsResponse:
+      type: object
+      required:
+      - allowed-actions
+      properties:
+        allowed-actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LakekeeperProjectActionKind'
     EndpointStatistic:
       type: object
       required:
@@ -770,29 +767,6 @@ components:
             endpoints cannot be associated with a warehouse, e.g. warehouse creation or user management
 
             will not have a `warehouse-id`'
-    ErrorModel:
-      type: object
-      description: JSON error payload returned in a response with further details on the error
-      required:
-      - message
-      - type
-      - code
-      properties:
-        code:
-          type: integer
-          format: int32
-          description: HTTP response code
-          minimum: 0
-        message:
-          type: string
-          description: Human-readable error message
-        stack:
-          type: array
-          items:
-            type: string
-        type:
-          type: string
-          description: Internal type definition of the error
     CreateProjectRequest:
       type: object
       required:
@@ -808,6 +782,32 @@ components:
         project-name:
           type: string
           description: Name of the project to create.
+    CreateProjectResponse:
+      type: object
+      required:
+      - project-id
+      properties:
+        project-id:
+          type: string
+          description: ID of the created project.
+    ListProjectsResponse:
+      type: object
+      required:
+      - projects
+      properties:
+        projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/GetProjectResponse'
+          description: List of projects
+    RenameProjectRequest:
+      type: object
+      required:
+      - new-name
+      properties:
+        new-name:
+          type: string
+          description: New name for the project.
   securitySchemes:
     bearerAuth:
       type: http
