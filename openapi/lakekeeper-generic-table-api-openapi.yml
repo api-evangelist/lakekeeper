@@ -430,3 +430,9 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+x-provenance:
+  method: harvested
+  publisher: Lakekeeper
+  source: https://docs.lakekeeper.io/docs/latest/api/generic-table-open-api.yaml
+  note: split by refine-openapis from the provider's own published document, verified by fetch (openapi/_original/*.fetch.json);
+    stamped by stamp-openapi-provenance.py (roadmap#793)
