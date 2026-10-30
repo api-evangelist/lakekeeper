@@ -64,5 +64,143 @@
 > Full detail: **[Where this data comes from](https://apievangelist.com/about/where-our-data-comes-from)**
 <!-- API-EVANGELIST-PROVENANCE:END -->
 
-Lakekeeper is a company surfaced via the API Evangelist harvest backlog (source: self-hosted-agent-stack) and added to the network as a stub for full-pipeline profiling.
-- https://lakekeeper.io/
+Lakekeeper is an open-source Apache Iceberg REST Catalog written in Rust and maintained by Vakamo. It manages Iceberg tables, views and namespaces for query engines such as Apache Spark, Trino, StarRocks, DuckDB, Athena, Flink and PyIceberg, vending short-lived, prefix-scoped storage credentials for S3, GCS, Azure ADLS and Microsoft OneLake/Fabric instead of handing long-lived keys to engines. It exposes three distinct HTTP APIs — the standard Iceberg REST Catalog API at /catalog/v1, a Lakekeeper-specific Management API at /management/v1 for bootstrapping, projects, warehouses, users, roles, tasks and fine-grained permissions, and a Data API at /lakekeeper/v1 that catalogs non-Iceberg generic tables such as Lance, Delta and Parquet. Authorization is pluggable (OpenFGA for RBAC/ ReBAC, Open Policy Agent bridge, Cedar in the commercial Lakekeeper+ distribution), authentication is OIDC/OAuth2 or Kubernetes service accounts, and change events are published as CloudEvents to Kafka or NATS. Lakekeeper is self-hosted software under Apache 2.0; commercial Lakekeeper+ and Lakekeeper Cloud are sold by Vakamo.
+
+**Areas:** Apache Iceberg · Data Catalog · Lakehouse · Open Source · Rust · Data Governance · Access Control · Object Storage · Metadata · Self-Hosted · openfga · Data Engineering
+
+## Lakekeeper on APIs.io
+
+Everything profiled for Lakekeeper is published on APIs.io rather than in this repository. Start at the provider page — **[apis.io/providers/lakekeeper/](https://apis.io/providers/lakekeeper/)** — or go straight to one of the APIs or properties below.
+
+### APIs (13)
+
+- [Lakekeeper Generic Table (Data) API](https://apis.io/apis/lakekeeper/lakekeeper-generic-table-data-api/) — Lakekeeper's data-plane API served under /lakekeeper/v1, cataloging non-Iceberg table formats — Lance, Delta, CSV, Parquet — alongside Iceberg tables in the…
+- [Lakekeeper Authorization API](https://apis.io/apis/lakekeeper/lakekeeper-authorization-api/) — The authorization API from Lakekeeper — 1 operation(s) for authorization.
+- [Lakekeeper Catalog API](https://apis.io/apis/lakekeeper/lakekeeper-catalog-api-api/) — The Catalog API API from Lakekeeper — 16 operation(s) for catalog api.
+- [Lakekeeper Configuration API](https://apis.io/apis/lakekeeper/lakekeeper-configuration-api-api/) — The Configuration API API from Lakekeeper — 1 operation(s) for configuration api.
+- [Lakekeeper OAuth2 API](https://apis.io/apis/lakekeeper/lakekeeper-oauth2-api-api/) — The OAuth2 API API from Lakekeeper — 1 operation(s) for oauth2 api.
+- [Lakekeeper Permissions Cedar API](https://apis.io/apis/lakekeeper/lakekeeper-permissions-cedar-api/) — Cedar Authorization Management. Only available if Cedar authorization is enabled.
+- [Lakekeeper Permissions Openfga API](https://apis.io/apis/lakekeeper/lakekeeper-permissions-openfga-api/) — Authorization and permissions management using OpenFGA
+- [Lakekeeper Project API](https://apis.io/apis/lakekeeper/lakekeeper-project-api/) — Manage Projects
+- [Lakekeeper Role API](https://apis.io/apis/lakekeeper/lakekeeper-role-api/) — Manage Roles
+- [Lakekeeper Server API](https://apis.io/apis/lakekeeper/lakekeeper-server-api/) — Manage Server
+- [Lakekeeper Tasks API](https://apis.io/apis/lakekeeper/lakekeeper-tasks-api/) — View & Manage Tasks
+- [Lakekeeper User API](https://apis.io/apis/lakekeeper/lakekeeper-user-api/) — Manage Users
+- [Lakekeeper Warehouse API](https://apis.io/apis/lakekeeper/lakekeeper-warehouse-api/) — Manage Warehouses
+
+### Published properties
+
+Each property below is a page on APIs.io carrying the machine-readable artifact and what it says.
+
+#### AsyncAPI (1)
+
+Event-driven and webhook contracts.
+
+- [Lakekeeper Events](https://apis.io/asyncapis/lakekeeper/lakekeeper-events/)
+
+#### MCP servers (1)
+
+Model Context Protocol servers that expose the API to agents.
+
+- [lakekeeper-mcp.yml](https://apis.io/servers/lakekeeper/lakekeeper-mcp-yml/)
+
+#### Overlays (1)
+
+OpenAPI overlays, including conversational phrasing for each operation.
+
+- [Lakekeeper Management Api Overlay](https://apis.io/overlays/lakekeeper/lakekeeper-management-api-overlay/)
+
+#### Security (2)
+
+Authentication, trust centre, and vulnerability disclosure.
+
+- [Lakekeeper Authentication](https://apis.io/security/lakekeeper/lakekeeper-authentication/)
+- [Lakekeeper Domain Security](https://apis.io/security/lakekeeper/lakekeeper-domain-security/)
+
+#### OAuth scopes (1)
+
+The permissions the API asks for.
+
+- [Lakekeeper Scopes](https://apis.io/scopes/lakekeeper/lakekeeper-scopes/)
+
+#### Plans and pricing (1)
+
+Published plans, tiers and prices.
+
+- [Lakekeeper Plans Pricing](https://apis.io/plans/lakekeeper/lakekeeper-plans-pricing/)
+
+#### Rate limits (1)
+
+Published request limits.
+
+- [Lakekeeper Rate Limits](https://apis.io/rate-limits/lakekeeper/lakekeeper-rate-limits/)
+
+## Where to find this API
+
+Links to the company's own pages. This repository publishes no copy of their specifications — the canonical document is theirs and lives at the URLs below.
+
+- [Website](https://lakekeeper.io/)
+- [Documentation](https://docs.lakekeeper.io/docs/latest/api-overview/)
+- [Getting started](https://docs.lakekeeper.io/getting-started/)
+- [API reference](https://docs.lakekeeper.io/docs/latest/api/)
+- [Pricing](https://vakamo.com/pricing)
+- [Support](https://docs.lakekeeper.io/support/)
+- [Changelog](https://docs.lakekeeper.io/about/release-notes/)
+- [Blog](https://vakamo.com/blog/)
+- [Terms of service](https://docs.lakekeeper.io/about/license/)
+- [GitHub](https://github.com/lakekeeper)
+
+## API Evangelist rating
+
+**Kin Score 55.3** — strong · rubric 0.25.0 · scored 2026-10-23
+
+| Facet | Score |
+|---|---|
+| Discoverability | 78.6 |
+| Contract quality | 54.4 |
+| Contract governance | 18.2 |
+| Operational transparency | 18.4 |
+| Developer ergonomics | 80.4 |
+| Access clarity | 52.6 |
+
+**Agent readiness 42.7** — agent-native
+
+| Agent-readiness dimension | Result |
+|---|---|
+| Spec Presence | yes |
+| Agentic Access | — |
+| Reversibility Documented | documented (partial credit) |
+| MCP Server | — |
+| Auth Clarity | bearer (partial credit) |
+| Idempotency | verified |
+| Error Semantics | verified |
+| OpenAPI Examples | partial |
+| Rate Limit Signal | documented (partial credit) |
+| Event Surface Described | yes |
+| Agent Skills | derived (partial credit) |
+| Well Known Catalog | yes |
+| Consent Identity | — |
+| Agent Card | — |
+| Dry Run Mode | — |
+| Delegated Identity | — |
+| Protected Resource Metadata | — |
+| Dynamic Client Registration | — |
+| Agentic Commerce | — |
+| Pagination Ratio | na |
+| Operation Distinctiveness | mostly |
+
+**Regulatory alignment 30.4** — Horizontal (data, software, accessibility, platform)
+
+The rubric is published at [github.com/api-evangelist/kin-score](https://github.com/api-evangelist/kin-score). The per-check breakdown behind these numbers — which checks were earned, partial or missed — along with score history and how this provider compares to its peers, is available at [apis.io/providers/lakekeeper/](https://apis.io/providers/lakekeeper/).
+
+## How this profile is made
+
+API Evangelist profiles a company's public API surface the way a developer would find it: the website, developer portal and documentation, the specifications it publishes, its public repositories, and its pricing, status and changelog pages. From that it derives the properties above — contracts split per API, workflows, schemas, collections, governance rules, plans and rate limits — and scores them against the published [Kin Score rubric](https://github.com/api-evangelist/kin-score).
+
+The artifacts are published on [APIs.io](https://apis.io), not in this repository. This repository is the public record for Lakekeeper: the place to say something is wrong, missing or out of date, and to ask for a re-score or a removal.
+
+## Open an issue
+
+- **Something about this listing** — a wrong description, a missing API, a stale artifact or a question about the rating: [open an issue on this repository](https://github.com/api-evangelist/lakekeeper/issues/new).
+- **A new API, or one that is not in the catalog yet** — [submit it on APIs.io](https://apis.io/add/).
+- **Anything else** — [the APIs.io inbox](https://github.com/api-search/inbox/issues/new) or [info@apievangelist.com](mailto:info@apievangelist.com).
